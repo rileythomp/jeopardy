@@ -18,7 +18,7 @@ void upper_case(string& str) {
 int main(int argc, char* argv[]) {
   srand(time(nullptr));
   try {
-    connection C("dbname = testdb user = postgres password = J@ckRi1ey \
+    connection C("dbname = testdb user = postgres password = password \
     hostaddr = 127.0.0.1 port = 5432");
 
     if (!C.is_open()) {
