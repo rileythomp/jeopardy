@@ -12,13 +12,15 @@ using namespace pqxx;
 int main(int argc, char* argv[]) {
   // Upload file data to PostgreSQL database
 
-  connection C("dbname = testdb user = postgres password = J@ckRi1ey \
+  connection C("dbname = testdb user = postgres password = password \
     hostaddr = 127.0.0.1 port = 5432");
 
   if (!C.is_open()) {
     cout << "Can't open database" << endl;
     return 1;
   }
+  
+  C.prepare("insert_to_questions", "INSERT INTO QUESTIONS (ROUND, VALUE, DAILY_DOUBLE, CATEGORY, COMMENTS, ANSWER, QUESTION, AIR_DATE, NOTES, SEASON) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);");
   
   const int num_seasons = 35;
 
@@ -37,7 +39,6 @@ int main(int argc, char* argv[]) {
         question.emplace_back(question_data);
       }
 
-      C.prepare("insert_to_questions", "INSERT INTO QUESTIONS (ROUND, VALUE, DAILY_DOUBLE, CATEGORY, COMMENTS, ANSWER, QUESTION, AIR_DATE, NOTES, SEASON) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);");
       work W(C);
       W.prepared("insert_to_questions")(question[0])(question[1])(question[2])(question[3])(question[4])(question[5])(question[6])(question[7])(question[8])(i).exec();
       W.commit();
