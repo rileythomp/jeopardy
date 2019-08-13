@@ -30,14 +30,14 @@ Question::Question(pqxx::result::const_iterator data) {
 
 // Asks the user the question
 void Question::ask() {
-  std::cout << "Value: " << value << std::endl;
+  std::cout << "Value:    " << value << std::endl;
   std::cout << "Category: " << category << std::endl;
 
   if (comments != "-") {
     std::cout << "Comments: " << comments << std::endl;
   }
 
-  std::cout << "Clue: " << answer << std::endl;
+  std::cout << "Clue:     " << answer << std::endl;
 }
 
 void lower_case(std::string& str) {

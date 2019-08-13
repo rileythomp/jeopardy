@@ -10,6 +10,24 @@ void upper_case(string& str) {
   }
 }
 
+void update_index(bool& reset_index, int& i) {
+  if (reset_index) {
+    i = max(-1, i-10);
+    reset_index = false;
+  }
+  ++i;
+}
+
+void update_vals(int& val1, int incr1, int& val2, int incr2) {
+  val1 += incr1;
+  val2 += incr2;
+}
+
+void get_input(string& str, string msg) {
+  cout << msg << ": ";
+  getline(cin, str);
+}
+
 int main(int argc, char* argv[]) {
   try {
     // Initialize db
@@ -22,24 +40,26 @@ int main(int argc, char* argv[]) {
 
     // Intialize game variables
     srand(time(nullptr));
-    int total_asked, total_correct, value_asked, value_correct = 0;
+    int total_asked = 0;
+    int total_correct = 0;
+    int value_asked = 0;
+    int value_correct = 0;
     bool quit_game = false;
 
     cout << "Jeopardy Practice" << endl << endl;
+    cout << "Enter response as 'skipq' to skip a question" << endl;
     cout << "Enter response as 'quitround' or 'quitgame' to end a round or game respectively" << endl << endl;
 
     // Game loop
     while (!quit_game) {
       // Set category
-      cout << "Category: ";
       string category;
-      getline(cin, category);
+      get_input(category, "Category");
       upper_case(category);
 
       // Set value
-      cout << "Value: ";
       string value;
-      getline(cin, value);
+      get_input(value, "Value");
 
       // Get questions
       work work(conn);
@@ -57,7 +77,7 @@ int main(int argc, char* argv[]) {
         questions = work.prepared("select_by_category")("%"+category+"%")("no").exec();
       }
       else { // both set
-        conn.prepare("select_by_category_and_value", "SELECT * FROM QUESTIONS WHERE CATEGORY = $1 AND VALUE = $2 AND DAILY_DOUBLE = $3 ORDER BY CATEGORY DESC");
+        conn.prepare("select_by_category_and_value", "SELECT * FROM QUESTIONS WHERE CATEGORY LIKE $1 AND VALUE = $2 AND DAILY_DOUBLE = $3 ORDER BY CATEGORY DESC");
         questions = work.prepared("select_by_category_and_value")("%"+category+"%")(stoi(value))("no").exec();
       }
       work.commit();
@@ -73,10 +93,14 @@ int main(int argc, char* argv[]) {
       cout << "Total questions: " << len << endl << endl;
 
       // Initialize round variables
-      int round_correct, round_asked, round_val_correct, round_val_asked = 0;
+      int round_correct = 0;
+      int round_asked = 0;
+      int round_val_correct = 0;
+      int round_val_asked = 0;
       int max_before_reset = len-1;
       int i = max(0, len-5); 
-      bool quit_round, reset_index = false;
+      bool quit_round = false;
+      bool reset_index = false;
 
       // Round loop
       while (!quit_round) {
@@ -92,9 +116,8 @@ int main(int argc, char* argv[]) {
         q.ask();
 
         // Get response
-        std::cout << "Response: ";
-        std::string response;
-        std::getline(std::cin, response);
+        string response;
+        get_input(response, "Response");
 
         // Handle quit responses
         if (response == "quitround") {
@@ -104,40 +127,37 @@ int main(int argc, char* argv[]) {
           quit_game = true;
           break;
         }
+        else if (response == "skipq") {
+          update_index(reset_index, i);
+          cout << endl;
+          continue;
+        }
 
         // Handle response
         if (q.is_correct_response(response)) {
           std::cout << "Correct!" << std::endl;
-          round_correct += 1;
-          round_val_correct += q.get_value();
+          update_vals(round_correct, 1, round_val_correct, q.get_value());
         }
         else {
           std::cout << "Incorrect" << std::endl;
         }
 
         // Update round totals
-        round_asked += 1;
-        round_val_asked += q.get_value();
+        update_vals(round_asked, 1, round_val_asked, q.get_value());
 
         std::cout << "Full response: " << q.get_response() << std::endl;
-        cout << "Round Score: " << round_correct << "/" << round_asked << " Round Value: " << round_val_correct << "/" << round_val_asked << endl;
+        cout << "Round Score: " << round_correct << "/" << round_asked << ", Round Value: " << round_val_correct << "/" << round_val_asked << endl;
         std::cout << std::endl;
 
         // Go down the list 10 questions, to start of new 5-set
-        if (reset_index) {
-          i = max(-1, i-10);
-          reset_index = false;
-        }
-        ++i;
+        update_index(reset_index, i);
       }
 
       // Update game variables
-      total_correct += round_correct;
-      total_asked += round_asked;
-      value_correct += round_val_correct;
-      value_asked += round_val_asked;
+      update_vals(total_correct, round_correct, total_asked, round_asked);
+      update_vals(value_correct, round_val_correct, value_asked, round_val_asked);
 
-      cout << "Score: " << total_correct << "/" << total_asked << " Value: " << value_correct << "/" << value_asked << endl << endl;
+      cout << "Score: " << total_correct << "/" << total_asked << ", Value: " << value_correct << "/" << value_asked << endl << endl;
     }
 
     conn.disconnect();
