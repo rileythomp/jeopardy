@@ -1,9 +1,4 @@
-#include <iostream>
-#include <sstream>
 #include <fstream>
-#include <vector>
-#include <string>
-#include <pqxx/pqxx> 
 #include "question.h"
 
 using namespace std;
@@ -16,15 +11,17 @@ void upper_case(string& str) {
 }
 
 int main(int argc, char* argv[]) {
-  srand(time(nullptr));
   try {
-    connection C("dbname = testdb user = postgres password = password \
-    hostaddr = 127.0.0.1 port = 5432");
+    string pgpw = getenv("POSTGRES_PW");
 
-    if (!C.is_open()) {
-        cout << "Can't open database" << endl;
-        return 1;
+    connection conn("dbname = testdb user = postgres password = " + pgpw + " hostaddr = 127.0.0.1 port = 5432");
+
+    if (!conn.is_open()) {
+      cout << "Can't open database" << endl;
+      return 1;
     }
+
+    srand(time(nullptr));
 
     int total_asked = 0;
     int total_correct = 0;
@@ -35,41 +32,35 @@ int main(int argc, char* argv[]) {
 
     while (true) {
       cout << "Category: ";
-
       string category;
-
       getline(cin, category);
-
       upper_case(category);
 
       cout << "Value: ";
-
       string value;
-
       getline(cin, value);
 
-      work W(C);
-
+      work work(conn);
       result questions;
 
       if (category == "" && value == "") { // both empty
-        C.prepare("select_all_questions", "SELECT * FROM QUESTIONS");
-        questions = W.prepared("select_all_questions").exec();
+        conn.prepare("select_all_questions", "SELECT * FROM QUESTIONS WHERE DAILY_DOUBLE= $1");
+        questions = work.prepared("select_all_questions")("no").exec();
       }
       else if (category == "") { // category empty, value set
-        C.prepare("select_by_value", "SELECT * FROM QUESTIONS WHERE VALUE = $1");
-        questions = W.prepared("select_by_value")(stoi(value)).exec();
+        conn.prepare("select_by_value", "SELECT * FROM QUESTIONS WHERE VALUE = $1 AND DAILY_DOUBLE= $2");
+        questions = work.prepared("select_by_value")(stoi(value))("no").exec();
       }
       else if (value == "") { // category set, value empty
-        C.prepare("select_by_category", "SELECT * FROM QUESTIONS WHERE CATEGORY = $1");
-        questions = W.prepared("select_by_category")(category).exec();
+        conn.prepare("select_by_category", "SELECT * FROM QUESTIONS WHERE CATEGORY = $1 AND DAILY_DOUBLE= $2");
+        questions = work.prepared("select_by_category")(category)("no").exec();
       }
       else { // both set
-        C.prepare("select_by_category_and_value", "SELECT * FROM QUESTIONS WHERE CATEGORY = $1 AND VALUE = $2");
-        questions = W.prepared("select_by_category_and_value")(category)(stoi(value)).exec();
+        conn.prepare("select_by_category_and_value", "SELECT * FROM QUESTIONS WHERE CATEGORY = $1 AND VALUE = $2 AND DAILY_DOUBLE= $3");
+        questions = work.prepared("select_by_category_and_value")(category)(stoi(value))("no").exec();
       }
 
-      W.commit();
+      work.commit();
 
       int len = questions.size();
 
@@ -78,13 +69,26 @@ int main(int argc, char* argv[]) {
         continue;
       }
 
+      cout << "Total questions: " << len << endl << endl;
+
       int round_correct = 0;
       int round_asked = 0;
       int round_val_correct = 0;
       int round_val_asked = 0;
 
-      cout << "Total questions: " << len << endl << endl;
-      for (int i = 0; i < len; ++i) {
+      int max_before_reset = len-1;
+
+      bool keep_going = true;
+      bool reset_index = false;
+      bool reset_mbr = false;
+
+      for (int i = max(0, len-5); keep_going; ++i) {
+        if (i == max_before_reset) {
+          keep_going = max_before_reset >= 5;
+          reset_index = true;
+          max_before_reset -= 5;
+        }
+
         Question q = Question(questions[i]);
 
         q.ask();
@@ -101,24 +105,29 @@ int main(int argc, char* argv[]) {
         else {
           std::cout << "Incorrect" << std::endl;
         }
+
         round_asked += 1;
         round_val_asked += q.get_value();
 
         std::cout << "Full response: " << q.get_response() << std::endl;
         cout << "Round Score: " << round_correct << "/" << round_asked << " Round Value: " << round_val_correct << "/" << round_val_asked << endl;
-
-
         std::cout << std::endl;
+
+        if (reset_index) {
+          i = max(-1, i-10);
+          reset_index = false;
+        }
       }
+
       total_correct += round_correct;
       total_asked += round_asked;
       value_correct += round_val_correct;
       value_asked += round_val_asked;
-      cout << "Score: " << total_correct << "/" << total_asked << " Value: " << value_correct << "/" << value_asked << endl;
 
+      cout << "Score: " << total_correct << "/" << total_asked << " Value: " << value_correct << "/" << value_asked << endl;
     }
 
-    C.disconnect();
+    conn.disconnect();
   }
   catch (const std::exception &e) {
     cerr << e.what() << std::endl;

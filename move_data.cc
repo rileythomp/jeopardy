@@ -1,9 +1,4 @@
-#include <iostream>
-#include <sstream>
 #include <fstream>
-#include <vector>
-#include <string>
-#include <pqxx/pqxx> 
 #include "question.h"
 
 using namespace std;
