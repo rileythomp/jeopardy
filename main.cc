@@ -135,19 +135,19 @@ int main(int argc, char* argv[]) {
 
         // Handle response
         if (q.is_correct_response(response)) {
-          std::cout << "Correct!" << std::endl;
+          cout << "Correct!" << endl;
           update_vals(round_correct, 1, round_val_correct, q.get_value());
         }
         else {
-          std::cout << "Incorrect" << std::endl;
+          cout << "Incorrect" << endl;
         }
 
         // Update round totals
         update_vals(round_asked, 1, round_val_asked, q.get_value());
 
-        std::cout << "Full response: " << q.get_response() << std::endl;
+        cout << "Full response: " << q.get_response() << endl;
         cout << "Round Score: " << round_correct << "/" << round_asked << ", Round Value: " << round_val_correct << "/" << round_val_asked << endl;
-        std::cout << std::endl;
+        cout << endl;
 
         // Go down the list 10 questions, to start of new 5-set
         update_index(reset_index, i);
@@ -162,8 +162,8 @@ int main(int argc, char* argv[]) {
 
     conn.disconnect();
   }
-  catch (const std::exception &e) {
-    cerr << e.what() << std::endl;
+  catch (const exception &e) {
+    cerr << e.what() << endl;
     return 1;
   }
 
