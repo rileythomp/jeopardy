@@ -12,41 +12,38 @@ void upper_case(string& str) {
 
 int main(int argc, char* argv[]) {
   try {
+    // Initialize db
     string pgpw = getenv("POSTGRES_PW");
-
     connection conn("dbname = testdb user = postgres password = " + pgpw + " hostaddr = 127.0.0.1 port = 5432");
-
     if (!conn.is_open()) {
       cout << "Can't open database" << endl;
       return 1;
     }
 
+    // Intialize game variables
     srand(time(nullptr));
-
-    int total_asked = 0;
-    int total_correct = 0;
-    int value_asked = 0;
-    int value_correct = 0;
-
-    bool quit = false;
+    int total_asked, total_correct, value_asked, value_correct = 0;
+    bool quit_game = false;
 
     cout << "Jeopardy Practice" << endl << endl;
-
     cout << "Enter response as 'quitround' or 'quitgame' to end a round or game respectively" << endl << endl;
 
-    while (!quit) {
+    // Game loop
+    while (!quit_game) {
+      // Set category
       cout << "Category: ";
       string category;
       getline(cin, category);
       upper_case(category);
 
+      // Set value
       cout << "Value: ";
       string value;
       getline(cin, value);
 
+      // Get questions
       work work(conn);
       result questions;
-
       if (category == "" && value == "") { // both empty
         conn.prepare("select_all_questions", "SELECT * FROM QUESTIONS WHERE DAILY_DOUBLE = $1 AND VALUE != 0");
         questions = work.prepared("select_all_questions")("no").exec();
@@ -56,18 +53,18 @@ int main(int argc, char* argv[]) {
         questions = work.prepared("select_by_value")(stoi(value))("no").exec();
       }
       else if (value == "") { // category set, value empty
-        conn.prepare("select_by_category", "SELECT * FROM QUESTIONS WHERE CATEGORY = $1 AND DAILY_DOUBLE = $2 AND VALUE != 0");
-        questions = work.prepared("select_by_category")(category)("no").exec();
+        conn.prepare("select_by_category", "SELECT * FROM QUESTIONS WHERE CATEGORY LIKE $1 AND DAILY_DOUBLE = $2 AND VALUE != 0 ORDER BY CATEGORY DESC");
+        questions = work.prepared("select_by_category")("%"+category+"%")("no").exec();
       }
       else { // both set
-        conn.prepare("select_by_category_and_value", "SELECT * FROM QUESTIONS WHERE CATEGORY = $1 AND VALUE = $2 AND DAILY_DOUBLE = $3");
-        questions = work.prepared("select_by_category_and_value")(category)(stoi(value))("no").exec();
+        conn.prepare("select_by_category_and_value", "SELECT * FROM QUESTIONS WHERE CATEGORY = $1 AND VALUE = $2 AND DAILY_DOUBLE = $3 ORDER BY CATEGORY DESC");
+        questions = work.prepared("select_by_category_and_value")("%"+category+"%")(stoi(value))("no").exec();
       }
-
       work.commit();
 
       int len = questions.size();
 
+      // Handle no questions returned
       if (len == 0) {
         cout << "No clues matched your query, try again" << endl << endl;
         continue;
@@ -75,41 +72,41 @@ int main(int argc, char* argv[]) {
 
       cout << "Total questions: " << len << endl << endl;
 
-      int round_correct = 0;
-      int round_asked = 0;
-      int round_val_correct = 0;
-      int round_val_asked = 0;
-
+      // Initialize round variables
+      int round_correct, round_asked, round_val_correct, round_val_asked = 0;
       int max_before_reset = len-1;
+      int i = max(0, len-5); 
+      bool quit_round, reset_index = false;
 
-      bool keep_going = true;
-      bool reset_index = false;
-      bool reset_mbr = false;
-
-      for (int i = max(0, len-5); keep_going; ++i) {
+      // Round loop
+      while (!quit_round) {
+        // Handle end of 5-set
         if (i == max_before_reset) {
-          keep_going = max_before_reset >= 5;
+          quit_round = max_before_reset < 5;
           reset_index = true;
           max_before_reset -= 5;
         }
 
+        // Construct and ask question
         Question q = Question(questions[i]);
-
         q.ask();
 
+        // Get response
         std::cout << "Response: ";
         std::string response;
         std::getline(std::cin, response);
 
+        // Handle quit responses
         if (response == "quitround") {
           break;
         }
         else if (response == "quitgame") {
-          quit = true;
+          quit_game = true;
           break;
         }
 
-        if (q.correct_response(response)) {
+        // Handle response
+        if (q.is_correct_response(response)) {
           std::cout << "Correct!" << std::endl;
           round_correct += 1;
           round_val_correct += q.get_value();
@@ -118,6 +115,7 @@ int main(int argc, char* argv[]) {
           std::cout << "Incorrect" << std::endl;
         }
 
+        // Update round totals
         round_asked += 1;
         round_val_asked += q.get_value();
 
@@ -125,12 +123,15 @@ int main(int argc, char* argv[]) {
         cout << "Round Score: " << round_correct << "/" << round_asked << " Round Value: " << round_val_correct << "/" << round_val_asked << endl;
         std::cout << std::endl;
 
+        // Go down the list 10 questions, to start of new 5-set
         if (reset_index) {
           i = max(-1, i-10);
           reset_index = false;
         }
+        ++i;
       }
 
+      // Update game variables
       total_correct += round_correct;
       total_asked += round_asked;
       value_correct += round_val_correct;

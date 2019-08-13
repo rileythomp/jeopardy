@@ -1,5 +1,6 @@
 #include "question.h"
 
+// Construct question from tsv data
 Question::Question(std::vector<std::string> data, int _season) {
   season = _season;
   round = std::stoi(data[0]);
@@ -13,6 +14,7 @@ Question::Question(std::vector<std::string> data, int _season) {
   notes = data[8];
 }
 
+// Construct question from postgres response
 Question::Question(pqxx::result::const_iterator data) {
   round = data[0].as<int>();
   value = data[1].as<int>();
@@ -26,6 +28,7 @@ Question::Question(pqxx::result::const_iterator data) {
   season = data[9].as<int>();
 }
 
+// Asks the user the question
 void Question::ask() {
   std::cout << "Value: " << value << std::endl;
   std::cout << "Category: " << category << std::endl;
@@ -43,19 +46,26 @@ void lower_case(std::string& str) {
   }
 }
 
-bool Question::correct_response(std::string user_response) {
+bool is_valid_substring(std::string s1, std::string s2) {
+  return s1.find(s2) != std::string::npos && s2.length() > 2;
+}
+
+// Determines if a response is correct
+bool Question::is_correct_response(std::string user_response) {
+  // Handle user entering nothing
   if (user_response == "") {
     return false;
   }
   
-  lower_case(user_response);
+  // Separate answer into words
   std::istringstream iss(question);
   std::vector<std::string> words{std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};
+  lower_case(user_response);
 
   for (auto word : words) {
     lower_case(word);
 
-    if (user_response.find(word) != std::string::npos || word.find(user_response) != std::string::npos) {
+    if (is_valid_substring(word, user_response) || is_valid_substring(user_response, word)) {
       return true;
     }
   }

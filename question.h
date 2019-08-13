@@ -26,7 +26,7 @@ class Question {
       void ask();
 
       // Determines if a response is correct
-      bool correct_response(std::string user_response);
+      bool is_correct_response(std::string user_response);
 
       // Pretty prints a question
       friend std::ostream& operator<< (std::ostream& out, const Question& q);
