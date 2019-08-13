@@ -28,9 +28,13 @@ int main(int argc, char* argv[]) {
     int value_asked = 0;
     int value_correct = 0;
 
-    cout << "Jeopardy Practice" << endl;
+    bool quit = false;
 
-    while (true) {
+    cout << "Jeopardy Practice" << endl << endl;
+
+    cout << "Enter response as 'quitround' or 'quitgame' to end a round or game respectively" << endl << endl;
+
+    while (!quit) {
       cout << "Category: ";
       string category;
       getline(cin, category);
@@ -44,19 +48,19 @@ int main(int argc, char* argv[]) {
       result questions;
 
       if (category == "" && value == "") { // both empty
-        conn.prepare("select_all_questions", "SELECT * FROM QUESTIONS WHERE DAILY_DOUBLE= $1");
+        conn.prepare("select_all_questions", "SELECT * FROM QUESTIONS WHERE DAILY_DOUBLE = $1 AND VALUE != 0");
         questions = work.prepared("select_all_questions")("no").exec();
       }
       else if (category == "") { // category empty, value set
-        conn.prepare("select_by_value", "SELECT * FROM QUESTIONS WHERE VALUE = $1 AND DAILY_DOUBLE= $2");
+        conn.prepare("select_by_value", "SELECT * FROM QUESTIONS WHERE VALUE = $1 AND DAILY_DOUBLE = $2");
         questions = work.prepared("select_by_value")(stoi(value))("no").exec();
       }
       else if (value == "") { // category set, value empty
-        conn.prepare("select_by_category", "SELECT * FROM QUESTIONS WHERE CATEGORY = $1 AND DAILY_DOUBLE= $2");
+        conn.prepare("select_by_category", "SELECT * FROM QUESTIONS WHERE CATEGORY = $1 AND DAILY_DOUBLE = $2 AND VALUE != 0");
         questions = work.prepared("select_by_category")(category)("no").exec();
       }
       else { // both set
-        conn.prepare("select_by_category_and_value", "SELECT * FROM QUESTIONS WHERE CATEGORY = $1 AND VALUE = $2 AND DAILY_DOUBLE= $3");
+        conn.prepare("select_by_category_and_value", "SELECT * FROM QUESTIONS WHERE CATEGORY = $1 AND VALUE = $2 AND DAILY_DOUBLE = $3");
         questions = work.prepared("select_by_category_and_value")(category)(stoi(value))("no").exec();
       }
 
@@ -97,6 +101,14 @@ int main(int argc, char* argv[]) {
         std::string response;
         std::getline(std::cin, response);
 
+        if (response == "quitround") {
+          break;
+        }
+        else if (response == "quitgame") {
+          quit = true;
+          break;
+        }
+
         if (q.correct_response(response)) {
           std::cout << "Correct!" << std::endl;
           round_correct += 1;
@@ -124,7 +136,7 @@ int main(int argc, char* argv[]) {
       value_correct += round_val_correct;
       value_asked += round_val_asked;
 
-      cout << "Score: " << total_correct << "/" << total_asked << " Value: " << value_correct << "/" << value_asked << endl;
+      cout << "Score: " << total_correct << "/" << total_asked << " Value: " << value_correct << "/" << value_asked << endl << endl;
     }
 
     conn.disconnect();
