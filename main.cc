@@ -1,4 +1,3 @@
-#include <fstream>
 #include "question.h"
 
 using namespace std;
@@ -129,7 +128,7 @@ int main(int argc, char* argv[]) {
         }
         else if (response == "skipq") {
           update_index(reset_index, i);
-          cout << endl;
+          cout << "Full response: " << q.get_response() << endl << endl;
           continue;
         }
 
