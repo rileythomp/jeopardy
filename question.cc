@@ -30,8 +30,8 @@ Question::Question(pqxx::result::const_iterator data) {
 
 // Asks the user the question
 void Question::ask() {
-  std::cout << "Value:    " << value << std::endl;
   std::cout << "Category: " << category << std::endl;
+  std::cout << "Value:    " << value << std::endl;
 
   if (comments != "-") {
     std::cout << "Comments: " << comments << std::endl;

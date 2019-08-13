@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
       update_vals(total_correct, round_correct, total_asked, round_asked);
       update_vals(value_correct, round_val_correct, value_asked, round_val_asked);
 
-      cout << "Score: " << total_correct << "/" << total_asked << ", Value: " << value_correct << "/" << value_asked << endl << endl;
+      cout << "Total Score: " << total_correct << "/" << total_asked << ", Total Value: " << value_correct << "/" << value_asked << endl << endl;
     }
 
     conn.disconnect();
