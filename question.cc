@@ -61,13 +61,15 @@ bool Question::is_correct_response(std::string user_response) {
   
   // Separate answer into words
   std::istringstream iss(question);
-  std::vector<std::string> words{std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};
+  std::vector<std::string> words{std::istream_iterator<std::string>{iss},
+                                 std::istream_iterator<std::string>{}};
   lower_case(user_response);
 
   for (auto word : words) {
     lower_case(word);
 
-    if (is_valid_substring(word, user_response) || is_valid_substring(user_response, word)) {
+    if (is_valid_substring(word, user_response) ||
+        is_valid_substring(user_response, word)) {
       return true;
     }
   }
