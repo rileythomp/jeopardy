@@ -27,6 +27,21 @@ void get_input(string& str, string msg) {
   getline(cin, str);
 }
 
+void get_questions(result& questions, work& work, string category, string value) {
+  if (category == "" && value == "") {
+    questions = work.prepared("select_all_questions").exec();
+  }
+  else if (category == "") {
+    questions = work.prepared("select_by_value")(stoi(value)).exec();
+  }
+  else if (value == "") {
+    questions = work.prepared("select_by_category")("%"+category+"%").exec();
+  }
+  else {
+    questions = work.prepared("select_by_category_and_value")("%"+category+"%")(stoi(value)).exec();
+  }
+}
+
 int main(int argc, char* argv[]) {
   try {
     // Initialize db
@@ -36,6 +51,12 @@ int main(int argc, char* argv[]) {
       cout << "Can't open database" << endl;
       return 1;
     }
+
+    // Prepare SQL queries
+    conn.prepare("select_all_questions", "SELECT * FROM QUESTIONS WHERE DAILY_DOUBLE = 'no' AND VALUE != 0");
+    conn.prepare("select_by_value", "SELECT * FROM QUESTIONS WHERE VALUE = $1 AND DAILY_DOUBLE = 'no'");
+    conn.prepare("select_by_category", "SELECT * FROM QUESTIONS WHERE CATEGORY LIKE $1 AND DAILY_DOUBLE = 'no' AND VALUE != 0 ORDER BY CATEGORY DESC");
+    conn.prepare("select_by_category_and_value", "SELECT * FROM QUESTIONS WHERE CATEGORY LIKE $1 AND VALUE = $2 AND DAILY_DOUBLE = 'no' ORDER BY CATEGORY DESC");
 
     // Intialize game variables
     srand(time(nullptr));
@@ -63,22 +84,7 @@ int main(int argc, char* argv[]) {
       // Get questions
       work work(conn);
       result questions;
-      if (category == "" && value == "") { // both empty
-        conn.prepare("select_all_questions", "SELECT * FROM QUESTIONS WHERE DAILY_DOUBLE = $1 AND VALUE != 0");
-        questions = work.prepared("select_all_questions")("no").exec();
-      }
-      else if (category == "") { // category empty, value set
-        conn.prepare("select_by_value", "SELECT * FROM QUESTIONS WHERE VALUE = $1 AND DAILY_DOUBLE = $2");
-        questions = work.prepared("select_by_value")(stoi(value))("no").exec();
-      }
-      else if (value == "") { // category set, value empty
-        conn.prepare("select_by_category", "SELECT * FROM QUESTIONS WHERE CATEGORY LIKE $1 AND DAILY_DOUBLE = $2 AND VALUE != 0 ORDER BY CATEGORY DESC");
-        questions = work.prepared("select_by_category")("%"+category+"%")("no").exec();
-      }
-      else { // both set
-        conn.prepare("select_by_category_and_value", "SELECT * FROM QUESTIONS WHERE CATEGORY LIKE $1 AND VALUE = $2 AND DAILY_DOUBLE = $3 ORDER BY CATEGORY DESC");
-        questions = work.prepared("select_by_category_and_value")("%"+category+"%")(stoi(value))("no").exec();
-      }
+      get_questions(questions, work, category, value);
       work.commit();
 
       int len = questions.size();
