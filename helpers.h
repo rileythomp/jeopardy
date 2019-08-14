@@ -11,15 +11,6 @@ void upper_case(std::string& str) {
   }
 }
 
-// Update question index
-void update_index(bool& reset_index, int& i) {
-  if (reset_index) {
-    i = std::max(-1, i-10);
-    reset_index = false;
-  }
-  ++i;
-}
-
 // Update score values
 void update_vals(int& val1, int incr1, int& val2, int incr2) {
   val1 += incr1;
@@ -39,21 +30,9 @@ void loop_round(const int& len,
                 int& round_correct,
                 int& round_val_asked,
                 int& round_val_correct) {
-  // Initialize round variables
-  int max_before_reset = len-1;
-  int i = std::max(0, len-5); 
-  bool quit_round = false;
-  bool reset_index = false;
 
   // Round loop
-  while (!quit_round) {
-    // Handle end of 5-set
-    if (i == max_before_reset) {
-      quit_round = max_before_reset < 5;
-      reset_index = true;
-      max_before_reset -= 5;
-    }
-
+  for (int i = len-1; i >= 0; --i) {
     // Construct and ask question
     Question q = Question(questions[i]);
     q.ask();
@@ -73,7 +52,6 @@ void loop_round(const int& len,
       break;
     }
     else if (response == "skipq") {
-      update_index(reset_index, i);
       std::cout << "Full response: " << q.get_response() << std::endl << std::endl;
       continue;
     }
@@ -93,9 +71,6 @@ void loop_round(const int& len,
     std::cout << "Full response: " << q.get_response() << std::endl;
     std::cout << "Round Score: " << round_correct << "/" << round_asked << ", Round Value: " << round_val_correct << "/" << round_val_asked << std::endl;
     std::cout << std::endl;
-
-    // Go down the list 10 questions, to start of new 5-set
-    update_index(reset_index, i);
   }
 }
 
