@@ -3,12 +3,14 @@
 using namespace std;
 using namespace pqxx;
 
+// Convert string to upper case
 void upper_case(string& str) {
   for (int i = 0; i < str.length(); ++i) {
     str[i] = toupper(str[i]);
   }
 }
 
+// Update question index
 void update_index(bool& reset_index, int& i) {
   if (reset_index) {
     i = max(-1, i-10);
@@ -17,16 +19,19 @@ void update_index(bool& reset_index, int& i) {
   ++i;
 }
 
+// Update score values
 void update_vals(int& val1, int incr1, int& val2, int incr2) {
   val1 += incr1;
   val2 += incr2;
 }
 
+// Get user input
 void get_input(string& str, string msg) {
   cout << msg << ": ";
   getline(cin, str);
 }
 
+// Get list of questions
 void get_questions(result& questions, work& work, string category, string value) {
   if (category == "" && value == "") {
     questions = work.prepared("select_all_questions").exec();

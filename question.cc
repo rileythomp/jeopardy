@@ -40,14 +40,16 @@ void Question::ask() {
   std::cout << "Clue:     " << answer << std::endl;
 }
 
+// convert string to lower case
 void lower_case(std::string& str) {
   for (int i = 0; i < str.length(); ++i) {
     str[i] = tolower(str[i]);
   }
 }
 
+// determine if a word is a substring of another word
 bool is_valid_substring(std::string s1, std::string s2) {
-  return s1.find(s2) != std::string::npos && s2.length() > 2;
+  return s2.length() > 2 && s1.find(s2) != std::string::npos;
 }
 
 // Determines if a response is correct
@@ -73,6 +75,7 @@ bool Question::is_correct_response(std::string user_response) {
   return user_response == question;
 }
 
+// Pretty prints a question
 std::ostream& operator<< (std::ostream& out, const Question& q) {
   out << "Round: " << q.round << std::endl;
   out << "Value: " << q.value << std::endl;
