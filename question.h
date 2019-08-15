@@ -25,6 +25,9 @@ class Question {
       // Asks the user the question
       void ask();
 
+      // Prints response and round score
+      void end(int rc, int ra, int rvc, int rva);
+
       // Determines if a response is correct
       bool is_correct_response(std::string user_response);
 

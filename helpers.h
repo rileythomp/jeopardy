@@ -5,9 +5,22 @@
 #include "question.h"
 
 // Convert string to upper case
-void upper_case(std::string& str) {
+// void upper_case(std::string& str) {
+//   for (int i = 0; i < str.length(); ++i) {
+//     str[i] = toupper(str[i]);
+//   }
+// }
+
+// convert string to lower case
+// void lower_case(std::string& str) {
+//   for (int i = 0; i < str.length(); ++i) {
+//     str[i] = tolower(str[i]);
+//   }
+// }
+
+void normalize_string(std::string& str, int (*change_case)(int c)) {
   for (int i = 0; i < str.length(); ++i) {
-    str[i] = toupper(str[i]);
+    str[i] = (*change_case)(str[i]);
   }
 }
 
@@ -32,27 +45,28 @@ void loop_round(const int& len,
                 int& round_val_correct) {
 
   // Round loop
-  for (int i = len-1; i >= 0; --i) {
+  for (auto question : questions) {
     // Construct and ask question
-    Question q = Question(questions[i]);
+    Question q = Question(question);
     q.ask();
 
     // Get response
     std::string response;
     get_input(response, "Response");
+    normalize_string(response, tolower);
 
     // Handle quit responses
     if (response == "quitround") {
-      std::cout << "Full response: " << q.get_response() << std::endl << std::endl;
+      q.end(round_correct, round_asked, round_val_correct, round_val_asked);
       break;
     }
     else if (response == "quitgame") {
       quit_game = true;
-      std::cout << "Full response: " << q.get_response() << std::endl << std::endl;
+      q.end(round_correct, round_asked, round_val_correct, round_val_asked);
       break;
     }
     else if (response == "skipq") {
-      std::cout << "Full response: " << q.get_response() << std::endl << std::endl;
+      q.end(round_correct, round_asked, round_val_correct, round_val_asked);
       continue;
     }
 
@@ -68,9 +82,7 @@ void loop_round(const int& len,
     // Update round totals
     update_vals(round_asked, 1, round_val_asked, q.get_value());
 
-    std::cout << "Full response: " << q.get_response() << std::endl;
-    std::cout << "Round Score: " << round_correct << "/" << round_asked << ", Round Value: " << round_val_correct << "/" << round_val_asked << std::endl;
-    std::cout << std::endl;
+    q.end(round_correct, round_asked, round_val_correct, round_val_asked);
   }
 }
 
@@ -92,7 +104,7 @@ void loop_game(pqxx::connection& conn) {
     // Set category
     std::string category;
     get_input(category, "Category");
-    upper_case(category);
+    normalize_string(category, toupper);
 
     // Set value
     std::string value;

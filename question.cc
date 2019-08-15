@@ -40,6 +40,11 @@ void Question::ask() {
   std::cout << "Clue:     " << answer << std::endl;
 }
 
+void Question::end(int rc, int ra, int rvc, int rva) {
+  std::cout << "Full response: " << get_response() << std::endl;
+  std::cout << "Round Score: " << rc << "/" << ra << ", Round Value: " << rvc << "/" << rva << std::endl << std::endl;
+}
+
 // convert string to lower case
 void lower_case(std::string& str) {
   for (int i = 0; i < str.length(); ++i) {
