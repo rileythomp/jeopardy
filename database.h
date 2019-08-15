@@ -6,14 +6,18 @@
 
 // Prepare SQL queries
 void prepare_jeopardy_queries(pqxx::connection& conn) {
-  conn.prepare("select_all_questions", 
-               "SELECT * FROM QUESTIONS WHERE DAILY_DOUBLE = 'no' AND VALUE != 0 ORDER BY AIR_DATE DESC, CATEGORY ASC, VALUE ASC");
-  conn.prepare("select_by_value",
-               "SELECT * FROM QUESTIONS WHERE VALUE = $1 AND DAILY_DOUBLE = 'no' ORDER BY AIR_DATE DESC, CATEGORY ASC, VALUE ASC");
-  conn.prepare("select_by_category",
-               "SELECT * FROM QUESTIONS WHERE CATEGORY LIKE $1 AND DAILY_DOUBLE = 'no' AND VALUE != 0 ORDER BY AIR_DATE DESC, CATEGORY ASC, VALUE ASC");
-  conn.prepare("select_by_category_and_value",
-               "SELECT * FROM QUESTIONS WHERE CATEGORY LIKE $1 AND VALUE = $2 AND DAILY_DOUBLE = 'no' ORDER BY AIR_DATE DESC, CATEGORY ASC, VALUE ASC");
+  conn.prepare(
+    "select_all_questions", 
+    "SELECT * FROM QUESTIONS WHERE DAILY_DOUBLE = 'no' AND VALUE != 0 ORDER BY AIR_DATE DESC, CATEGORY ASC, VALUE ASC");
+  conn.prepare(
+    "select_by_value",
+    "SELECT * FROM QUESTIONS WHERE VALUE = $1 AND DAILY_DOUBLE = 'no' ORDER BY AIR_DATE DESC, CATEGORY ASC, VALUE ASC");
+  conn.prepare(
+    "select_by_category",
+    "SELECT * FROM QUESTIONS WHERE CATEGORY LIKE $1 AND DAILY_DOUBLE = 'no' AND VALUE != 0 ORDER BY AIR_DATE DESC, CATEGORY ASC, VALUE ASC");
+  conn.prepare(
+    "select_by_category_and_value",
+    "SELECT * FROM QUESTIONS WHERE CATEGORY LIKE $1 AND VALUE = $2 AND DAILY_DOUBLE = 'no' ORDER BY AIR_DATE DESC, CATEGORY ASC, VALUE ASC");
 }
 
 // Check if connection is open

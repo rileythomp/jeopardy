@@ -4,20 +4,6 @@
 #include "database.h"
 #include "question.h"
 
-// Convert string to upper case
-// void upper_case(std::string& str) {
-//   for (int i = 0; i < str.length(); ++i) {
-//     str[i] = toupper(str[i]);
-//   }
-// }
-
-// convert string to lower case
-// void lower_case(std::string& str) {
-//   for (int i = 0; i < str.length(); ++i) {
-//     str[i] = tolower(str[i]);
-//   }
-// }
-
 void normalize_string(std::string& str, int (*change_case)(int c)) {
   for (int i = 0; i < str.length(); ++i) {
     str[i] = (*change_case)(str[i]);
@@ -36,14 +22,14 @@ void get_input(std::string& str, std::string msg) {
   std::getline(std::cin, str);
 }
 
-void loop_round(const int& len,
-                pqxx::result& questions,
-                bool& quit_game,
-                int& round_asked,
-                int& round_correct,
-                int& round_val_asked,
-                int& round_val_correct) {
-
+void loop_round(
+  const int& len,
+  pqxx::result& questions,
+  bool& quit_game,
+  int& round_asked,
+  int& round_correct,
+  int& round_val_asked,
+  int& round_val_correct) {
   // Round loop
   for (auto question : questions) {
     // Construct and ask question
