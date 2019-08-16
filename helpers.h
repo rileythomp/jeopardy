@@ -119,6 +119,7 @@ void loop_game(pqxx::connection& conn) {
     update_vals(value_correct, round_val_correct, value_asked, round_val_asked);
 
     std::cout << "Total Score: " << total_correct << "/" << total_asked << ", Total Value: " << value_correct << "/" << value_asked << std::endl << std::endl;
+    std::cout << "Thanks for playing" << std::endl << std::endl;
   }
 }
 
