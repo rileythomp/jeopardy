@@ -605,32 +605,15 @@ void addtoletters(char letter) {
 
 void print_title() {
 	string word = "jeopardy practice";
-	// while(getline(cin, word)) {
-		letters = {};
-		for (char c : word) {
-			addtoletters(c);
-		}
+    letters = {};
+    for (char c : word) {
+        addtoletters(c);
+    }
 
-		for (int x = 0; x < letters[0].size(); ++x) {
-			for (auto letter : letters) {
-				cout << letter[x];
-			}
-			cout << endl;
-		}
-	// }
+    for (int x = 0; x < letters[0].size(); ++x) {
+        for (auto letter : letters) {
+            cout << letter[x];
+        }
+        cout << endl;
+    }
 }
-
-// int main() {
-//     cout << "Enter a word to be printed: ";
-//     string word;
-//     while (getline(cin, word)) {
-//         letters = {};
-//         for (char c : word) {addtoletters(c);}
-//         for (int x = 0; x < letters[0].size(); ++x) {
-//             for (auto letter : letters) {cout << letter[x];}
-//             cout << endl;
-//         }   
-//         cout << "Enter a word to be printed: ";
-//     }
-// }
-
