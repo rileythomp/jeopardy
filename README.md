@@ -10,11 +10,15 @@ Built with:
 
 To run locally:
 
-Must have libpqxx installed.
+Must configure a PostgreSQL database to write questions to and have libpqxx installed.
 
 ```$ git clone https://github.com/rileythomp/jeopardy.git```
 
 ```$ cd jeopardy```
+
+```$ g++ data_to_db.cc -o datatodb```
+
+```$ ./datatodb```
 
 ```$ g++ main.cc question.cc -lpqxx -lpq -o jeopardy```
 
