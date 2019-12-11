@@ -16,7 +16,7 @@ Must have libpqxx installed.
 
 ```$ cd jeopardy```
 
-```$ g++ main.cc question.cc -lpqxx -lpq```
+```$ g++ main.cc question.cc -lpqxx -lpq -o jeopardy```
 
 ```$ ./jeopardy```
 
