@@ -10,7 +10,8 @@ Built with:
 
 To run locally:
 
-Must configure a PostgreSQL database to write questions to and have libpqxx installed.
+Must configure a PostgreSQL database to write questions to and query questions from.
+Must have libpqxx installed.
 
 ```$ git clone https://github.com/rileythomp/jeopardy.git```
 

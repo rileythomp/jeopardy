@@ -93,8 +93,18 @@ void loop_game(pqxx::connection& conn) {
     normalize_string(category, toupper);
 
     // Set value
-    std::string value;
-    get_input(value, "Value");
+    bool invalid_value = true;
+    int value;
+    while (invalid_value) {
+      std::string value_input;
+      get_input(value_input, "Value");
+      try {
+        value = stoi(value_input);
+        invalid_value = false;
+      } catch (const std::exception &e) {
+        std::cout << "Sorry, that's not a valid value, pelase enter a number or just hit enter" << std::endl;
+      }
+    }
 
     // Get questions
     pqxx::work work(conn);

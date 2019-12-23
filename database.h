@@ -28,18 +28,18 @@ void check_open(pqxx::connection& conn) {
 }
 
 // Get list of questions
-void get_questions(pqxx::result& questions, pqxx::work& work, std::string category, std::string value) {
-  if (category == "" && value == "") {
+void get_questions(pqxx::result& questions, pqxx::work& work, std::string category, int value) {
+  if (category == "" && value == 0) {
     questions = work.prepared("select_all_questions").exec();
   }
   else if (category == "") {
-    questions = work.prepared("select_by_value")(stoi(value)).exec();
+    questions = work.prepared("select_by_value")(value).exec();
   }
-  else if (value == "") {
+  else if (value == 0) {
     questions = work.prepared("select_by_category")("%"+category+"%").exec();
   }
   else {
-    questions = work.prepared("select_by_category_and_value")("%"+category+"%")(stoi(value)).exec();
+    questions = work.prepared("select_by_category_and_value")("%"+category+"%")(value).exec();
   }
   work.commit();
 }
