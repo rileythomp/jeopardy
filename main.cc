@@ -6,7 +6,9 @@ using namespace pqxx;
 int main(int argc, char* argv[]) {
   try {
     // Initialize db
-    string pgpw = getenv("POSTGRES_PW");
+    // string pgpw = getenv("POSTGRES_PW");
+    string pgpw;
+    getline(cin, pgpw);
     connection conn("dbname = testdb user = postgres password = " + pgpw + " hostaddr = 127.0.0.1 port = 5432");
     check_open(conn);
     prepare_jeopardy_queries(conn);

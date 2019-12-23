@@ -6,7 +6,7 @@ using namespace pqxx;
 
 int main(int argc, char* argv[]) {
   // Upload file data to PostgreSQL database
-
+  return;
   connection C("dbname = testdb user = postgres password = password \
     hostaddr = 127.0.0.1 port = 5432");
 
