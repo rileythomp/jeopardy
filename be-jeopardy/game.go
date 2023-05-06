@@ -1,6 +1,8 @@
 package main
 
-import "github.com/gorilla/websocket"
+import (
+	"github.com/gorilla/websocket"
+)
 
 type (
 	Player struct {
@@ -27,4 +29,15 @@ func (g *Game) numPlayersReady() int {
 		}
 	}
 	return playersReady
+}
+
+func (g *Game) messagePlayers(resp any) error {
+	for _, player := range game.Players {
+		if player.conn != nil {
+			if err := player.conn.WriteJSON(resp); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

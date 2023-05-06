@@ -26,7 +26,7 @@ type (
 		Code    int    `json:"code"`
 		Token   string `json:"token,omitempty"`
 		Message string `json:"message"`
-		Game    Game   `json:"game,omitempty"`
+		Game    *Game  `json:"game,omitempty"`
 	}
 )
 
@@ -135,34 +135,25 @@ func playGame(c *gin.Context) {
 	}
 	player.conn = conn
 
-	playersReady := game.numPlayersReady()
-	if playersReady < 3 {
-		for _, player := range game.Players {
-			if player.conn != nil {
-				if err := player.conn.WriteJSON(Response{
-					Code:    200,
-					Message: fmt.Sprintf("There are %d players ready, waiting for %d more", playersReady, 3-playersReady),
-					Game:    *game,
-				}); err != nil {
-					log.Println("Failed to write message to WebSocket:", err)
-					conn.Close()
-					break
-				}
-			}
-		}
-		return
+	resp := Response{
+		Code:    200,
+		Message: "We are ready to play",
+		Game:    game,
 	}
 
-	for _, player := range game.Players {
-		if err := player.conn.WriteJSON(Response{
+	playersReady := game.numPlayersReady()
+	if playersReady < 3 {
+		resp = Response{
 			Code:    200,
-			Message: "we are ready to play",
-			Game:    *game,
-		}); err != nil {
-			log.Println("Failed to write message to WebSocket:", err)
-			conn.Close()
-			return
+			Message: fmt.Sprintf("There are %d players ready, waiting for %d more", playersReady, 3-playersReady),
+			Game:    game,
 		}
+	}
+
+	if err := game.messagePlayers(resp); err != nil {
+		log.Println("Error sending message to players:", err)
+		conn.Close()
+		return
 	}
 }
 
