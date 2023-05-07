@@ -4,6 +4,15 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const (
+	PreGame = iota
+	RecvPick
+	RecvBuzz
+	RecvAns
+	RecvFinal
+	PostGame
+)
+
 type (
 	Player struct {
 		Id    string `json:"id"`

@@ -18,13 +18,12 @@ export class JoinComponent implements OnInit {
 		private router: Router,
 		private websocketService: WebsocketService,
 		private jwtService: JwtService,
-	) {
+	) { }
+
+	ngOnInit(): void {
 		this.jwtService.jwt$.subscribe(jwt => {
 			this.jwt = jwt;
 		});
-	 }
-
-	ngOnInit(): void {
 		this.websocketService.connect('ws://localhost:8080/jeopardy/join')
 	}
 

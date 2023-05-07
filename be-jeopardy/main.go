@@ -155,6 +155,35 @@ func playGame(c *gin.Context) {
 		conn.Close()
 		return
 	}
+
+	for {
+		// read client message
+		_, msg, err := conn.ReadMessage()
+		if err != nil {
+			log.Println("Failed to read message from WebSocket:", err)
+			conn.Close()
+			return
+		}
+		type Tmp struct {
+			Field string `json:"hello"`
+			Echo  string `json:"echo"`
+		}
+		var t Tmp
+		if err := json.Unmarshal(msg, &t); err != nil {
+			log.Println("Failed to unmarshal JSON:", err)
+			conn.Close()
+			return
+		}
+		t.Echo = t.Field + "addition"
+
+		err = conn.WriteJSON(t)
+		if err != nil {
+			log.Println("Failed to write message to WebSocket:", err)
+			conn.Close()
+			return
+		}
+
+	}
 }
 
 func main() {
