@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { GameStateService } from '../game-state.service';
 import { WebsocketService } from '../websocket.service';
+import { PlayerService } from '../player.service';
 import { JwtService } from '../jwt.service';
+import { Player, Question, GameState } from '../model/model';
 
 @Component({
 	selector: 'app-game',
@@ -9,22 +11,95 @@ import { JwtService } from '../jwt.service';
 	styleUrls: ['./game.component.less'],
 })
 export class GameComponent implements OnInit {
-	playerNames: string[];
+	players: Player[];
+	titles: string[];
+	questionRows: Question[][];
+	questionAnswer: string;
 
 	constructor(
-		private gameStateService: GameStateService,
 		private websocketService: WebsocketService,
 		private jwtService: JwtService,
+		protected gameState: GameStateService,
+		protected player: PlayerService,
 	) { }
 
 	ngOnInit(): void {
-		this.playerNames = this.gameStateService.playerNames();
-		// this.websocketService.send({"hello": "world"})
-		// this.websocketService.onmessage((event: { data: string; }) => {
-		// 	console.log("received game message")
-		// 	console.log(JSON.parse(event.data))
-		// })
+		this.players = this.gameState.getPlayers();
+		this.titles = this.gameState.getTitles();
+		this.questionRows = this.gameState.getQuestionRows();
 
+		this.websocketService.onmessage((event: { data: string; }) => {
+			let resp = JSON.parse(event.data);
+			if (resp.game.state == GameState.RecvBuzz) {
+				console.log('show the question, accept a buzz');
+				console.log(resp);
+
+				this.gameState.updateGameState(resp.game);
+				this.player.updatePlayer(resp.curPlayer);
+
+				this.players = this.gameState.getPlayers();
+				this.titles = this.gameState.getTitles();
+				this.questionRows = this.gameState.getQuestionRows();
+			}
+			else if (resp.game.state == GameState.RecvAns) {
+				console.log('alert of buzz, accept an answer');
+				console.log(resp);
+
+				this.gameState.updateGameState(resp.game);
+				this.player.updatePlayer(resp.curPlayer);
+			}
+			else if (resp.game.state == GameState.RecvPick) {
+				console.log('show the board, accept a pick');
+				console.log(resp);
+
+				this.gameState.updateGameState(resp.game);
+				this.player.updatePlayer(resp.curPlayer);
+
+				this.players = this.gameState.getPlayers();
+				this.titles = this.gameState.getTitles();
+				this.questionRows = this.gameState.getQuestionRows();
+			}
+			else {
+				alert('Unable to update game');
+			}
+		})
+	}
+
+	highlightQuestion(event: any, color: string) {
+		if (event.target.style.backgroundColor == 'lightpink') {
+			return
+		}
+		if (this.player.canPick()) {
+			event.target.style.backgroundColor = color;
+		}
+	}
+
+	handleQuestionPick(topicIdx: number, valIdx: number) {
+		if (this.player.canPick() && this.gameState.questionCanBePicked(topicIdx, valIdx)) {
+			this.websocketService.send({
+				"token": this.jwtService.getJwt(),
+				"topicIdx": topicIdx,
+				"valIdx": valIdx,
+			})
+		}
+	}
+
+	handleBuzz() {
+		if (this.player.canBuzz()) {
+			this.websocketService.send({
+				"token": this.jwtService.getJwt(),
+			})
+		}
+	}
+
+	handleAnswer() {
+		if (this.player.canAnswer()) {
+			this.websocketService.send({
+				"token": this.jwtService.getJwt(),
+				"answer": this.questionAnswer,
+			})
+		}
+		this.questionAnswer = '';
 	}
 
 }

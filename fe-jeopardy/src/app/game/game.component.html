@@ -1,4 +1,43 @@
-<p>game works!</p>
 <ol>
-    <li *ngFor="let name of playerNames">{{ name }}</li>
+    <li *ngFor="let player of players">{{ player.name }}: {{ player.score }}</li>
 </ol>
+
+<p> You are playing as {{ player.getName() }}</p>
+
+<div *ngIf="gameState.recvingPick()">
+    <p>It is {{ gameState.getPickingPlayer() }}'s turn to pick a question</p>
+    <table>
+        <tr>
+            <td *ngFor="let title of titles">
+                {{ title }}
+            </td>
+        </tr>
+        <tr *ngFor="let row of questionRows; let valIdx = index">
+            <td
+            *ngFor="let q of row; let topicIdx = index"
+            (mouseover)="highlightQuestion($event, 'lightgreen')"
+            (mouseout)="highlightQuestion($event, 'white')"
+            (click)="handleQuestionPick(topicIdx, valIdx)"
+            [ngStyle]="{'background-color': q.canChoose ? 'white' : 'lightpink'}">
+                {{ q.value }}
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div *ngIf="gameState.recvingBuzz() || gameState.recvingAns()">
+    Question: {{ gameState.curQuestion() }}
+    <br>
+    Value: {{ gameState.curValue() }}
+    <br>
+    <button *ngIf="player.canBuzz()" (click)="handleBuzz()">Buzz</button>
+</div>
+
+<div *ngIf="gameState.recvingAns() && player.canAnswer()">
+    <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
+    <button (click)="handleAnswer()">Answer</button>
+</div>
+
+<div *ngIf="gameState.recvingAns() && !player.canAnswer()">
+    {{ gameState.getAnsweringPlayer() }} is answering the question
+</div>

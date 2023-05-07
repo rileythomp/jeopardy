@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { JwtService } from '../jwt.service';
 import { WebsocketService } from '../websocket.service';
+import { GameState as GameState } from '../model/model';
 
 @Component({
 	selector: 'app-join',
@@ -34,9 +35,9 @@ export class JoinComponent implements OnInit {
 		this.websocketService.send(joinReq);
 
 		this.websocketService.onmessage((event: { data: string; }) => {
-			let response = JSON.parse(event.data);
-			this.jwtService.setJwt(response.token);
-			if (response.code == 200) {
+			let resp = JSON.parse(event.data);
+			this.jwtService.setJwt(resp.token);
+			if (resp.game.state == GameState.PreGame) {
 				this.router.navigate(['/lobby']);
 			} else {
 				alert('Unable to join game');

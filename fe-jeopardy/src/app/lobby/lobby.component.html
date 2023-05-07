@@ -2,5 +2,6 @@
     {{lobbyMessage}}
 </p>
 <ol>
-    <li *ngFor="let name of playerNames">{{ name }}</li>
+    <li *ngFor="let player of players">{{ player.name }}</li>
 </ol>
+<p> You are playing as {{ playerName() }} </p>
