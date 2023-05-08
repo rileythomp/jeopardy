@@ -25,19 +25,51 @@
     </table>
 </div>
 
-<div *ngIf="gameState.recvingBuzz() || gameState.recvingAns()">
-    Question: {{ gameState.curQuestion() }}
-    <br>
-    Value: {{ gameState.curValue() }}
-    <br>
-    <button *ngIf="player.canBuzz()" (click)="handleBuzz()">Buzz</button>
+<div *ngIf="!gameState.finalRound()">
+    <div *ngIf="gameState.recvingBuzz() || gameState.recvingAns()">
+        Question: {{ gameState.curQuestion() }}
+        <br>
+        Value: {{ gameState.curValue() }}
+        <br>
+        <button *ngIf="player.canBuzz()" (click)="handleBuzz()">Buzz</button>
+    </div>
+    
+    <div *ngIf="gameState.recvingAns() && player.canAnswer()">
+        <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
+        <button (click)="handleAnswer()">Answer</button>
+    </div>
+    
+    <div *ngIf="gameState.recvingAns() && !player.canAnswer()">
+        {{ gameState.getAnsweringPlayer() }} is answering the question
+    </div>
+    
+    <div *ngIf="gameState.recvingWager() && player.canWager()">
+        <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
+        <button (click)="handleWager()">Wager</button>
+    </div>
+    
+    <div *ngIf="gameState.recvingWager() && !player.canWager()">
+        {{ gameState.getWageringPlayer() }} is choosing a wager
+    </div>    
 </div>
 
-<div *ngIf="gameState.recvingAns() && player.canAnswer()">
-    <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
-    <button (click)="handleAnswer()">Answer</button>
+<div *ngIf="gameState.finalRound() && gameState.recvingWager()">
+    Final Jeopardy
+    <div *ngIf="player.canWager()">
+        <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
+        <button (click)="handleWager()">Wager</button>
+    </div>
 </div>
 
-<div *ngIf="gameState.recvingAns() && !player.canAnswer()">
-    {{ gameState.getAnsweringPlayer() }} is answering the question
+<div *ngIf="gameState.finalRound() && gameState.recvingAns()">
+    Final Jeopardy
+    <p>Question: {{ gameState.curQuestion() }}</p>
+    <div *ngIf="player.canAnswer()">
+        <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
+        <button (click)="handleAnswer()">Answer</button>
+    </div>
+</div>
+
+<div *ngIf="gameState.gameOver()">
+    The winner is {{ gameState.getWinner() }}
 </div>

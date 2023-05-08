@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
-import { Game, Player, Question, GameState } from './model/model';
+import { Game, Player, Question, GameState, RoundState } from './model/model';
 
 @Injectable({
 	providedIn: 'root'
@@ -39,21 +39,30 @@ export class GameStateService {
 	getQuestionRows(): Question[][] {
 		let firstRow = [];
 		let secondRow = [];
-		let thirdRow = [];
-		let fourthRow = [];
-		let fifthRow = [];
-		for (let topic of this.game.firstRound) {
+		// let thirdRow = [];
+		// let fourthRow = [];
+		// let fifthRow = [];
+		let round = this.game.firstRound;
+		if (this.game.round == RoundState.SecondRound) {
+			round = this.game.secondRound;
+		}
+		for (let topic of round) {
 			firstRow.push(topic.questions[0]);
 			secondRow.push(topic.questions[1]);
-			thirdRow.push(topic.questions[2]);
-			fourthRow.push(topic.questions[3]);
-			fifthRow.push(topic.questions[4]);
+			// thirdRow.push(topic.questions[2]);
+			// fourthRow.push(topic.questions[3]);
+			// fifthRow.push(topic.questions[4]);
 		}
-		return [firstRow, secondRow, thirdRow, fourthRow, fifthRow];
+		return [firstRow, secondRow];
+		// return [firstRow, secondRow, thirdRow, fourthRow, fifthRow];
 	}
 
 	getTitles(): string[] {
-		return this.game.firstRound.map((topic: {title: string}) => topic.title);
+		let round = this.game.firstRound;
+		if (this.game.round == RoundState.SecondRound) {
+			round = this.game.secondRound;
+		}
+		return round.map((topic: {title: string}) => topic.title);
 	}
 
 	getPickingPlayer(): string {
@@ -62,6 +71,10 @@ export class GameStateService {
 
 	getAnsweringPlayer(): string {
 		return this.game.players.find((player: Player) => player.canAnswer)?.name ?? '';
+	}
+
+	getWageringPlayer(): string {
+		return this.game.players.find((player: Player) => player.canWager)?.name ?? '';
 	}
 
 	recvingPick(): boolean {
@@ -76,6 +89,30 @@ export class GameStateService {
 		return this.game.state == GameState.RecvAns;
 	}
 
+	recvingWager(): boolean {
+		return this.game.state == GameState.RecvWager;
+	}
+
+	finalRound(): boolean {
+		return this.game.round == RoundState.FinalRound;
+	}
+
+	getWinner(): string {
+		let max = 0;
+		let winner = '';
+		for (let player of this.game.players) {
+			if (player.score > max) {
+				max = player.score;
+				winner = player.name;
+			}
+		}
+		return winner;
+	}
+
+	gameOver(): boolean {
+		return this.game.state == GameState.PostGame;
+	}
+
 	curQuestion(): string {
 		return this.game.curQuestion.question;
 	}
@@ -85,6 +122,10 @@ export class GameStateService {
 	}
 
 	questionCanBePicked(topicIdx: number, valIdx: number): boolean {
-		return this.game.firstRound[topicIdx].questions[valIdx].canChoose;
+		let round = this.game.firstRound;
+		if (this.game.round == RoundState.SecondRound) {
+			round = this.game.secondRound;
+		}
+		return round[topicIdx].questions[valIdx].canChoose;
 	}
 }

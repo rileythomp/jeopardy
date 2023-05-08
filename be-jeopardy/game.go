@@ -14,22 +14,51 @@ const (
 	PreGame GameState = iota
 	RecvPick
 	RecvBuzz
+	RecvWager
 	RecvAns
-	RecvFinal
 	PostGame
 	Error
 )
 
+type RoundState int
+
+const (
+	FirstRound RoundState = iota
+	SecondRound
+	FinalRound
+)
+
 type (
+	Game struct {
+		State        GameState  `json:"state"`
+		Round        RoundState `json:"round"`
+		Players      []*Player  `json:"players"`
+		FirstRound   [2]Topic   `json:"firstRound"`
+		SecondRound  [2]Topic   `json:"secondRound"`
+		FinalRound   Question   `json:"finalRound"`
+		CurQuestion  Question   `json:"curQuestion"`
+		GuessedWrong []string   `json:"guessedWrong"`
+		LastPicker   string     `json:"lastPicker"`
+		FinalWagers  int        `json:"finalWagers"`
+		FinalAnswers int        `json:"finalAnswers"`
+	}
+
 	Player struct {
-		Id        string `json:"id"`
-		Name      string `json:"name"`
-		Score     int    `json:"score"`
-		CanPick   bool   `json:"canPick"`
-		CanBuzz   bool   `json:"canBuzz"`
-		CanAnswer bool   `json:"canAnswer"`
+		Id         string `json:"id"`
+		Name       string `json:"name"`
+		Score      int    `json:"score"`
+		CanPick    bool   `json:"canPick"`
+		CanBuzz    bool   `json:"canBuzz"`
+		CanAnswer  bool   `json:"canAnswer"`
+		CanWager   bool   `json:"canWager"`
+		FinalWager int    `json:"finalWager"`
 
 		conn *websocket.Conn
+	}
+
+	Topic struct {
+		Title     string      `json:"title"`
+		Questions [2]Question `json:"questions"`
 	}
 
 	Question struct {
@@ -39,22 +68,6 @@ type (
 		CanChoose   bool   `json:"canChoose"`
 		DailyDouble bool   `json:"dailyDouble"`
 	}
-
-	Topic struct {
-		Title     string      `json:"title"`
-		Questions [5]Question `json:"questions"`
-	}
-
-	Game struct {
-		State        GameState `json:"state"`
-		Players      []*Player `json:"players"`
-		FirstRound   [6]Topic  `json:"firstRound"`
-		SecondRound  [6]Topic  `json:"secondRound"`
-		FinalRound   Question  `json:"finalRound"`
-		CurQuestion  Question  `json:"curQuestion"`
-		GuessedWrong []string  `json:"guessedWrong"`
-		LastPicker   string    `json:"lastPicker"`
-	}
 )
 
 func NewGame() *Game {
@@ -62,6 +75,112 @@ func NewGame() *Game {
 		State:   PreGame,
 		Players: []*Player{},
 	}
+}
+
+func (g *Game) roundOver() bool {
+	round := g.FirstRound
+	if g.Round == SecondRound {
+		round = g.SecondRound
+	}
+	for _, topic := range round {
+		for _, question := range topic.Questions {
+			if question.CanChoose {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (g *Game) lowestPlayer() string {
+	lowest := g.Players[0]
+	for _, player := range g.Players {
+		if player.Score < lowest.Score {
+			lowest = player
+		}
+	}
+	return lowest.Id
+}
+
+func (g *Game) setState(state GameState, id string) {
+	if state == RecvPick {
+		if g.roundOver() {
+			g.Round++
+			if g.Round == FinalRound {
+				// if its the last round, go to recv final
+				for _, player := range g.Players {
+					player.CanPick = false
+					player.CanBuzz = false
+					player.CanAnswer = false
+					player.CanWager = player.Score > 0
+				}
+				g.CurQuestion = g.FinalRound
+				g.State = RecvWager
+				return
+			} else if g.Round == SecondRound {
+				// if its the second round, the picker is the player with the lowest score
+				id = g.lowestPlayer()
+			}
+		}
+		for _, player := range g.Players {
+			player.CanPick = player.Id == id
+			player.CanBuzz = false
+			player.CanAnswer = false
+			player.CanWager = false
+		}
+	} else if state == RecvBuzz {
+		for _, player := range g.Players {
+			player.CanPick = false
+			player.CanBuzz = player.canBuzz(g.GuessedWrong)
+			player.CanAnswer = false
+			player.CanWager = false
+		}
+	} else if state == RecvAns {
+		for _, player := range g.Players {
+			player.CanPick = false
+			player.CanBuzz = false
+			player.CanAnswer = player.Id == id
+			if g.Round == FinalRound {
+				player.CanAnswer = player.CanWager
+			}
+			player.CanWager = false
+		}
+	} else if state == RecvWager {
+		for _, player := range g.Players {
+			player.CanPick = false
+			player.CanBuzz = false
+			player.CanAnswer = false
+			player.CanWager = player.Id == id
+		}
+	} else if state == PostGame {
+		for _, player := range g.Players {
+			player.CanPick = false
+			player.CanBuzz = false
+			player.CanAnswer = false
+			player.CanWager = false
+		}
+	} else {
+		return
+	}
+	g.State = state
+}
+
+func (g *Game) messageAllPlayers(resp Response) error {
+	for _, player := range game.Players {
+		if player.conn != nil {
+			resp.CurPlayer = player
+			if err := player.conn.WriteJSON(resp); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (g *Game) addPlayer(name string) string {
+	player := NewPlayer(name)
+	g.Players = append(g.Players, player)
+	return player.Id
 }
 
 func (g *Game) numPlayersReady() int {
@@ -78,11 +197,20 @@ func (g *Game) readyToPlay() bool {
 	return g.numPlayersReady() == 3
 }
 
+func (g *Game) getPlayerById(id string) *Player {
+	for _, player := range g.Players {
+		if player.Id == id {
+			return player
+		}
+	}
+	return nil
+}
+
 func (g *Game) setQuestions() error {
-	g.FirstRound = [6]Topic{
+	g.FirstRound = [2]Topic{
 		{
 			Title: "World Capitals",
-			Questions: [5]Question{
+			Questions: [2]Question{
 				{
 					Question:  "This city is the capital of the United States",
 					Answer:    "Washington, D.C.",
@@ -95,29 +223,30 @@ func (g *Game) setQuestions() error {
 					Value:     400,
 					CanChoose: true,
 				},
-				{
-					Question:  "This city is the capital of France",
-					Answer:    "Paris",
-					Value:     600,
-					CanChoose: true,
-				},
-				{
-					Question:  "This city is the capital of Germany",
-					Answer:    "Berlin",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:  "This city is the capital of Russia",
-					Answer:    "Moscow",
-					Value:     1000,
-					CanChoose: true,
-				},
+				// {
+				// 	Question:  "This city is the capital of France",
+				// 	Answer:    "Paris",
+				// 	Value:     600,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:    "This city is the capital of Germany",
+				// 	Answer:      "Berlin",
+				// 	Value:       800,
+				// 	CanChoose:   true,
+				// 	DailyDouble: true,
+				// },
+				// {
+				// 	Question:  "This city is the capital of Russia",
+				// 	Answer:    "Moscow",
+				// 	Value:     1000,
+				// 	CanChoose: true,
+				// },
 			},
 		},
 		{
 			Title: "State Capitals",
-			Questions: [5]Question{
+			Questions: [2]Question{
 				{
 					Question:  "This city is the capital of California",
 					Answer:    "Sacramento",
@@ -130,172 +259,172 @@ func (g *Game) setQuestions() error {
 					Value:     400,
 					CanChoose: true,
 				},
-				{
-					Question:  "This city is the capital of New York",
-					Answer:    "Albany",
-					Value:     600,
-					CanChoose: true,
-				},
-				{
-					Question:  "This city is the capital of Florida",
-					Answer:    "Tallahassee",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:  "This city is the capital of Washington",
-					Answer:    "Olympia",
-					Value:     1000,
-					CanChoose: true,
-				},
+				// {
+				// 	Question:  "This city is the capital of New York",
+				// 	Answer:    "Albany",
+				// 	Value:     600,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This city is the capital of Florida",
+				// 	Answer:    "Tallahassee",
+				// 	Value:     800,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This city is the capital of Washington",
+				// 	Answer:    "Olympia",
+				// 	Value:     1000,
+				// 	CanChoose: true,
+				// },
 			},
 		},
-		{
-			Title: "Provincial Capitals",
-			Questions: [5]Question{
-				{
-					Question:  "This city is the capital of British Columbia",
-					Answer:    "Victoria",
-					Value:     200,
-					CanChoose: true,
-				},
-				{
-					Question:  "This city is the capital of Alberta",
-					Answer:    "Edmonton",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:  "This city is the capital of Saskatchewan",
-					Answer:    "Regina",
-					Value:     600,
-					CanChoose: true,
-				},
-				{
-					Question:  "This city is the capital of Manitoba",
-					Answer:    "Winnipeg",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:  "This city is the capital of Ontario",
-					Answer:    "Toronto",
-					Value:     1000,
-					CanChoose: true,
-				},
-			},
-		},
-		{
-			Title: "Sports Trivia",
-			Questions: [5]Question{
-				{
-					Question:  "This team won the 2019 NBA Finals",
-					Answer:    "Toronto Raptors",
-					Value:     200,
-					CanChoose: true,
-				},
-				{
-					Question:  "This team won the 2019 Stanley Cup",
-					Answer:    "St. Louis Blues",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:  "This team won the 2019 World Series",
-					Answer:    "Washington Nationals",
-					Value:     600,
-					CanChoose: true,
-				},
-				{
-					Question:  "This team won the 2019 Super Bowl",
-					Answer:    "New England Patriots",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:  "This team won the 2019 MLS Cup",
-					Answer:    "Seattle Sounders",
-					Value:     1000,
-					CanChoose: true,
-				},
-			},
-		},
-		{
-			Title: "Music Trivia",
-			Questions: [5]Question{
-				{
-					Question:  "This artist won the 2019 Grammy for Album of the Year",
-					Answer:    "Kacey Musgraves",
-					Value:     200,
-					CanChoose: true,
-				},
-				{
-					Question:  "This artist won the 2019 Grammy for Record of the Year",
-					Answer:    "Childish Gambino",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:  "This artist won the 2019 Grammy for Song of the Year",
-					Answer:    "Donald Glover",
-					Value:     600,
-					CanChoose: true,
-				},
-				{
-					Question:  "This artist won the 2019 Grammy for Best New Artist",
-					Answer:    "Dua Lipa",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:  "This artist won the 2019 Grammy for Best Rap Album",
-					Answer:    "Igor",
-					Value:     1000,
-					CanChoose: true,
-				},
-			},
-		},
-		{
-			Title: "Geography Trivia",
-			Questions: [5]Question{
-				{
-					Question:  "This is the largest country in the world",
-					Answer:    "Russia",
-					Value:     200,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the largest country in Africa",
-					Answer:    "Algeria",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the largest country in South America",
-					Answer:    "Brazil",
-					Value:     600,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the largest country in Asia",
-					Answer:    "China",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the largest country in Europe, excluding Russia",
-					Answer:    "Ukraine",
-					Value:     1000,
-					CanChoose: true,
-				},
-			},
-		},
+		// {
+		// 	Title: "Provincial Capitals",
+		// 	Questions: [5]Question{
+		// 		{
+		// 			Question:  "This city is the capital of British Columbia",
+		// 			Answer:    "Victoria",
+		// 			Value:     200,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This city is the capital of Alberta",
+		// 			Answer:    "Edmonton",
+		// 			Value:     400,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This city is the capital of Saskatchewan",
+		// 			Answer:    "Regina",
+		// 			Value:     600,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This city is the capital of Manitoba",
+		// 			Answer:    "Winnipeg",
+		// 			Value:     800,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This city is the capital of Ontario",
+		// 			Answer:    "Toronto",
+		// 			Value:     1000,
+		// 			CanChoose: true,
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	Title: "Sports Trivia",
+		// 	Questions: [5]Question{
+		// 		{
+		// 			Question:  "This team won the 2019 NBA Finals",
+		// 			Answer:    "Toronto Raptors",
+		// 			Value:     200,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This team won the 2019 Stanley Cup",
+		// 			Answer:    "St. Louis Blues",
+		// 			Value:     400,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This team won the 2019 World Series",
+		// 			Answer:    "Washington Nationals",
+		// 			Value:     600,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This team won the 2019 Super Bowl",
+		// 			Answer:    "New England Patriots",
+		// 			Value:     800,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This team won the 2019 MLS Cup",
+		// 			Answer:    "Seattle Sounders",
+		// 			Value:     1000,
+		// 			CanChoose: true,
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	Title: "Music Trivia",
+		// 	Questions: [5]Question{
+		// 		{
+		// 			Question:  "This artist won the 2019 Grammy for Album of the Year",
+		// 			Answer:    "Kacey Musgraves",
+		// 			Value:     200,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This artist won the 2019 Grammy for Record of the Year",
+		// 			Answer:    "Childish Gambino",
+		// 			Value:     400,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This artist won the 2019 Grammy for Song of the Year",
+		// 			Answer:    "Donald Glover",
+		// 			Value:     600,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This artist won the 2019 Grammy for Best New Artist",
+		// 			Answer:    "Dua Lipa",
+		// 			Value:     800,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This artist won the 2019 Grammy for Best Rap Album",
+		// 			Answer:    "Igor",
+		// 			Value:     1000,
+		// 			CanChoose: true,
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	Title: "Geography Trivia",
+		// 	Questions: [5]Question{
+		// 		{
+		// 			Question:  "This is the largest country in the world",
+		// 			Answer:    "Russia",
+		// 			Value:     200,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the largest country in Africa",
+		// 			Answer:    "Algeria",
+		// 			Value:     400,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the largest country in South America",
+		// 			Answer:    "Brazil",
+		// 			Value:     600,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the largest country in Asia",
+		// 			Answer:    "China",
+		// 			Value:     800,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the largest country in Europe, excluding Russia",
+		// 			Answer:    "Ukraine",
+		// 			Value:     1000,
+		// 			CanChoose: true,
+		// 		},
+		// 	},
+		// },
 	}
 
-	g.SecondRound = [6]Topic{
+	g.SecondRound = [2]Topic{
 		{
 			Title: "Movie Trivia",
-			Questions: [5]Question{
+			Questions: [2]Question{
 				{
 					Question:  "This movie won the 2019 Oscar for Best Picture",
 					Answer:    "Green Book",
@@ -308,29 +437,29 @@ func (g *Game) setQuestions() error {
 					Value:     800,
 					CanChoose: true,
 				},
-				{
-					Question:  "This movie won the 2019 Oscar for Best Actor",
-					Answer:    "Rami Malek",
-					Value:     1200,
-					CanChoose: true,
-				},
-				{
-					Question:  "This movie won the 2019 Oscar for Best Actress",
-					Answer:    "Olivia Colman",
-					Value:     1600,
-					CanChoose: true,
-				},
-				{
-					Question:  "This movie won the 2019 Oscar for Best Director",
-					Answer:    "Alfonso Cuarón",
-					Value:     2000,
-					CanChoose: true,
-				},
+				// {
+				// 	Question:  "This movie won the 2019 Oscar for Best Actor",
+				// 	Answer:    "Rami Malek",
+				// 	Value:     1200,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This movie won the 2019 Oscar for Best Actress",
+				// 	Answer:    "Olivia Colman",
+				// 	Value:     1600,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This movie won the 2019 Oscar for Best Director",
+				// 	Answer:    "Alfonso Cuarón",
+				// 	Value:     2000,
+				// 	CanChoose: true,
+				// },
 			},
 		},
 		{
 			Title: "TV Trivia",
-			Questions: [5]Question{
+			Questions: [2]Question{
 				{
 					Question:  "This show won the 2019 Emmy for Best Drama Series",
 					Answer:    "Game of Thrones",
@@ -343,172 +472,232 @@ func (g *Game) setQuestions() error {
 					Value:     800,
 					CanChoose: true,
 				},
-				{
-					Question:  "This actor won the 2019 Emmy for Best Actor in a Drama Series",
-					Answer:    "Billy Porter",
-					Value:     1200,
-					CanChoose: true,
-				},
-				{
-					Question:  "This actress won the 2019 Emmy for Best Actress in a Drama Series",
-					Answer:    "Jodie Comer",
-					Value:     1600,
-					CanChoose: true,
-				},
-				{
-					Question:  "This actress won the 2019 Emmy for Best Actress in a Comedy Series",
-					Answer:    "Phoebe Waller-Bridge",
-					Value:     2000,
-					CanChoose: true,
-				},
+				// {
+				// 	Question:  "This actor won the 2019 Emmy for Best Actor in a Drama Series",
+				// 	Answer:    "Billy Porter",
+				// 	Value:     1200,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This actress won the 2019 Emmy for Best Actress in a Drama Series",
+				// 	Answer:    "Jodie Comer",
+				// 	Value:     1600,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This actress won the 2019 Emmy for Best Actress in a Comedy Series",
+				// 	Answer:    "Phoebe Waller-Bridge",
+				// 	Value:     2000,
+				// 	CanChoose: true,
+				// },
 			},
 		},
-		{
-			Title: "Science Trivia",
-			Questions: [5]Question{
-				{
-					Question:  "This is the largest planet in the solar system",
-					Answer:    "Jupiter",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the smallest planet in the solar system",
-					Answer:    "Mercury",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the largest organ in the human body",
-					Answer:    "The skin",
-					Value:     1200,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the largest bone in the human body",
-					Answer:    "The femur",
-					Value:     1600,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the world's largest animal",
-					Answer:    "The Antarctic blue whale",
-					Value:     2000,
-					CanChoose: true,
-				},
-			},
-		},
-		{
-			Title: "History Trivia",
-			Questions: [5]Question{
-				{
-					Question:  "This is the year that WWII ended",
-					Answer:    "1945",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the year that the Berlin Wall fell",
-					Answer:    "1989",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the year that the Titanic sank",
-					Answer:    "1912",
-					Value:     1200,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the year that the Magna Carta was signed",
-					Answer:    "1215",
-					Value:     1600,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the year that the Declaration of Independence was signed",
-					Answer:    "1776",
-					Value:     2000,
-					CanChoose: true,
-				},
-			},
-		},
-		{
-			Title: "Math Trivia",
-			Questions: [5]Question{
-				{
-					Question:  "This is the longest side of a right triangle",
-					Answer:    "Hypotenuse",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the number of degrees in a circle",
-					Answer:    "360",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the number of degrees in a right angle",
-					Answer:    "90",
-					Value:     1200,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the number of degrees in a straight angle",
-					Answer:    "180",
-					Value:     1600,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the number of degrees in a triangle",
-					Answer:    "180",
-					Value:     2000,
-					CanChoose: true,
-				},
-			},
-		},
-		{
-			Title: "Business Trivia",
-			Questions: [5]Question{
-				{
-					Question:  "This 3-letter memorandum of debt is a strong but not legally binding promise to pay",
-					Answer:    "I.O.U.",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:  "In 2007 Forbes reported that this TV personality was \"America's sole black female billionaire\"",
-					Answer:    "Oprah Winfrey",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:  "26 billion merger in 2016, this business website might keep nagging Microsoft to update its resume",
-					Answer:    "LinkedIn",
-					Value:     1200,
-					CanChoose: true,
-				},
-				{
-					Question:  "A passage from the book of Hosea was the inspiration Israel's first Minister of Transportation had for naming this airline	El",
-					Answer:    "El Al",
-					Value:     1600,
-					CanChoose: true,
-				},
-				{
-					Question:  "Corn is traded at this sort of exchange as well as, of course, frozen concentrated orange juice",
-					Answer:    "Commodity",
-					Value:     2000,
-					CanChoose: true,
-				},
-			},
-		},
+		// {
+		// 	Title: "Science Trivia",
+		// 	Questions: [5]Question{
+		// 		{
+		// 			Question:  "This is the largest planet in the solar system",
+		// 			Answer:    "Jupiter",
+		// 			Value:     400,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the smallest planet in the solar system",
+		// 			Answer:    "Mercury",
+		// 			Value:     800,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the largest organ in the human body",
+		// 			Answer:    "The skin",
+		// 			Value:     1200,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the largest bone in the human body",
+		// 			Answer:    "The femur",
+		// 			Value:     1600,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the world's largest animal",
+		// 			Answer:    "The Antarctic blue whale",
+		// 			Value:     2000,
+		// 			CanChoose: true,
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	Title: "History Trivia",
+		// 	Questions: [5]Question{
+		// 		{
+		// 			Question:  "This is the year that WWII ended",
+		// 			Answer:    "1945",
+		// 			Value:     400,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the year that the Berlin Wall fell",
+		// 			Answer:    "1989",
+		// 			Value:     800,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the year that the Titanic sank",
+		// 			Answer:    "1912",
+		// 			Value:     1200,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the year that the Magna Carta was signed",
+		// 			Answer:    "1215",
+		// 			Value:     1600,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the year that the Declaration of Independence was signed",
+		// 			Answer:    "1776",
+		// 			Value:     2000,
+		// 			CanChoose: true,
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	Title: "Math Trivia",
+		// 	Questions: [5]Question{
+		// 		{
+		// 			Question:  "This is the longest side of a right triangle",
+		// 			Answer:    "Hypotenuse",
+		// 			Value:     400,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the number of degrees in a circle",
+		// 			Answer:    "360",
+		// 			Value:     800,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the number of degrees in a right angle",
+		// 			Answer:    "90",
+		// 			Value:     1200,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the number of degrees in a straight angle",
+		// 			Answer:    "180",
+		// 			Value:     1600,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the number of degrees in a triangle",
+		// 			Answer:    "180",
+		// 			Value:     2000,
+		// 			CanChoose: true,
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	Title: "Business Trivia",
+		// 	Questions: [5]Question{
+		// 		{
+		// 			Question:  "This 3-letter memorandum of debt is a strong but not legally binding promise to pay",
+		// 			Answer:    "I.O.U.",
+		// 			Value:     400,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "In 2007 Forbes reported that this TV personality was \"America's sole black female billionaire\"",
+		// 			Answer:    "Oprah Winfrey",
+		// 			Value:     800,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "26 billion merger in 2016, this business website might keep nagging Microsoft to update its resume",
+		// 			Answer:    "LinkedIn",
+		// 			Value:     1200,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "A passage from the book of Hosea was the inspiration Israel's first Minister of Transportation had for naming this airline	El",
+		// 			Answer:    "El Al",
+		// 			Value:     1600,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "Corn is traded at this sort of exchange as well as, of course, frozen concentrated orange juice",
+		// 			Answer:    "Commodity",
+		// 			Value:     2000,
+		// 			CanChoose: true,
+		// 		},
+		// 	},
+		// },
 	}
 	g.FinalRound = Question{
 		Question: "An MLB team got this name in 1902 after some of its players defected to a new crosstown rival, leaving young replacements",
 		Answer:   "Chicago Cubs",
 	}
 	return nil
+}
+
+func (g *Game) disableQuestion(question Question) {
+	for i, topic := range g.FirstRound {
+		for j, q := range topic.Questions {
+			if question.equal(q) {
+				g.FirstRound[i].Questions[j].CanChoose = false
+				return
+			}
+		}
+	}
+	for i, topic := range g.SecondRound {
+		for j, q := range topic.Questions {
+			if question.equal(q) {
+				g.SecondRound[i].Questions[j].CanChoose = false
+				return
+			}
+		}
+	}
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func (g *Game) validWager(wager, score int) bool {
+	minWager := 5
+	if g.Round == FinalRound {
+		minWager = 0
+	}
+	roundMax := 0
+	if g.Round == FirstRound {
+		roundMax = 1000
+	} else if g.Round == SecondRound {
+		roundMax = 2000
+	}
+	return wager >= minWager && wager <= max(score, roundMax)
+}
+
+func (g *Game) numFinalWagers() int {
+	numWagers := 0
+	for _, player := range g.Players {
+		if player.CanWager {
+			numWagers++
+		}
+	}
+	return numWagers
+}
+
+func (g *Game) numFinalAnswers() int {
+	numAnswers := 0
+	for _, player := range g.Players {
+		if player.CanAnswer {
+			numAnswers++
+		}
+	}
+	return numAnswers
 }
 
 func NewPlayer(name string) *Player {
@@ -522,33 +711,6 @@ func NewPlayer(name string) *Player {
 	}
 }
 
-func (g *Game) addPlayer(name string) string {
-	player := NewPlayer(name)
-	g.Players = append(g.Players, player)
-	return player.Id
-}
-
-func (g *Game) getPlayerById(id string) *Player {
-	for _, player := range g.Players {
-		if player.Id == id {
-			return player
-		}
-	}
-	return nil
-}
-
-func (g *Game) messageAllPlayers(resp Response) error {
-	for _, player := range game.Players {
-		if player.conn != nil {
-			resp.CurPlayer = player
-			if err := player.conn.WriteJSON(resp); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 func (p *Player) canBuzz(guessedWrong []string) bool {
 	for _, id := range guessedWrong {
 		if id == p.Id {
@@ -556,29 +718,6 @@ func (p *Player) canBuzz(guessedWrong []string) bool {
 		}
 	}
 	return true
-}
-
-func (g *Game) setState(state GameState, id string) {
-	if state == RecvPick {
-		for _, player := range g.Players {
-			player.CanPick = player.Id == id
-			player.CanBuzz = false
-			player.CanAnswer = false
-		}
-	} else if state == RecvBuzz {
-		for _, player := range g.Players {
-			player.CanPick = false
-			player.CanBuzz = player.canBuzz(g.GuessedWrong)
-			player.CanAnswer = false
-		}
-	} else if state == RecvAns {
-		for _, player := range g.Players {
-			player.CanPick = false
-			player.CanBuzz = false
-			player.CanAnswer = player.Id == id
-		}
-	}
-	g.State = state
 }
 
 func (q *Question) checkAnswer(ans string) bool {
@@ -590,21 +729,6 @@ func (q *Question) checkAnswer(ans string) bool {
 	return levenshtein.ComputeDistance(ans, corrAns) <= 3
 }
 
-func (g *Game) disableQuestion(q Question) {
-	for i, topic := range g.FirstRound {
-		for j, question := range topic.Questions {
-			if question == q {
-				g.FirstRound[i].Questions[j].CanChoose = false
-				return
-			}
-		}
-	}
-	for i, topic := range g.SecondRound {
-		for j, question := range topic.Questions {
-			if question == q {
-				g.SecondRound[i].Questions[j].CanChoose = false
-				return
-			}
-		}
-	}
+func (q *Question) equal(q0 Question) bool {
+	return q.Question == q0.Question && q.Answer == q0.Answer
 }

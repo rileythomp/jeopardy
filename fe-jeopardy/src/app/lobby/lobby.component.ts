@@ -15,6 +15,7 @@ export class LobbyComponent implements OnInit {
 	lobbyMessage: string;
 	jwt: string;
 	players: Player[];
+	playerName: string;
 
 	constructor(
 		private router: Router,
@@ -45,6 +46,7 @@ export class LobbyComponent implements OnInit {
 				this.gameState.updateGameState(resp.game);
 				this.players = this.gameState.getPlayers();
 				this.player.updatePlayer(resp.curPlayer);
+				this.playerName = this.player.getName();
 			}
 			else if (resp.game.state == GameState.RecvPick) {
 				this.lobbyMessage = resp.message;
@@ -58,9 +60,4 @@ export class LobbyComponent implements OnInit {
 			}
 		})
 	}
-
-	playerName(): string {
-		return this.player.getName();
-	}
-
 }

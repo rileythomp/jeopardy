@@ -15,6 +15,7 @@ export class GameComponent implements OnInit {
 	titles: string[];
 	questionRows: Question[][];
 	questionAnswer: string;
+	wagerAmt: string;
 
 	constructor(
 		private websocketService: WebsocketService,
@@ -38,7 +39,6 @@ export class GameComponent implements OnInit {
 				this.player.updatePlayer(resp.curPlayer);
 
 				this.players = this.gameState.getPlayers();
-				this.titles = this.gameState.getTitles();
 				this.questionRows = this.gameState.getQuestionRows();
 			}
 			else if (resp.game.state == GameState.RecvAns) {
@@ -58,6 +58,24 @@ export class GameComponent implements OnInit {
 				this.players = this.gameState.getPlayers();
 				this.titles = this.gameState.getTitles();
 				this.questionRows = this.gameState.getQuestionRows();
+			}
+			else if (resp.game.state == GameState.RecvWager) {
+				console.log('show the question, accept a wager');
+				console.log(resp);
+
+				this.gameState.updateGameState(resp.game);
+				this.player.updatePlayer(resp.curPlayer);
+
+				this.players = this.gameState.getPlayers();
+			}
+			else if (resp.game.state == GameState.PostGame) {
+				console.log('show who won the game');
+				console.log(resp);
+
+				this.gameState.updateGameState(resp.game);
+				this.player.updatePlayer(resp.curPlayer);
+
+				this.players = this.gameState.getPlayers();
 			}
 			else {
 				alert('Unable to update game');
@@ -102,4 +120,13 @@ export class GameComponent implements OnInit {
 		this.questionAnswer = '';
 	}
 
+	handleWager() {
+		if (this.player.canWager()) {
+			this.websocketService.send({
+				"token": this.jwtService.getJwt(),
+				"wager": this.wagerAmt,
+			})
+		}
+		this.wagerAmt = '';
+	}
 }

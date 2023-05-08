@@ -41,6 +41,11 @@ type (
 		Answer string `json:"answer"`
 	}
 
+	WagerRequest struct {
+		Request
+		Wager int `json:"wager"`
+	}
+
 	Response struct {
 		Code      int     `json:"code"`
 		Token     string  `json:"token,omitempty"`
@@ -213,7 +218,11 @@ func playGame(c *gin.Context) {
 				_ = conn.WriteJSON(Response{Message: "Player cannot pick", Code: http.StatusForbidden})
 				continue
 			}
-			curQuestion := game.FirstRound[pickReq.TopicIdx].Questions[pickReq.ValIdx]
+			round := game.FirstRound
+			if game.Round == SecondRound {
+				round = game.SecondRound
+			}
+			curQuestion := round[pickReq.TopicIdx].Questions[pickReq.ValIdx]
 			if !curQuestion.CanChoose {
 				log.Println("Question already chosen")
 				_ = conn.WriteJSON(Response{Message: "Question already chosen", Code: http.StatusForbidden})
@@ -221,11 +230,21 @@ func playGame(c *gin.Context) {
 			}
 			game.LastPicker = player.Id
 			game.CurQuestion = curQuestion
-			game.setState(RecvBuzz, "")
-			resp := Response{
-				Code:    200,
-				Message: "New Question",
-				Game:    game,
+			var resp Response
+			if curQuestion.DailyDouble {
+				game.setState(RecvWager, player.Id)
+				resp = Response{
+					Code:    200,
+					Message: "Daily Double",
+					Game:    game,
+				}
+			} else {
+				game.setState(RecvBuzz, "")
+				resp = Response{
+					Code:    200,
+					Message: "New Question",
+					Game:    game,
+				}
 			}
 			if err := game.messageAllPlayers(resp); err != nil {
 				log.Println("Error sending question to players:", err)
@@ -292,10 +311,34 @@ func playGame(c *gin.Context) {
 				_ = conn.WriteJSON(Response{Message: "Player cannot answer", Code: http.StatusForbidden})
 				continue
 			}
+			if game.Round == FinalRound {
+				isCorrect := game.CurQuestion.checkAnswer(ansReq.Answer)
+				if isCorrect {
+					player.Score += player.FinalWager
+				} else {
+					player.Score -= player.FinalWager
+				}
+				game.FinalAnswers++
+				if game.FinalAnswers == game.numFinalAnswers() {
+					game.setState(PostGame, "")
+					resp := Response{
+						Code:    200,
+						Message: "All answers received",
+						Game:    game,
+					}
+					if err := game.messageAllPlayers(resp); err != nil {
+						log.Println("Error sending answers to players:", err)
+						conn.Close()
+						continue
+					}
+				}
+				continue
+			}
 			isCorrect := game.CurQuestion.checkAnswer(ansReq.Answer)
 			if isCorrect {
 				player.Score += game.CurQuestion.Value
 				game.disableQuestion(game.CurQuestion)
+				game.GuessedWrong = []string{}
 				game.CurQuestion = Question{}
 				game.setState(RecvPick, player.Id)
 				resp := Response{
@@ -308,16 +351,23 @@ func playGame(c *gin.Context) {
 					conn.Close()
 					continue
 				}
-				game.GuessedWrong = []string{}
 			} else {
 				player.Score -= game.CurQuestion.Value
-				game.GuessedWrong = append(game.GuessedWrong, player.Id)
-				allGuessed := len(game.GuessedWrong) == len(game.Players)
-				if allGuessed {
+				if game.CurQuestion.DailyDouble {
 					game.disableQuestion(game.CurQuestion)
+					game.GuessedWrong = []string{}
+					game.CurQuestion = Question{}
 					game.setState(RecvPick, game.LastPicker)
 				} else {
-					game.setState(RecvBuzz, "")
+					game.GuessedWrong = append(game.GuessedWrong, player.Id)
+					if len(game.GuessedWrong) == len(game.Players) {
+						game.disableQuestion(game.CurQuestion)
+						game.GuessedWrong = []string{}
+						game.CurQuestion = Question{}
+						game.setState(RecvPick, game.LastPicker)
+					} else {
+						game.setState(RecvBuzz, "")
+					}
 				}
 				resp := Response{
 					Code:    200,
@@ -329,9 +379,68 @@ func playGame(c *gin.Context) {
 					conn.Close()
 					continue
 				}
-				if allGuessed {
-					game.GuessedWrong = []string{}
+			}
+		} else if game.State == RecvWager {
+			var wagerReq WagerRequest
+			if err := json.Unmarshal(msg, &wagerReq); err != nil {
+				log.Println("Failed to unmarshal wager request:", err)
+				conn.Close()
+				continue
+			}
+			playerId, err := getJWTSubject(wagerReq.Token)
+			if err != nil {
+				log.Println("Failed to get playerId from token:", err)
+				conn.Close()
+				continue
+			}
+			player := game.getPlayerById(playerId)
+			if player == nil {
+				log.Println("Player not found")
+				_ = conn.WriteJSON(Response{Message: "Player not found", Code: http.StatusForbidden})
+				continue
+			}
+			if !player.CanWager {
+				log.Println("Player cannot wager")
+				_ = conn.WriteJSON(Response{Message: "Player cannot wager", Code: http.StatusForbidden})
+				continue
+			}
+			if !game.validWager(wagerReq.Wager, player.Score) {
+				log.Printf("Invalid wager, must be between 5 and %d\n", max(player.Score, 1000))
+				_ = conn.WriteJSON(Response{Message: "Invalid wager", Code: http.StatusForbidden})
+				continue
+			}
+			if game.Round == FinalRound {
+				// set the players wager
+				// wait until we've received all wagers
+				// then set the question
+				player.FinalWager = wagerReq.Wager
+				game.FinalWagers++
+				if game.FinalWagers == game.numFinalWagers() {
+					game.setState(RecvAns, "")
+					resp := Response{
+						Code:    200,
+						Message: "All wagers received",
+						Game:    game,
+					}
+					if err := game.messageAllPlayers(resp); err != nil {
+						log.Println("Error sending wagers to players:", err)
+						conn.Close()
+						continue
+					}
 				}
+				continue
+			}
+			game.CurQuestion.Value = wagerReq.Wager
+			game.setState(RecvAns, player.Id)
+			resp := Response{
+				Code:    200,
+				Message: "Player wagered",
+				Game:    game,
+			}
+			if err := game.messageAllPlayers(resp); err != nil {
+				log.Println("Error sending wager to players:", err)
+				conn.Close()
+				continue
 			}
 		} else {
 			continue

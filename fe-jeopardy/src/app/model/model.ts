@@ -1,5 +1,6 @@
 export type Game = {
     state: GameState;
+    round: RoundState;
     players: Player[];
     firstRound: Topic[];
     secondRound: Topic[];
@@ -14,6 +15,7 @@ export type Player = {
     canPick: boolean;
     canBuzz: boolean;
     canAnswer: boolean;
+    canWager: boolean;
 };
 
 type Topic = {
@@ -33,8 +35,14 @@ export enum GameState {
     PreGame,
     RecvPick,
     RecvBuzz,
+    RecvWager,
     RecvAns,
-    RecvFinal,
     PostGame,
     Error,
+}
+
+export enum RoundState {
+	FirstRound,
+	SecondRound,
+	FinalRound,
 }
