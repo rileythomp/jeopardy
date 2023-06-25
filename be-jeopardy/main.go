@@ -107,30 +107,6 @@ func playGame(c *gin.Context) {
 		return
 	}
 
-	resp := jeopardy.Response{
-		Code:    200,
-		Message: "Waiting for more players",
-		Game:    game,
-	}
-	if game.ReadyToPlay() {
-		if err := game.StartGame(); err != nil {
-			log.Println("Error starting game", err)
-			closeConnWithMsg(conn, fmt.Sprintf("error starting game: %s", err.Error()), http.StatusInternalServerError)
-			return
-		}
-		resp = jeopardy.Response{
-			Code:    200,
-			Message: "We are ready to play",
-			Game:    game,
-		}
-	}
-
-	if err := game.MessageAllPlayers(resp); err != nil {
-		log.Println("Error sending message to players:", err)
-		closeConnWithMsg(conn, "Error sending message to players", http.StatusInternalServerError)
-		return
-	}
-
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
