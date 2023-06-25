@@ -76,48 +76,6 @@ type (
 		CanChoose   bool   `json:"canChoose"`
 		DailyDouble bool   `json:"dailyDouble"`
 	}
-
-	Response struct {
-		Code      int     `json:"code"`
-		Token     string  `json:"token,omitempty"`
-		Message   string  `json:"message"`
-		Game      *Game   `json:"game,omitempty"`
-		CurPlayer *Player `json:"curPlayer,omitempty"`
-	}
-
-	Request struct {
-		Token string `json:"token,omitempty"`
-	}
-
-	JoinRequest struct {
-		Request
-		PlayerName string `json:"playerName"`
-	}
-
-	PlayRequest struct {
-		Request
-	}
-
-	PickRequest struct {
-		Request
-		TopicIdx int `json:"topicIdx"`
-		ValIdx   int `json:"valIdx"`
-	}
-
-	BuzzRequest struct {
-		Request
-		IsPass bool `json:"isPass"`
-	}
-
-	AnswerRequest struct {
-		Request
-		Answer string `json:"answer"`
-	}
-
-	WagerRequest struct {
-		Request
-		Wager int `json:"wager"`
-	}
 )
 
 func NewGame() *Game {
@@ -158,6 +116,218 @@ func (g *Game) HandleRequest(playerId string, msg []byte) error {
 		return fmt.Errorf("invalid game state")
 	}
 	return err
+}
+
+func (g *Game) HandlePick(playerId string, topicIdx, valIdx int) error {
+	player := g.GetPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("player not found")
+	}
+	if !player.CanPick {
+		return fmt.Errorf("player cannot pick")
+	}
+	if topicIdx < 0 || valIdx < 0 || topicIdx >= numTopics || valIdx >= numQuestions {
+		return fmt.Errorf("invalid question pick")
+	}
+	curRound := g.FirstRound
+	if g.Round == SecondRound {
+		curRound = g.SecondRound
+	}
+	curQuestion := curRound[topicIdx].Questions[valIdx]
+	if !curQuestion.CanChoose {
+		return fmt.Errorf("question cannot be chosen")
+	}
+	g.LastPicker = player.Id
+	g.CurQuestion = curQuestion
+	var resp Response
+	if curQuestion.DailyDouble {
+		g.SetState(RecvWager, player.Id)
+		resp = Response{
+			Code:    200,
+			Message: "Daily Double",
+			Game:    g,
+		}
+	} else {
+		g.SetState(RecvBuzz, "")
+		resp = Response{
+			Code:    200,
+			Message: "New Question",
+			Game:    g,
+		}
+	}
+	if err := g.MessageAllPlayers(resp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *Game) HandleBuzz(playerId string, isPass bool) error {
+	player := g.GetPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("player not found")
+	}
+	if !player.CanBuzz {
+		return fmt.Errorf("player cannot buzz")
+	}
+	if isPass {
+		g.Passes++
+	}
+	var resp Response
+	if g.Passes+len(g.GuessedWrong) == len(g.Players) {
+		g.disableQuestion()
+		g.GuessedWrong = []string{}
+		g.Passes = 0
+		g.SetState(RecvPick, g.LastPicker)
+		resp = Response{
+			Code:    200,
+			Message: "Question unanswered",
+			Game:    g,
+		}
+		// TODO: check for new round
+	} else {
+		g.SetState(RecvAns, player.Id)
+		resp = Response{
+			Code:    200,
+			Message: "Player buzzed",
+			Game:    g,
+		}
+	}
+	if err := g.MessageAllPlayers(resp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *Game) HandleAnswer(playerId, answer string) error {
+	player := g.GetPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("player not found")
+	}
+	if !player.CanAnswer {
+		return fmt.Errorf("player cannot answer")
+	}
+	isCorrect := g.CurQuestion.checkAnswer(answer)
+	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
+	var resp Response
+	if g.Round == FinalRound {
+		g.FinalAnswers++
+		if !g.roundEnded() {
+			log.Printf("received answer from %s: %s\n", player.Name, answer)
+			return nil
+		}
+		g.SetState(PostGame, "")
+		resp = Response{
+			Code:    200,
+			Message: "Final round ended",
+			Game:    g,
+		}
+	} else {
+		if !isCorrect {
+			g.GuessedWrong = append(g.GuessedWrong, player.Id)
+		}
+		if isCorrect || g.CurQuestion.DailyDouble || g.Passes+len(g.GuessedWrong) == len(g.Players) {
+			g.disableQuestion()
+		}
+		roundOver := g.roundEnded()
+		if roundOver && g.Round == FirstRound {
+			g.Round = SecondRound
+			g.GuessedWrong = []string{}
+			g.Passes = 0
+			g.SetState(RecvPick, g.lowestPlayer())
+			resp = Response{
+				Code:    200,
+				Message: "First round ended",
+				Game:    g,
+			}
+		} else if roundOver && g.Round == SecondRound {
+			g.Round = FinalRound
+			g.GuessedWrong = []string{}
+			g.Passes = 0
+			g.CurQuestion = g.FinalRound
+			g.SetState(RecvWager, "")
+			resp = Response{
+				Code:    200,
+				Message: "Second round ended",
+				Game:    g,
+			}
+		} else if g.Passes+len(g.GuessedWrong) == len(g.Players) {
+			g.GuessedWrong = []string{}
+			g.Passes = 0
+			g.SetState(RecvPick, g.LastPicker)
+			resp = Response{
+				Code:    200,
+				Message: "All players guessed wrong",
+				Game:    g,
+			}
+		} else if isCorrect || g.CurQuestion.DailyDouble {
+			g.GuessedWrong = []string{}
+			g.Passes = 0
+			g.SetState(RecvPick, playerId)
+			resp = Response{
+				Code:    200,
+				Message: "Question is complete",
+				Game:    g,
+			}
+		} else {
+			g.SetState(RecvBuzz, "")
+			resp = Response{
+				Code:    200,
+				Message: "Player answered incorrectly",
+				Game:    g,
+			}
+		}
+	}
+	if err := g.MessageAllPlayers(resp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *Game) HandleWager(playerId string, wager int) error {
+	player := g.GetPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("player not found")
+	}
+	if !player.CanWager {
+		return fmt.Errorf("player cannot wager")
+	}
+	if !g.validWager(wager, player.Score) {
+		return fmt.Errorf("invalid wager, must be between 5 and %d", max(player.Score, 1000))
+	}
+	var resp Response
+	if g.Round == FinalRound {
+		player.FinalWager = wager
+		g.FinalWagers++
+		if g.FinalWagers != g.numFinalWagers() {
+			resp = Response{
+				Code:    200,
+				Message: "Player wagered",
+				Game:    g,
+			}
+			if err := player.conn.WriteJSON(resp); err != nil {
+				return err
+			}
+			return nil
+		}
+		g.SetState(RecvAns, "")
+		resp = Response{
+			Code:    200,
+			Message: "All wagers received",
+			Game:    g,
+		}
+	} else {
+		g.CurQuestion.Value = wager
+		g.SetState(RecvAns, player.Id)
+		resp = Response{
+			Code:    200,
+			Message: "Player wagered",
+			Game:    g,
+		}
+	}
+	if err := g.MessageAllPlayers(resp); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (g *Game) SetState(state GameState, id string) {
@@ -207,228 +377,18 @@ func (g *Game) SetState(state GameState, id string) {
 	g.State = state
 }
 
-func (g *Game) HandlePick(playerId string, topicIdx, valIdx int) error {
-	player := g.GetPlayerById(playerId)
-	if player == nil {
-		return fmt.Errorf("Player not found")
-	}
-	if !player.CanPick {
-		return fmt.Errorf("Player cannot pick")
-	}
-	if topicIdx < 0 || valIdx < 0 || topicIdx >= numTopics || valIdx >= numQuestions {
-		return fmt.Errorf("invalid question pick")
-	}
-
-	curRound := g.FirstRound
-	if g.Round == SecondRound {
-		curRound = g.SecondRound
-	}
-	curQuestion := curRound[topicIdx].Questions[valIdx]
-	if !curQuestion.CanChoose {
-		return fmt.Errorf("Question cannot be chosen")
-	}
-	g.LastPicker = player.Id
-	g.CurQuestion = curQuestion
-	var resp Response
-	if curQuestion.DailyDouble {
-		g.SetState(RecvWager, player.Id)
-		resp = Response{
-			Code:    200,
-			Message: "Daily Double",
-			Game:    g,
-		}
-	} else {
-		g.SetState(RecvBuzz, "")
-		resp = Response{
-			Code:    200,
-			Message: "New Question",
-			Game:    g,
-		}
-	}
-	if err := g.MessageAllPlayers(resp); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (g *Game) HandleBuzz(playerId string, isPass bool) error {
-	player := g.GetPlayerById(playerId)
-	if player == nil {
-		return fmt.Errorf("Player not found")
-	}
-	if !player.CanBuzz {
-		return fmt.Errorf("Player cannot buzz")
-	}
-	if isPass {
-		g.Passes++
-	}
-	var resp Response
-	if g.Passes == len(g.Players) {
-		g.disableQuestion()
-		g.Passes = 0
-		g.SetState(RecvPick, g.LastPicker)
-		resp = Response{
-			Code:    200,
-			Message: "Question unanswered",
-			Game:    g,
-		}
-	} else {
-		g.SetState(RecvAns, player.Id)
-		resp = Response{
-			Code:    200,
-			Message: "Player buzzed",
-			Game:    g,
-		}
-	}
-	if err := g.MessageAllPlayers(resp); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (g *Game) HandleAnswer(playerId, answer string) error {
-	player := g.GetPlayerById(playerId)
-	if player == nil {
-		return fmt.Errorf("Player not found")
-	}
-	if !player.CanAnswer {
-		return fmt.Errorf("Player cannot answer")
-	}
-	isCorrect := g.CurQuestion.checkAnswer(answer)
-	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
-	var resp Response
-	if g.Round == FinalRound {
-		g.FinalAnswers++
-		if !g.roundEnded() {
-			log.Printf("received answer from %s: %s\n", player.Name, answer)
-			return nil
-		}
-		g.SetState(PostGame, "")
-		resp = Response{
-			Code:    200,
-			Message: "Final round ended",
-			Game:    g,
-		}
-	} else {
-		if !isCorrect {
-			g.GuessedWrong = append(g.GuessedWrong, player.Id)
-		}
-		if isCorrect || g.CurQuestion.DailyDouble || len(g.GuessedWrong) == len(g.Players) {
-			g.disableQuestion()
-		}
-		roundOver := g.roundEnded()
-		if roundOver && g.Round == FirstRound {
-			g.Round = SecondRound
-			g.GuessedWrong = []string{}
-			g.SetState(RecvPick, g.lowestPlayer())
-			resp = Response{
-				Code:    200,
-				Message: "First round ended",
-				Game:    g,
-			}
-		} else if roundOver && g.Round == SecondRound {
-			g.Round = FinalRound
-			g.CurQuestion = g.FinalRound
-			g.SetState(RecvWager, "")
-			resp = Response{
-				Code:    200,
-				Message: "Second round ended",
-				Game:    g,
-			}
-		} else if len(g.GuessedWrong) == len(g.Players) {
-			g.GuessedWrong = []string{}
-			g.SetState(RecvPick, g.LastPicker)
-			resp = Response{
-				Code:    200,
-				Message: "All players guessed wrong",
-				Game:    g,
-			}
-		} else if isCorrect || g.CurQuestion.DailyDouble {
-			g.GuessedWrong = []string{}
-			g.SetState(RecvPick, playerId)
-			resp = Response{
-				Code:    200,
-				Message: "Question is complete",
-				Game:    g,
-			}
-		} else {
-			g.SetState(RecvBuzz, "")
-			resp = Response{
-				Code:    200,
-				Message: "Player answered incorrectly",
-				Game:    g,
-			}
-		}
-	}
-	if err := g.MessageAllPlayers(resp); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (g *Game) HandleWager(playerId string, wager int) error {
-	player := g.GetPlayerById(playerId)
-	if player == nil {
-		return fmt.Errorf("Player not found")
-	}
-	if !player.CanWager {
-		return fmt.Errorf("Player cannot wager")
-	}
-	if !g.validWager(wager, player.Score) {
-		return fmt.Errorf("invalid wager, must be between 5 and %d", max(player.Score, 1000))
-	}
-	var resp Response
-	if g.Round == FinalRound {
-		player.FinalWager = wager
-		g.FinalWagers++
-		if g.FinalWagers != g.numFinalWagers() {
-			resp = Response{
-				Code:    200,
-				Message: "Player wagered",
-				Game:    g,
-			}
-			if err := player.conn.WriteJSON(resp); err != nil {
-				return err
-			}
-			return nil
-		}
-		g.SetState(RecvAns, "")
-		resp = Response{
-			Code:    200,
-			Message: "All wagers received",
-			Game:    g,
-		}
-	} else {
-		g.CurQuestion.Value = wager
-		g.SetState(RecvAns, player.Id)
-		resp = Response{
-			Code:    200,
-			Message: "Player wagered",
-			Game:    g,
-		}
-	}
-	if err := g.MessageAllPlayers(resp); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (g *Game) HasStarted() bool {
 	return g.State != PreGame
 }
 
-func (g *Game) AddPlayer(msg []byte) (string, error) {
-	var joinReq JoinRequest
-	if err := json.Unmarshal(msg, &joinReq); err != nil {
-		return "", fmt.Errorf("failed to parse join request: %w", err)
-	}
+func (g *Game) AddPlayer(name string) (string, error) {
 	if g.HasStarted() {
 		return "", fmt.Errorf("game already in progress")
 	}
 	if len(g.Players) > 2 {
 		return "", fmt.Errorf("game is full")
 	}
-	player := NewPlayer(joinReq.PlayerName)
+	player := NewPlayer(name)
 	g.Players = append(g.Players, player)
 	return player.Id, nil
 }
@@ -457,7 +417,6 @@ func (g *Game) MessageAllPlayers(resp Response) error {
 
 func (g *Game) roundEnded() bool {
 	if g.Round == FinalRound {
-		log.Printf("final answers: %d, num final answers: %d\n", g.FinalAnswers, g.numFinalAnswers())
 		return g.FinalAnswers == g.numFinalAnswers()
 	}
 	curRound := g.FirstRound

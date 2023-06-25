@@ -41,7 +41,13 @@ func joinGame(c *gin.Context) {
 		closeConnWithMsg(conn, "Failed to read message from WebSocket", http.StatusInternalServerError)
 		return
 	}
-	playerId, err := game.AddPlayer(msg)
+	var joinReq jeopardy.JoinRequest
+	if err := json.Unmarshal(msg, &joinReq); err != nil {
+		log.Println("Failed to parse join request:", err)
+		closeConnWithMsg(conn, fmt.Sprintf("Failed to parse join request: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+	playerId, err := game.AddPlayer(joinReq.PlayerName)
 	if err != nil {
 		log.Println("Failed to add player:", err)
 		closeConnWithMsg(conn, fmt.Sprintf("Failed to add player: %s", err.Error()), http.StatusInternalServerError)
