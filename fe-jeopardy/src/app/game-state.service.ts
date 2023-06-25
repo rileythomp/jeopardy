@@ -39,7 +39,7 @@ export class GameStateService {
 	getQuestionRows(): Question[][] {
 		let firstRow = [];
 		let secondRow = [];
-		// let thirdRow = [];
+		let thirdRow = [];
 		// let fourthRow = [];
 		// let fifthRow = [];
 		let round = this.game.firstRound;
@@ -49,11 +49,11 @@ export class GameStateService {
 		for (let topic of round) {
 			firstRow.push(topic.questions[0]);
 			secondRow.push(topic.questions[1]);
-			// thirdRow.push(topic.questions[2]);
+			thirdRow.push(topic.questions[2]);
 			// fourthRow.push(topic.questions[3]);
 			// fifthRow.push(topic.questions[4]);
 		}
-		return [firstRow, secondRow];
+		return [firstRow, secondRow, thirdRow];
 		// return [firstRow, secondRow, thirdRow, fourthRow, fifthRow];
 	}
 

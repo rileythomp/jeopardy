@@ -22,7 +22,6 @@ func setJWTKeys() error {
 	if err != nil {
 		return err
 	}
-
 	privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
 	if err != nil {
 		return err
@@ -41,14 +40,12 @@ func setJWTKeys() error {
 	return nil
 }
 
-func generateToken(id string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
+func generateJWT(id string) (string, error) {
+	return jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
 		"iss": issuer,
 		"sub": id,
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
-	})
-
-	return token.SignedString(privateKey)
+	}).SignedString(privateKey)
 }
 
 func getJWTSubject(jwtStr string) (string, error) {

@@ -6,6 +6,12 @@ The server echoes messages sent to it. The client sends a message every second a
 
 To run the example, start the server:
 
+**TODO**
+ * Fix answer check 
+ * Implement daily double
+ * Don't clear names after submitting wager
+ * Hide final jeopardy answer input after answering
+
 ```bash
 go run server/server.go
 ```

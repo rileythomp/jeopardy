@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"strings"
 
 	"github.com/agnivade/levenshtein"
@@ -17,7 +19,6 @@ const (
 	RecvWager
 	RecvAns
 	PostGame
-	Error
 )
 
 type RoundState int
@@ -28,19 +29,25 @@ const (
 	FinalRound
 )
 
+const (
+	numTopics    = 3
+	numQuestions = 3
+)
+
 type (
 	Game struct {
-		State        GameState  `json:"state"`
-		Round        RoundState `json:"round"`
-		Players      []*Player  `json:"players"`
-		FirstRound   [2]Topic   `json:"firstRound"`
-		SecondRound  [2]Topic   `json:"secondRound"`
-		FinalRound   Question   `json:"finalRound"`
-		CurQuestion  Question   `json:"curQuestion"`
-		GuessedWrong []string   `json:"guessedWrong"`
-		LastPicker   string     `json:"lastPicker"`
-		FinalWagers  int        `json:"finalWagers"`
-		FinalAnswers int        `json:"finalAnswers"`
+		State        GameState        `json:"state"`
+		Round        RoundState       `json:"round"`
+		Players      []*Player        `json:"players"`
+		FirstRound   [numTopics]Topic `json:"firstRound"`
+		SecondRound  [numTopics]Topic `json:"secondRound"`
+		FinalRound   Question         `json:"finalRound"`
+		CurQuestion  Question         `json:"curQuestion"`
+		GuessedWrong []string         `json:"guessedWrong"`
+		LastPicker   string           `json:"lastPicker"`
+		FinalWagers  int              `json:"finalWagers"`
+		FinalAnswers int              `json:"finalAnswers"`
+		Passes       int              `json:"passes"`
 	}
 
 	Player struct {
@@ -57,8 +64,8 @@ type (
 	}
 
 	Topic struct {
-		Title     string      `json:"title"`
-		Questions [2]Question `json:"questions"`
+		Title     string                 `json:"title"`
+		Questions [numQuestions]Question `json:"questions"`
 	}
 
 	Question struct {
@@ -77,65 +84,23 @@ func NewGame() *Game {
 	}
 }
 
-func (g *Game) roundOver() bool {
-	round := g.FirstRound
-	if g.Round == SecondRound {
-		round = g.SecondRound
-	}
-	for _, topic := range round {
-		for _, question := range topic.Questions {
-			if question.CanChoose {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func (g *Game) lowestPlayer() string {
-	lowest := g.Players[0]
-	for _, player := range g.Players {
-		if player.Score < lowest.Score {
-			lowest = player
-		}
-	}
-	return lowest.Id
-}
-
 func (g *Game) setState(state GameState, id string) {
-	if state == RecvPick {
-		if g.roundOver() {
-			g.Round++
-			if g.Round == FinalRound {
-				// if its the last round, go to recv final
-				for _, player := range g.Players {
-					player.CanPick = false
-					player.CanBuzz = false
-					player.CanAnswer = false
-					player.CanWager = player.Score > 0
-				}
-				g.CurQuestion = g.FinalRound
-				g.State = RecvWager
-				return
-			} else if g.Round == SecondRound {
-				// if its the second round, the picker is the player with the lowest score
-				id = g.lowestPlayer()
-			}
-		}
+	switch state {
+	case RecvPick:
 		for _, player := range g.Players {
 			player.CanPick = player.Id == id
 			player.CanBuzz = false
 			player.CanAnswer = false
 			player.CanWager = false
 		}
-	} else if state == RecvBuzz {
+	case RecvBuzz:
 		for _, player := range g.Players {
 			player.CanPick = false
 			player.CanBuzz = player.canBuzz(g.GuessedWrong)
 			player.CanAnswer = false
 			player.CanWager = false
 		}
-	} else if state == RecvAns {
+	case RecvAns:
 		for _, player := range g.Players {
 			player.CanPick = false
 			player.CanBuzz = false
@@ -145,24 +110,260 @@ func (g *Game) setState(state GameState, id string) {
 			}
 			player.CanWager = false
 		}
-	} else if state == RecvWager {
+	case RecvWager:
 		for _, player := range g.Players {
 			player.CanPick = false
 			player.CanBuzz = false
 			player.CanAnswer = false
 			player.CanWager = player.Id == id
+			if g.Round == FinalRound {
+				player.CanWager = player.Score > 0
+			}
 		}
-	} else if state == PostGame {
+	default:
 		for _, player := range g.Players {
 			player.CanPick = false
 			player.CanBuzz = false
 			player.CanAnswer = false
 			player.CanWager = false
 		}
-	} else {
-		return
 	}
 	g.State = state
+}
+
+func (g *Game) handlePick(playerId string, topicIdx, valIdx int) error {
+	player := g.getPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("Player not found")
+	}
+	if !player.CanPick {
+		return fmt.Errorf("Player cannot pick")
+	}
+	if topicIdx < 0 || valIdx < 0 || topicIdx >= numTopics || valIdx >= numQuestions {
+		return fmt.Errorf("invalid question pick")
+	}
+
+	curRound := g.FirstRound
+	if g.Round == SecondRound {
+		curRound = g.SecondRound
+	}
+	curQuestion := curRound[topicIdx].Questions[valIdx]
+	if !curQuestion.CanChoose {
+		return fmt.Errorf("Question cannot be chosen")
+	}
+	g.LastPicker = player.Id
+	g.CurQuestion = curQuestion
+	var resp Response
+	if curQuestion.DailyDouble {
+		g.setState(RecvWager, player.Id)
+		resp = Response{
+			Code:    200,
+			Message: "Daily Double",
+			Game:    g,
+		}
+	} else {
+		g.setState(RecvBuzz, "")
+		resp = Response{
+			Code:    200,
+			Message: "New Question",
+			Game:    g,
+		}
+	}
+	if err := g.messageAllPlayers(resp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *Game) handleBuzz(playerId string, isPass bool) error {
+	player := g.getPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("Player not found")
+	}
+	if !player.CanBuzz {
+		return fmt.Errorf("Player cannot buzz")
+	}
+	if isPass {
+		g.Passes++
+	}
+	var resp Response
+	if g.Passes == len(g.Players) {
+		g.disableQuestion()
+		g.Passes = 0
+		g.setState(RecvPick, g.LastPicker)
+		resp = Response{
+			Code:    200,
+			Message: "Question unanswered",
+			Game:    g,
+		}
+	} else {
+		g.setState(RecvAns, player.Id)
+		resp = Response{
+			Code:    200,
+			Message: "Player buzzed",
+			Game:    g,
+		}
+	}
+	if err := g.messageAllPlayers(resp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *Game) handleAnswer(playerId, answer string) error {
+	player := g.getPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("Player not found")
+	}
+	if !player.CanAnswer {
+		return fmt.Errorf("Player cannot answer")
+	}
+	isCorrect := g.CurQuestion.checkAnswer(answer)
+	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
+	var resp Response
+	if g.Round == FinalRound {
+		g.FinalAnswers++
+		if !g.roundEnded() {
+			log.Printf("received answer from %s: %s\n", player.Name, answer)
+			return nil
+		}
+		g.setState(PostGame, "")
+		resp = Response{
+			Code:    200,
+			Message: "Final round ended",
+			Game:    g,
+		}
+	} else {
+		if !isCorrect {
+			g.GuessedWrong = append(g.GuessedWrong, player.Id)
+		}
+		if isCorrect || g.CurQuestion.DailyDouble || len(g.GuessedWrong) == len(g.Players) {
+			g.disableQuestion()
+		}
+		roundOver := g.roundEnded()
+		if roundOver && g.Round == FirstRound {
+			g.Round = SecondRound
+			g.GuessedWrong = []string{}
+			g.setState(RecvPick, g.lowestPlayer())
+			resp = Response{
+				Code:    200,
+				Message: "First round ended",
+				Game:    g,
+			}
+		} else if roundOver && g.Round == SecondRound {
+			g.Round = FinalRound
+			g.CurQuestion = g.FinalRound
+			g.setState(RecvWager, "")
+			resp = Response{
+				Code:    200,
+				Message: "Second round ended",
+				Game:    g,
+			}
+		} else if len(g.GuessedWrong) == len(g.Players) {
+			g.GuessedWrong = []string{}
+			g.setState(RecvPick, g.LastPicker)
+			resp = Response{
+				Code:    200,
+				Message: "All players guessed wrong",
+				Game:    g,
+			}
+		} else if isCorrect || g.CurQuestion.DailyDouble {
+			g.GuessedWrong = []string{}
+			g.setState(RecvPick, playerId)
+			resp = Response{
+				Code:    200,
+				Message: "Question is complete",
+				Game:    g,
+			}
+		} else {
+			g.setState(RecvBuzz, "")
+			resp = Response{
+				Code:    200,
+				Message: "Player answered incorrectly",
+				Game:    g,
+			}
+		}
+	}
+	if err := g.messageAllPlayers(resp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *Game) handleWager(playerId string, wager int) error {
+	player := g.getPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("Player not found")
+	}
+	if !player.CanWager {
+		return fmt.Errorf("Player cannot wager")
+	}
+	if !g.validWager(wager, player.Score) {
+		return fmt.Errorf("invalid wager, must be between 5 and %d", max(player.Score, 1000))
+	}
+	var resp Response
+	if g.Round == FinalRound {
+		player.FinalWager = wager
+		g.FinalWagers++
+		if g.FinalWagers != g.numFinalWagers() {
+			resp = Response{
+				Code:    200,
+				Message: "Player wagered",
+				Game:    g,
+			}
+			if err := player.conn.WriteJSON(resp); err != nil {
+				return err
+			}
+			return nil
+		}
+		g.setState(RecvAns, "")
+		resp = Response{
+			Code:    200,
+			Message: "All wagers received",
+			Game:    g,
+		}
+	} else {
+		g.CurQuestion.Value = wager
+		g.setState(RecvAns, player.Id)
+		resp = Response{
+			Code:    200,
+			Message: "Player wagered",
+			Game:    g,
+		}
+	}
+	if err := g.messageAllPlayers(resp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Player) updateScore(val int, isCorrect bool, round RoundState) {
+	if round == FinalRound {
+		val = p.FinalWager
+	}
+	if !isCorrect {
+		val *= -1
+	}
+	p.Score += val
+}
+
+func (g *Game) roundEnded() bool {
+	if g.Round == FinalRound {
+		log.Printf("final answers: %d, num final answers: %d\n", g.FinalAnswers, g.numFinalAnswers())
+		return g.FinalAnswers == g.numFinalAnswers()
+	}
+	curRound := g.FirstRound
+	if g.Round == SecondRound {
+		curRound = g.SecondRound
+	}
+	for _, topic := range curRound {
+		for _, question := range topic.Questions {
+			if question.CanChoose {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func (g *Game) messageAllPlayers(resp Response) error {
@@ -206,11 +407,15 @@ func (g *Game) getPlayerById(id string) *Player {
 	return nil
 }
 
+func (g *Game) hasStarted() bool {
+	return g.State != PreGame
+}
+
 func (g *Game) setQuestions() error {
-	g.FirstRound = [2]Topic{
+	g.FirstRound = [numTopics]Topic{
 		{
 			Title: "World Capitals",
-			Questions: [2]Question{
+			Questions: [numQuestions]Question{
 				{
 					Question:  "This city is the capital of the United States",
 					Answer:    "Washington, D.C.",
@@ -223,12 +428,12 @@ func (g *Game) setQuestions() error {
 					Value:     400,
 					CanChoose: true,
 				},
-				// {
-				// 	Question:  "This city is the capital of France",
-				// 	Answer:    "Paris",
-				// 	Value:     600,
-				// 	CanChoose: true,
-				// },
+				{
+					Question:  "This city is the capital of France",
+					Answer:    "Paris",
+					Value:     600,
+					CanChoose: true,
+				},
 				// {
 				// 	Question:    "This city is the capital of Germany",
 				// 	Answer:      "Berlin",
@@ -246,7 +451,7 @@ func (g *Game) setQuestions() error {
 		},
 		{
 			Title: "State Capitals",
-			Questions: [2]Question{
+			Questions: [numQuestions]Question{
 				{
 					Question:  "This city is the capital of California",
 					Answer:    "Sacramento",
@@ -259,12 +464,12 @@ func (g *Game) setQuestions() error {
 					Value:     400,
 					CanChoose: true,
 				},
-				// {
-				// 	Question:  "This city is the capital of New York",
-				// 	Answer:    "Albany",
-				// 	Value:     600,
-				// 	CanChoose: true,
-				// },
+				{
+					Question:  "This city is the capital of New York",
+					Answer:    "Albany",
+					Value:     600,
+					CanChoose: true,
+				},
 				// {
 				// 	Question:  "This city is the capital of Florida",
 				// 	Answer:    "Tallahassee",
@@ -279,44 +484,44 @@ func (g *Game) setQuestions() error {
 				// },
 			},
 		},
-		// {
-		// 	Title: "Provincial Capitals",
-		// 	Questions: [5]Question{
-		// 		{
-		// 			Question:  "This city is the capital of British Columbia",
-		// 			Answer:    "Victoria",
-		// 			Value:     200,
-		// 			CanChoose: true,
-		// 		},
-		// 		{
-		// 			Question:  "This city is the capital of Alberta",
-		// 			Answer:    "Edmonton",
-		// 			Value:     400,
-		// 			CanChoose: true,
-		// 		},
-		// 		{
-		// 			Question:  "This city is the capital of Saskatchewan",
-		// 			Answer:    "Regina",
-		// 			Value:     600,
-		// 			CanChoose: true,
-		// 		},
-		// 		{
-		// 			Question:  "This city is the capital of Manitoba",
-		// 			Answer:    "Winnipeg",
-		// 			Value:     800,
-		// 			CanChoose: true,
-		// 		},
-		// 		{
-		// 			Question:  "This city is the capital of Ontario",
-		// 			Answer:    "Toronto",
-		// 			Value:     1000,
-		// 			CanChoose: true,
-		// 		},
-		// 	},
-		// },
+		{
+			Title: "Provincial Capitals",
+			Questions: [numQuestions]Question{
+				{
+					Question:  "This city is the capital of British Columbia",
+					Answer:    "Victoria",
+					Value:     200,
+					CanChoose: true,
+				},
+				{
+					Question:  "This city is the capital of Alberta",
+					Answer:    "Edmonton",
+					Value:     400,
+					CanChoose: true,
+				},
+				{
+					Question:  "This city is the capital of Saskatchewan",
+					Answer:    "Regina",
+					Value:     600,
+					CanChoose: true,
+				},
+				// {
+				// 	Question:  "This city is the capital of Manitoba",
+				// 	Answer:    "Winnipeg",
+				// 	Value:     800,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This city is the capital of Ontario",
+				// 	Answer:    "Toronto",
+				// 	Value:     1000,
+				// 	CanChoose: true,
+				// },
+			},
+		},
 		// {
 		// 	Title: "Sports Trivia",
-		// 	Questions: [5]Question{
+		// 	Questions: [numQuestions]Question{
 		// 		{
 		// 			Question:  "This team won the 2019 NBA Finals",
 		// 			Answer:    "Toronto Raptors",
@@ -351,7 +556,7 @@ func (g *Game) setQuestions() error {
 		// },
 		// {
 		// 	Title: "Music Trivia",
-		// 	Questions: [5]Question{
+		// 	Questions: [numQuestions]Question{
 		// 		{
 		// 			Question:  "This artist won the 2019 Grammy for Album of the Year",
 		// 			Answer:    "Kacey Musgraves",
@@ -386,7 +591,7 @@ func (g *Game) setQuestions() error {
 		// },
 		// {
 		// 	Title: "Geography Trivia",
-		// 	Questions: [5]Question{
+		// 	Questions: [numQuestions]Question{
 		// 		{
 		// 			Question:  "This is the largest country in the world",
 		// 			Answer:    "Russia",
@@ -421,10 +626,10 @@ func (g *Game) setQuestions() error {
 		// },
 	}
 
-	g.SecondRound = [2]Topic{
+	g.SecondRound = [numTopics]Topic{
 		{
 			Title: "Movie Trivia",
-			Questions: [2]Question{
+			Questions: [numQuestions]Question{
 				{
 					Question:  "This movie won the 2019 Oscar for Best Picture",
 					Answer:    "Green Book",
@@ -437,12 +642,12 @@ func (g *Game) setQuestions() error {
 					Value:     800,
 					CanChoose: true,
 				},
-				// {
-				// 	Question:  "This movie won the 2019 Oscar for Best Actor",
-				// 	Answer:    "Rami Malek",
-				// 	Value:     1200,
-				// 	CanChoose: true,
-				// },
+				{
+					Question:  "This movie won the 2019 Oscar for Best Actor",
+					Answer:    "Rami Malek",
+					Value:     1200,
+					CanChoose: true,
+				},
 				// {
 				// 	Question:  "This movie won the 2019 Oscar for Best Actress",
 				// 	Answer:    "Olivia Colman",
@@ -459,7 +664,7 @@ func (g *Game) setQuestions() error {
 		},
 		{
 			Title: "TV Trivia",
-			Questions: [2]Question{
+			Questions: [numQuestions]Question{
 				{
 					Question:  "This show won the 2019 Emmy for Best Drama Series",
 					Answer:    "Game of Thrones",
@@ -472,12 +677,12 @@ func (g *Game) setQuestions() error {
 					Value:     800,
 					CanChoose: true,
 				},
-				// {
-				// 	Question:  "This actor won the 2019 Emmy for Best Actor in a Drama Series",
-				// 	Answer:    "Billy Porter",
-				// 	Value:     1200,
-				// 	CanChoose: true,
-				// },
+				{
+					Question:  "This actor won the 2019 Emmy for Best Actor in a Drama Series",
+					Answer:    "Billy Porter",
+					Value:     1200,
+					CanChoose: true,
+				},
 				// {
 				// 	Question:  "This actress won the 2019 Emmy for Best Actress in a Drama Series",
 				// 	Answer:    "Jodie Comer",
@@ -492,44 +697,44 @@ func (g *Game) setQuestions() error {
 				// },
 			},
 		},
-		// {
-		// 	Title: "Science Trivia",
-		// 	Questions: [5]Question{
-		// 		{
-		// 			Question:  "This is the largest planet in the solar system",
-		// 			Answer:    "Jupiter",
-		// 			Value:     400,
-		// 			CanChoose: true,
-		// 		},
-		// 		{
-		// 			Question:  "This is the smallest planet in the solar system",
-		// 			Answer:    "Mercury",
-		// 			Value:     800,
-		// 			CanChoose: true,
-		// 		},
-		// 		{
-		// 			Question:  "This is the largest organ in the human body",
-		// 			Answer:    "The skin",
-		// 			Value:     1200,
-		// 			CanChoose: true,
-		// 		},
-		// 		{
-		// 			Question:  "This is the largest bone in the human body",
-		// 			Answer:    "The femur",
-		// 			Value:     1600,
-		// 			CanChoose: true,
-		// 		},
-		// 		{
-		// 			Question:  "This is the world's largest animal",
-		// 			Answer:    "The Antarctic blue whale",
-		// 			Value:     2000,
-		// 			CanChoose: true,
-		// 		},
-		// 	},
-		// },
+		{
+			Title: "Science Trivia",
+			Questions: [numQuestions]Question{
+				{
+					Question:  "This is the largest planet in the solar system",
+					Answer:    "Jupiter",
+					Value:     400,
+					CanChoose: true,
+				},
+				{
+					Question:  "This is the smallest planet in the solar system",
+					Answer:    "Mercury",
+					Value:     800,
+					CanChoose: true,
+				},
+				{
+					Question:  "This is the largest organ in the human body",
+					Answer:    "The skin",
+					Value:     1200,
+					CanChoose: true,
+				},
+				// {
+				// 	Question:  "This is the largest bone in the human body",
+				// 	Answer:    "The femur",
+				// 	Value:     1600,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This is the world's largest animal",
+				// 	Answer:    "The Antarctic blue whale",
+				// 	Value:     2000,
+				// 	CanChoose: true,
+				// },
+			},
+		},
 		// {
 		// 	Title: "History Trivia",
-		// 	Questions: [5]Question{
+		// 	Questions: [numQuestions]Question{
 		// 		{
 		// 			Question:  "This is the year that WWII ended",
 		// 			Answer:    "1945",
@@ -564,7 +769,7 @@ func (g *Game) setQuestions() error {
 		// },
 		// {
 		// 	Title: "Math Trivia",
-		// 	Questions: [5]Question{
+		// 	Questions: [numQuestions]Question{
 		// 		{
 		// 			Question:  "This is the longest side of a right triangle",
 		// 			Answer:    "Hypotenuse",
@@ -599,7 +804,7 @@ func (g *Game) setQuestions() error {
 		// },
 		// {
 		// 	Title: "Business Trivia",
-		// 	Questions: [5]Question{
+		// 	Questions: [numQuestions]Question{
 		// 		{
 		// 			Question:  "This 3-letter memorandum of debt is a strong but not legally binding promise to pay",
 		// 			Answer:    "I.O.U.",
@@ -640,30 +845,22 @@ func (g *Game) setQuestions() error {
 	return nil
 }
 
-func (g *Game) disableQuestion(question Question) {
+func (g *Game) disableQuestion() {
 	for i, topic := range g.FirstRound {
 		for j, q := range topic.Questions {
-			if question.equal(q) {
+			if q.equal(g.CurQuestion) {
 				g.FirstRound[i].Questions[j].CanChoose = false
-				return
 			}
 		}
 	}
 	for i, topic := range g.SecondRound {
 		for j, q := range topic.Questions {
-			if question.equal(q) {
+			if q.equal(g.CurQuestion) {
 				g.SecondRound[i].Questions[j].CanChoose = false
-				return
 			}
 		}
 	}
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
+	g.CurQuestion = Question{}
 }
 
 func (g *Game) validWager(wager, score int) bool {
@@ -726,9 +923,26 @@ func (q *Question) checkAnswer(ans string) bool {
 	if strings.Contains(ans, corrAns) || strings.Contains(corrAns, ans) {
 		return true
 	}
-	return levenshtein.ComputeDistance(ans, corrAns) <= 3
+	return levenshtein.ComputeDistance(ans, corrAns) < 3
+}
+
+func (g *Game) lowestPlayer() string {
+	lowest := g.Players[0]
+	for _, player := range g.Players {
+		if player.Score < lowest.Score {
+			lowest = player
+		}
+	}
+	return lowest.Id
 }
 
 func (q *Question) equal(q0 Question) bool {
 	return q.Question == q0.Question && q.Answer == q0.Answer
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
