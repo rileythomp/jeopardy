@@ -268,6 +268,7 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 	var resp Response
 	if g.Round == FinalRound {
 		g.FinalAnswers++
+		player.CanAnswer = false
 		if !g.roundEnded() {
 			log.Printf("received answer from %s: %s\n", player.Name, answer)
 			return nil
@@ -473,17 +474,17 @@ func (g *Game) setQuestions() error {
 					CanChoose: true,
 				},
 				{
-					Question:  "This city is the capital of France",
-					Answer:    "Paris",
-					Value:     600,
-					CanChoose: true,
+					Question:    "This city is the capital of France",
+					Answer:      "Paris",
+					Value:       600,
+					CanChoose:   true,
+					DailyDouble: true,
 				},
 				// {
 				// 	Question:    "This city is the capital of Germany",
 				// 	Answer:      "Berlin",
 				// 	Value:       800,
 				// 	CanChoose:   true,
-				// 	DailyDouble: true,
 				// },
 				// {
 				// 	Question:  "This city is the capital of Russia",
@@ -757,10 +758,11 @@ func (g *Game) setQuestions() error {
 					CanChoose: true,
 				},
 				{
-					Question:  "This is the largest organ in the human body",
-					Answer:    "The skin",
-					Value:     1200,
-					CanChoose: true,
+					Question:    "This is the largest organ in the human body",
+					Answer:      "The skin",
+					Value:       1200,
+					CanChoose:   true,
+					DailyDouble: true,
 				},
 				// {
 				// 	Question:  "This is the largest bone in the human body",
@@ -904,7 +906,6 @@ func (g *Game) disableQuestion() {
 			}
 		}
 	}
-	g.CurQuestion = Question{}
 }
 
 func (g *Game) validWager(wager, score int) bool {

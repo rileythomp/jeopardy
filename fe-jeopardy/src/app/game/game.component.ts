@@ -31,54 +31,61 @@ export class GameComponent implements OnInit {
 
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
-			if (resp.game.state == GameState.RecvBuzz) {
-				console.log('show the question, accept a buzz');
-				console.log(resp);
+			switch (resp.game.state) {
+				case GameState.RecvBuzz:
+					console.log('show the question, accept a buzz');
+					console.log(resp);
 
-				this.gameState.updateGameState(resp.game);
-				this.player.updatePlayer(resp.curPlayer);
+					this.gameState.updateGameState(resp.game);
+					this.player.updatePlayer(resp.curPlayer);
 
-				this.players = this.gameState.getPlayers();
-				this.questionRows = this.gameState.getQuestionRows();
-			}
-			else if (resp.game.state == GameState.RecvAns) {
-				console.log('alert of buzz, accept an answer');
-				console.log(resp);
+					this.players = this.gameState.getPlayers();
+					this.questionRows = this.gameState.getQuestionRows();
+					break;
 
-				this.gameState.updateGameState(resp.game);
-				this.player.updatePlayer(resp.curPlayer);
-			}
-			else if (resp.game.state == GameState.RecvPick) {
-				console.log('show the board, accept a pick');
-				console.log(resp);
+				case GameState.RecvAns:
+					console.log('alert of buzz, accept an answer');
+					console.log(resp);
 
-				this.gameState.updateGameState(resp.game);
-				this.player.updatePlayer(resp.curPlayer);
+					this.gameState.updateGameState(resp.game);
+					this.player.updatePlayer(resp.curPlayer);
+					break;
 
-				this.players = this.gameState.getPlayers();
-				this.titles = this.gameState.getTitles();
-				this.questionRows = this.gameState.getQuestionRows();
-			}
-			else if (resp.game.state == GameState.RecvWager) {
-				console.log('show the question, accept a wager');
-				console.log(resp);
+				case GameState.RecvPick:
+					console.log('show the board, accept a pick');
+					console.log(resp);
 
-				this.gameState.updateGameState(resp.game);
-				this.player.updatePlayer(resp.curPlayer);
+					this.gameState.updateGameState(resp.game);
+					this.player.updatePlayer(resp.curPlayer);
 
-				this.players = this.gameState.getPlayers();
-			}
-			else if (resp.game.state == GameState.PostGame) {
-				console.log('show who won the game');
-				console.log(resp);
+					this.players = this.gameState.getPlayers();
+					this.titles = this.gameState.getTitles();
+					this.questionRows = this.gameState.getQuestionRows();
+					break;
 
-				this.gameState.updateGameState(resp.game);
-				this.player.updatePlayer(resp.curPlayer);
+				case GameState.RecvWager:
+					console.log('show the question, accept a wager');
+					console.log(resp);
 
-				this.players = this.gameState.getPlayers();
-			}
-			else {
-				alert('Unable to update game');
+					this.gameState.updateGameState(resp.game);
+					this.player.updatePlayer(resp.curPlayer);
+
+					this.players = this.gameState.getPlayers();
+					break;
+
+				case GameState.PostGame:
+					console.log('show who won the game');
+					console.log(resp);
+
+					this.gameState.updateGameState(resp.game);
+					this.player.updatePlayer(resp.curPlayer);
+
+					this.players = this.gameState.getPlayers();
+					break;
+
+				default:
+					alert('Unable to update game');
+					break;
 			}
 		})
 	}
