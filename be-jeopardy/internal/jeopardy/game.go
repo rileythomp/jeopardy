@@ -349,8 +349,12 @@ func (g *Game) handleWager(playerId string, wager int) error {
 	if !player.CanWager {
 		return fmt.Errorf("player cannot wager")
 	}
-	if !g.validWager(wager, player.Score) {
-		return fmt.Errorf("invalid wager, must be between 5 and %d", max(player.Score, 1000))
+	if min, max, ok := g.validWager(wager, player.Score); !ok {
+		player.conn.WriteJSON(Response{
+			Code:    400,
+			Message: fmt.Sprintf("invalid wager, must be between %d and %d", min, max),
+		})
+		return nil
 	}
 	var resp Response
 	if g.Round == FinalRound {
@@ -908,7 +912,7 @@ func (g *Game) disableQuestion() {
 	}
 }
 
-func (g *Game) validWager(wager, score int) bool {
+func (g *Game) validWager(wager, score int) (int, int, bool) {
 	minWager := 5
 	if g.Round == FinalRound {
 		minWager = 0
@@ -919,7 +923,7 @@ func (g *Game) validWager(wager, score int) bool {
 	} else if g.Round == SecondRound {
 		roundMax = 2000
 	}
-	return wager >= minWager && wager <= max(score, roundMax)
+	return minWager, max(score, roundMax), wager >= minWager && wager <= max(score, roundMax)
 }
 
 func (g *Game) roundEnded() bool {

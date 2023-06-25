@@ -31,6 +31,10 @@ export class GameComponent implements OnInit {
 
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
+			if (resp.code != 200) {
+				alert(resp.message)
+				return
+			}
 			switch (resp.game.state) {
 				case GameState.RecvBuzz:
 					console.log('show the question, accept a buzz');
