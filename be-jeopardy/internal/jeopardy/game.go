@@ -85,6 +85,17 @@ func NewGame() *Game {
 	}
 }
 
+func (g *Game) StartGame() error {
+	if !g.ReadyToPlay() {
+		return fmt.Errorf("not enough players")
+	}
+	if err := g.SetQuestions(); err != nil {
+		return err
+	}
+	g.SetState(RecvPick, g.Players[0].Id)
+	return nil
+}
+
 func (g *Game) HandleRequest(playerId string, msg []byte) error {
 	var err error
 	switch g.State {

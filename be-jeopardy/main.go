@@ -113,12 +113,11 @@ func playGame(c *gin.Context) {
 		Game:    game,
 	}
 	if game.ReadyToPlay() {
-		if err := game.SetQuestions(); err != nil {
-			log.Println("Failed to set questions:", err)
-			closeConnWithMsg(conn, "Failed to set questions", http.StatusInternalServerError)
+		if err := game.StartGame(); err != nil {
+			log.Println("Error starting game", err)
+			closeConnWithMsg(conn, fmt.Sprintf("error starting game: %s", err.Error()), http.StatusInternalServerError)
 			return
 		}
-		game.SetState(jeopardy.RecvPick, game.Players[0].Id)
 		resp = jeopardy.Response{
 			Code:    200,
 			Message: "We are ready to play",
