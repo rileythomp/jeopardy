@@ -104,22 +104,14 @@ func (g *Game) SetPlayerConnection(playerId string, conn *websocket.Conn) error 
 		return fmt.Errorf("player not found")
 	}
 	player.conn = conn
-	resp := Response{
-		Code:    200,
-		Message: "Waiting for more players",
-		Game:    g,
-	}
+	msg := "Waiting for more players"
 	if g.readyToPlay() {
 		if err := g.startGame(); err != nil {
 			return fmt.Errorf("error starting game: %w", err)
 		}
-		resp = Response{
-			Code:    200,
-			Message: "We are ready to play",
-			Game:    g,
-		}
+		msg = "We are ready to play"
 	}
-	if err := g.messageAllPlayers(resp); err != nil {
+	if err := g.messageAllPlayers(msg); err != nil {
 		return fmt.Errorf("error sending message to players: %w", err)
 	}
 	return nil
@@ -197,23 +189,15 @@ func (g *Game) handlePick(playerId string, topicIdx, valIdx int) error {
 	}
 	g.LastPicker = player.Id
 	g.CurQuestion = curQuestion
-	var resp Response
+	var msg string
 	if curQuestion.DailyDouble {
 		g.setState(RecvWager, player.Id)
-		resp = Response{
-			Code:    200,
-			Message: "Daily Double",
-			Game:    g,
-		}
+		msg = "Daily Double"
 	} else {
 		g.setState(RecvBuzz, "")
-		resp = Response{
-			Code:    200,
-			Message: "New Question",
-			Game:    g,
-		}
+		msg = "New Question"
 	}
-	if err := g.messageAllPlayers(resp); err != nil {
+	if err := g.messageAllPlayers(msg); err != nil {
 		return err
 	}
 	return nil
@@ -230,27 +214,19 @@ func (g *Game) handleBuzz(playerId string, isPass bool) error {
 	if isPass {
 		g.Passes++
 	}
-	var resp Response
+	var msg string
 	if g.Passes+len(g.GuessedWrong) == len(g.Players) {
 		g.disableQuestion()
 		g.GuessedWrong = []string{}
 		g.Passes = 0
 		g.setState(RecvPick, g.LastPicker)
-		resp = Response{
-			Code:    200,
-			Message: "Question unanswered",
-			Game:    g,
-		}
+		msg = "Question unanswered"
 		// TODO: Handle unanswered question at end of round
 	} else {
 		g.setState(RecvAns, player.Id)
-		resp = Response{
-			Code:    200,
-			Message: "Player buzzed",
-			Game:    g,
-		}
+		msg = "Player buzzed"
 	}
-	if err := g.messageAllPlayers(resp); err != nil {
+	if err := g.messageAllPlayers(msg); err != nil {
 		return err
 	}
 	return nil
@@ -266,7 +242,7 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 	}
 	isCorrect := g.CurQuestion.checkAnswer(answer)
 	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
-	var resp Response
+	var msg string
 	if g.Round == FinalRound {
 		g.FinalAnswersRecvd++
 		player.CanAnswer = false
@@ -276,11 +252,7 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 			return nil
 		}
 		g.setState(PostGame, "")
-		resp = Response{
-			Code:    200,
-			Message: "Final round ended",
-			Game:    g,
-		}
+		msg = "Final round ended"
 	} else {
 		if !isCorrect {
 			g.GuessedWrong = append(g.GuessedWrong, player.Id)
@@ -294,11 +266,7 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 			g.GuessedWrong = []string{}
 			g.Passes = 0
 			g.setState(RecvPick, g.lowestPlayer())
-			resp = Response{
-				Code:    200,
-				Message: "First round ended",
-				Game:    g,
-			}
+			msg = "First round ended"
 		} else if roundOver && g.Round == SecondRound {
 			g.Round = FinalRound
 			g.GuessedWrong = []string{}
@@ -306,39 +274,23 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 			g.CurQuestion = g.FinalRound
 			g.NumFinalWagers = g.numFinalWagers()
 			g.setState(RecvWager, "")
-			resp = Response{
-				Code:    200,
-				Message: "Second round ended",
-				Game:    g,
-			}
+			msg = "Second round ended"
 		} else if g.Passes+len(g.GuessedWrong) == len(g.Players) {
 			g.GuessedWrong = []string{}
 			g.Passes = 0
 			g.setState(RecvPick, g.LastPicker)
-			resp = Response{
-				Code:    200,
-				Message: "All players guessed wrong",
-				Game:    g,
-			}
+			msg = "All players guessed wrong"
 		} else if isCorrect || g.CurQuestion.DailyDouble {
 			g.GuessedWrong = []string{}
 			g.Passes = 0
 			g.setState(RecvPick, playerId)
-			resp = Response{
-				Code:    200,
-				Message: "Question is complete",
-				Game:    g,
-			}
+			msg = "Question is complete"
 		} else {
 			g.setState(RecvBuzz, "")
-			resp = Response{
-				Code:    200,
-				Message: "Player answered incorrectly",
-				Game:    g,
-			}
+			msg = "Player answered incorrectly"
 		}
 	}
-	if err := g.messageAllPlayers(resp); err != nil {
+	if err := g.messageAllPlayers(msg); err != nil {
 		return err
 	}
 	return nil
@@ -360,13 +312,13 @@ func (g *Game) handleWager(playerId string, wager int) error {
 		})
 		return nil
 	}
-	var resp Response
+	var msg string
 	if g.Round == FinalRound {
 		player.FinalWager = wager
 		player.CanWager = false
 		g.FinalWagersRecvd++
 		if g.FinalWagersRecvd != g.NumFinalWagers {
-			resp = Response{
+			resp := Response{
 				Code:      200,
 				Message:   "Player wagered",
 				Game:      g,
@@ -378,21 +330,13 @@ func (g *Game) handleWager(playerId string, wager int) error {
 			return nil
 		}
 		g.setState(RecvAns, "")
-		resp = Response{
-			Code:    200,
-			Message: "All wagers received",
-			Game:    g,
-		}
+		msg = "All wagers received"
 	} else {
 		g.CurQuestion.Value = wager
 		g.setState(RecvAns, player.Id)
-		resp = Response{
-			Code:    200,
-			Message: "Player wagered",
-			Game:    g,
-		}
+		msg = "Player wagered"
 	}
-	if err := g.messageAllPlayers(resp); err != nil {
+	if err := g.messageAllPlayers(msg); err != nil {
 		return err
 	}
 	return nil
@@ -454,11 +398,15 @@ func (g *Game) setState(state GameState, id string) {
 	g.State = state
 }
 
-func (g *Game) messageAllPlayers(resp Response) error {
+func (g *Game) messageAllPlayers(msg string) error {
 	for _, player := range g.Players {
 		if player.conn != nil {
-			resp.CurPlayer = player
-			if err := player.conn.WriteJSON(resp); err != nil {
+			if err := player.conn.WriteJSON(Response{
+				Code:      200,
+				Message:   msg,
+				Game:      g,
+				CurPlayer: player,
+			}); err != nil {
 				// TODO: HANDLE ERROR SYNCHRONIZATION
 				return err
 			}
