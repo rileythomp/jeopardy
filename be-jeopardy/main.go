@@ -13,42 +13,6 @@ import (
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/jeopardy"
 )
 
-type (
-	Request struct {
-		Token string `json:"token,omitempty"`
-	}
-
-	JoinRequest struct {
-		Request
-		PlayerName string `json:"playerName"`
-	}
-
-	PlayRequest struct {
-		Request
-	}
-
-	PickRequest struct {
-		Request
-		TopicIdx int `json:"topicIdx"`
-		ValIdx   int `json:"valIdx"`
-	}
-
-	BuzzRequest struct {
-		Request
-		IsPass bool `json:"isPass"`
-	}
-
-	AnswerRequest struct {
-		Request
-		Answer string `json:"answer"`
-	}
-
-	WagerRequest struct {
-		Request
-		Wager int `json:"wager"`
-	}
-)
-
 var (
 	upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -77,20 +41,12 @@ func joinGame(c *gin.Context) {
 		closeConnWithMsg(conn, "Failed to read message from WebSocket", http.StatusInternalServerError)
 		return
 	}
-	var joinReq JoinRequest
-	if err := json.Unmarshal(msg, &joinReq); err != nil {
-		log.Println("Failed to parse join request:", err)
-		closeConnWithMsg(conn, "Failed to parse join request", http.StatusBadRequest)
+	playerId, err := game.AddPlayer(msg)
+	if err != nil {
+		log.Println("Failed to add player:", err)
+		closeConnWithMsg(conn, fmt.Sprintf("Failed to add player: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
-
-	if game.HasStarted() {
-		log.Println("Game already in progress")
-		closeConnWithMsg(conn, "Game already in progress", http.StatusForbidden)
-		return
-	}
-	playerId := game.AddPlayer(joinReq.PlayerName)
-
 	jwt, err := generateJWT(playerId)
 	if err != nil {
 		log.Println("Failed to generate token:", err)
@@ -124,7 +80,7 @@ func playGame(c *gin.Context) {
 		closeConnWithMsg(conn, "Failed to read message WebSocket", http.StatusInternalServerError)
 		return
 	}
-	var playReq PlayRequest
+	var playReq jeopardy.PlayRequest
 	if err := json.Unmarshal(msg, &playReq); err != nil {
 		log.Println("Failed to unmarshal play request:", err)
 		closeConnWithMsg(conn, "Failed to parse join request", http.StatusBadRequest)
@@ -138,13 +94,12 @@ func playGame(c *gin.Context) {
 		return
 	}
 
-	player := game.GetPlayerById(playerId)
-	if player == nil {
-		log.Println("Player not found")
-		closeConnWithMsg(conn, "Player not found", http.StatusForbidden)
+	err = game.SetPlayerConnection(playerId, conn)
+	if err != nil {
+		log.Println("Failed to set player connection:", err)
+		closeConnWithMsg(conn, "Failed to set player connection", http.StatusInternalServerError)
 		return
 	}
-	player.Conn = conn
 
 	resp := jeopardy.Response{
 		Code:    200,
@@ -178,86 +133,22 @@ func playGame(c *gin.Context) {
 			closeConnWithMsg(conn, "Failed to read message from WebSocket", http.StatusInternalServerError)
 			return
 		}
-
-		switch game.State {
-		case jeopardy.RecvPick:
-			var pickReq PickRequest
-			if err := json.Unmarshal(msg, &pickReq); err != nil {
-				log.Println("Failed to parse pick request:", err)
-				closeConnWithMsg(conn, "Failed to parse pick request", http.StatusBadRequest)
-				return
-			}
-			playerId, err := getJWTSubject(pickReq.Token)
-			if err != nil {
-				log.Println("Failed to get playerId from token:", err)
-				closeConnWithMsg(conn, "Failed to get playerId from token", http.StatusForbidden)
-				return
-			}
-			err = game.HandlePick(playerId, pickReq.TopicIdx, pickReq.ValIdx)
-			if err != nil {
-				log.Println("Failed to handle pick:", err)
-				closeConnWithMsg(conn, fmt.Sprintf("Failed to handle pick: %s", err), http.StatusInternalServerError)
-				return
-			}
-		case jeopardy.RecvBuzz:
-			var buzzReq BuzzRequest
-			if err := json.Unmarshal(msg, &buzzReq); err != nil {
-				log.Println("Failed to parse buzz request:", err)
-				closeConnWithMsg(conn, "Failed to parse buzz request", http.StatusBadRequest)
-				return
-			}
-			playerId, err := getJWTSubject(buzzReq.Token)
-			if err != nil {
-				log.Println("Failed to get playerId from token:", err)
-				closeConnWithMsg(conn, "Failed to get playerId from token", http.StatusForbidden)
-				return
-			}
-			err = game.HandleBuzz(playerId, buzzReq.IsPass)
-			if err != nil {
-				log.Println("Failed to handle buzz:", err)
-				closeConnWithMsg(conn, fmt.Sprintf("Failed to handle buzz: %s", err), http.StatusInternalServerError)
-				return
-			}
-		case jeopardy.RecvAns:
-			var ansReq AnswerRequest
-			if err := json.Unmarshal(msg, &ansReq); err != nil {
-				log.Println("Failed to parse answer request:", err)
-				closeConnWithMsg(conn, "Failed to parse answer request", http.StatusBadRequest)
-			}
-			playerId, err := getJWTSubject(ansReq.Token)
-			if err != nil {
-				log.Println("Failed to get playerId from token:", err)
-				conn.Close()
-				continue
-			}
-			err = game.HandleAnswer(playerId, ansReq.Answer)
-			if err != nil {
-				log.Println("Failed to handle answer:", err)
-				closeConnWithMsg(conn, fmt.Sprintf("Failed to handle answer: %s", err), http.StatusInternalServerError)
-				return
-			}
-		case jeopardy.RecvWager:
-			var wagerReq WagerRequest
-			if err := json.Unmarshal(msg, &wagerReq); err != nil {
-				log.Println("Failed to parse wager request:", err)
-				closeConnWithMsg(conn, "Failed to parse wager request", http.StatusBadRequest)
-				return
-			}
-			playerId, err := getJWTSubject(wagerReq.Token)
-			if err != nil {
-				log.Println("Failed to get playerId from token:", err)
-				closeConnWithMsg(conn, "Failed to get playerId from token", http.StatusForbidden)
-				return
-			}
-			err = game.HandleWager(playerId, wagerReq.Wager)
-			if err != nil {
-				log.Println("Failed to handle wager:", err)
-				closeConnWithMsg(conn, fmt.Sprintf("Failed to handle wager: %s", err), http.StatusInternalServerError)
-				return
-			}
-		default:
-			log.Println("Invalid game state")
-			continue
+		var req jeopardy.Request
+		if err := json.Unmarshal(msg, &req); err != nil {
+			log.Println("Failed to parse request:", err)
+			closeConnWithMsg(conn, "Failed to parse request", http.StatusBadRequest)
+			return
+		}
+		playerId, err := getJWTSubject(req.Token)
+		if err != nil {
+			log.Println("Failed to get playerId from token:", err)
+			closeConnWithMsg(conn, "Failed to get playerId from token", http.StatusForbidden)
+			return
+		}
+		err = game.HandleRequest(playerId, msg)
+		if err != nil {
+			log.Printf("Failed to handle request: %s", err.Error())
+			closeConnWithMsg(conn, err.Error(), http.StatusInternalServerError)
 		}
 	}
 }

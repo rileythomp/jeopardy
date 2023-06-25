@@ -1,6 +1,7 @@
 package jeopardy
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -60,7 +61,7 @@ type (
 		CanWager   bool   `json:"canWager"`
 		FinalWager int    `json:"finalWager"`
 
-		Conn *websocket.Conn
+		conn *websocket.Conn
 	}
 
 	Topic struct {
@@ -83,6 +84,40 @@ type (
 		Game      *Game   `json:"game,omitempty"`
 		CurPlayer *Player `json:"curPlayer,omitempty"`
 	}
+
+	Request struct {
+		Token string `json:"token,omitempty"`
+	}
+
+	JoinRequest struct {
+		Request
+		PlayerName string `json:"playerName"`
+	}
+
+	PlayRequest struct {
+		Request
+	}
+
+	PickRequest struct {
+		Request
+		TopicIdx int `json:"topicIdx"`
+		ValIdx   int `json:"valIdx"`
+	}
+
+	BuzzRequest struct {
+		Request
+		IsPass bool `json:"isPass"`
+	}
+
+	AnswerRequest struct {
+		Request
+		Answer string `json:"answer"`
+	}
+
+	WagerRequest struct {
+		Request
+		Wager int `json:"wager"`
+	}
 )
 
 func NewGame() *Game {
@@ -90,6 +125,39 @@ func NewGame() *Game {
 		State:   PreGame,
 		Players: []*Player{},
 	}
+}
+
+func (g *Game) HandleRequest(playerId string, msg []byte) error {
+	var err error
+	switch g.State {
+	case RecvPick:
+		var pickReq PickRequest
+		if err := json.Unmarshal(msg, &pickReq); err != nil {
+			return fmt.Errorf("failed to parse pick request: %w", err)
+		}
+		err = g.HandlePick(playerId, pickReq.TopicIdx, pickReq.ValIdx)
+	case RecvBuzz:
+		var buzzReq BuzzRequest
+		if err := json.Unmarshal(msg, &buzzReq); err != nil {
+			return fmt.Errorf("failed to parse buzz request: %w", err)
+		}
+		err = g.HandleBuzz(playerId, buzzReq.IsPass)
+	case RecvAns:
+		var ansReq AnswerRequest
+		if err := json.Unmarshal(msg, &ansReq); err != nil {
+			return fmt.Errorf("failed to parse answer request: %w", err)
+		}
+		err = g.HandleAnswer(playerId, ansReq.Answer)
+	case RecvWager:
+		var wagerReq WagerRequest
+		if err := json.Unmarshal(msg, &wagerReq); err != nil {
+			return fmt.Errorf("failed to parse wager request: %w", err)
+		}
+		err = g.HandleWager(playerId, wagerReq.Wager)
+	default:
+		return fmt.Errorf("invalid game state")
+	}
+	return err
 }
 
 func (g *Game) SetState(state GameState, id string) {
@@ -319,7 +387,7 @@ func (g *Game) HandleWager(playerId string, wager int) error {
 				Message: "Player wagered",
 				Game:    g,
 			}
-			if err := player.Conn.WriteJSON(resp); err != nil {
+			if err := player.conn.WriteJSON(resp); err != nil {
 				return err
 			}
 			return nil
@@ -349,16 +417,26 @@ func (g *Game) HasStarted() bool {
 	return g.State != PreGame
 }
 
-func (g *Game) AddPlayer(name string) string {
-	player := NewPlayer(name)
+func (g *Game) AddPlayer(msg []byte) (string, error) {
+	var joinReq JoinRequest
+	if err := json.Unmarshal(msg, &joinReq); err != nil {
+		return "", fmt.Errorf("failed to parse join request: %w", err)
+	}
+	if g.HasStarted() {
+		return "", fmt.Errorf("game already in progress")
+	}
+	if len(g.Players) > 2 {
+		return "", fmt.Errorf("game is full")
+	}
+	player := NewPlayer(joinReq.PlayerName)
 	g.Players = append(g.Players, player)
-	return player.Id
+	return player.Id, nil
 }
 
 func (g *Game) ReadyToPlay() bool {
 	playersReady := 0
 	for i := range g.Players {
-		if g.Players[i].Conn != nil {
+		if g.Players[i].conn != nil {
 			playersReady++
 		}
 	}
@@ -367,9 +445,9 @@ func (g *Game) ReadyToPlay() bool {
 
 func (g *Game) MessageAllPlayers(resp Response) error {
 	for _, player := range g.Players {
-		if player.Conn != nil {
+		if player.conn != nil {
 			resp.CurPlayer = player
-			if err := player.Conn.WriteJSON(resp); err != nil {
+			if err := player.conn.WriteJSON(resp); err != nil {
 				return err
 			}
 		}
@@ -394,6 +472,15 @@ func (g *Game) roundEnded() bool {
 		}
 	}
 	return true
+}
+
+func (g *Game) SetPlayerConnection(playerId string, conn *websocket.Conn) error {
+	player := g.GetPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("player not found")
+	}
+	player.conn = conn
+	return nil
 }
 
 func (g *Game) GetPlayerById(id string) *Player {
