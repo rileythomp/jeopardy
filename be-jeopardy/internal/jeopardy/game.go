@@ -37,18 +37,19 @@ const (
 
 type (
 	Game struct {
-		State        GameState        `json:"state"`
-		Round        RoundState       `json:"round"`
-		Players      []*Player        `json:"players"`
-		FirstRound   [numTopics]Topic `json:"firstRound"`
-		SecondRound  [numTopics]Topic `json:"secondRound"`
-		FinalRound   Question         `json:"finalRound"`
-		CurQuestion  Question         `json:"curQuestion"`
-		GuessedWrong []string         `json:"guessedWrong"`
-		LastPicker   string           `json:"lastPicker"`
-		FinalWagers  int              `json:"finalWagers"`
-		FinalAnswers int              `json:"finalAnswers"`
-		Passes       int              `json:"passes"`
+		State             GameState        `json:"state"`
+		Round             RoundState       `json:"round"`
+		Players           []*Player        `json:"players"`
+		FirstRound        [numTopics]Topic `json:"firstRound"`
+		SecondRound       [numTopics]Topic `json:"secondRound"`
+		FinalRound        Question         `json:"finalRound"`
+		CurQuestion       Question         `json:"curQuestion"`
+		GuessedWrong      []string         `json:"guessedWrong"`
+		LastPicker        string           `json:"lastPicker"`
+		NumFinalWagers    int              `json:"numFinalWagers"`
+		FinalWagersRecvd  int              `json:"finalWagers"`
+		FinalAnswersRecvd int              `json:"finalAnswers"`
+		Passes            int              `json:"passes"`
 	}
 
 	Player struct {
@@ -240,7 +241,7 @@ func (g *Game) handleBuzz(playerId string, isPass bool) error {
 			Message: "Question unanswered",
 			Game:    g,
 		}
-		// TODO: check for new round
+		// TODO: Handle unanswered question at end of round
 	} else {
 		g.setState(RecvAns, player.Id)
 		resp = Response{
@@ -267,9 +268,10 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
 	var resp Response
 	if g.Round == FinalRound {
-		g.FinalAnswers++
+		g.FinalAnswersRecvd++
 		player.CanAnswer = false
 		if !g.roundEnded() {
+			// TODO: Alert other players who answered
 			log.Printf("received answer from %s: %s\n", player.Name, answer)
 			return nil
 		}
@@ -302,6 +304,7 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 			g.GuessedWrong = []string{}
 			g.Passes = 0
 			g.CurQuestion = g.FinalRound
+			g.NumFinalWagers = g.numFinalWagers()
 			g.setState(RecvWager, "")
 			resp = Response{
 				Code:    200,
@@ -351,20 +354,23 @@ func (g *Game) handleWager(playerId string, wager int) error {
 	}
 	if min, max, ok := g.validWager(wager, player.Score); !ok {
 		player.conn.WriteJSON(Response{
-			Code:    400,
-			Message: fmt.Sprintf("invalid wager, must be between %d and %d", min, max),
+			Code:      400,
+			Message:   fmt.Sprintf("invalid wager, must be between %d and %d", min, max),
+			CurPlayer: player,
 		})
 		return nil
 	}
 	var resp Response
 	if g.Round == FinalRound {
 		player.FinalWager = wager
-		g.FinalWagers++
-		if g.FinalWagers != g.numFinalWagers() {
+		player.CanWager = false
+		g.FinalWagersRecvd++
+		if g.FinalWagersRecvd != g.NumFinalWagers {
 			resp = Response{
-				Code:    200,
-				Message: "Player wagered",
-				Game:    g,
+				Code:      200,
+				Message:   "Player wagered",
+				Game:      g,
+				CurPlayer: player,
 			}
 			if err := player.conn.WriteJSON(resp); err != nil {
 				return err
@@ -423,7 +429,7 @@ func (g *Game) setState(state GameState, id string) {
 			player.CanBuzz = false
 			player.CanAnswer = player.Id == id
 			if g.Round == FinalRound {
-				player.CanAnswer = player.CanWager
+				player.CanAnswer = player.Score > 0
 			}
 			player.CanWager = false
 		}
@@ -453,6 +459,7 @@ func (g *Game) messageAllPlayers(resp Response) error {
 		if player.conn != nil {
 			resp.CurPlayer = player
 			if err := player.conn.WriteJSON(resp); err != nil {
+				// TODO: HANDLE ERROR SYNCHRONIZATION
 				return err
 			}
 		}
@@ -471,19 +478,19 @@ func (g *Game) setQuestions() error {
 					Value:     200,
 					CanChoose: true,
 				},
-				{
-					Question:  "This city is the capital of the United Kingdom",
-					Answer:    "London",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:    "This city is the capital of France",
-					Answer:      "Paris",
-					Value:       600,
-					CanChoose:   true,
-					DailyDouble: true,
-				},
+				// {
+				// 	Question:  "This city is the capital of the United Kingdom",
+				// 	Answer:    "London",
+				// 	Value:     400,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:    "This city is the capital of France",
+				// 	Answer:      "Paris",
+				// 	Value:       600,
+				// 	CanChoose:   true,
+				// 	DailyDouble: true,
+				// },
 				// {
 				// 	Question:    "This city is the capital of Germany",
 				// 	Answer:      "Berlin",
@@ -498,76 +505,76 @@ func (g *Game) setQuestions() error {
 				// },
 			},
 		},
-		{
-			Title: "State Capitals",
-			Questions: [numQuestions]Question{
-				{
-					Question:  "This city is the capital of California",
-					Answer:    "Sacramento",
-					Value:     200,
-					CanChoose: true,
-				},
-				{
-					Question:  "This city is the capital of Texas",
-					Answer:    "Austin",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:  "This city is the capital of New York",
-					Answer:    "Albany",
-					Value:     600,
-					CanChoose: true,
-				},
-				// {
-				// 	Question:  "This city is the capital of Florida",
-				// 	Answer:    "Tallahassee",
-				// 	Value:     800,
-				// 	CanChoose: true,
-				// },
-				// {
-				// 	Question:  "This city is the capital of Washington",
-				// 	Answer:    "Olympia",
-				// 	Value:     1000,
-				// 	CanChoose: true,
-				// },
-			},
-		},
-		{
-			Title: "Provincial Capitals",
-			Questions: [numQuestions]Question{
-				{
-					Question:  "This city is the capital of British Columbia",
-					Answer:    "Victoria",
-					Value:     200,
-					CanChoose: true,
-				},
-				{
-					Question:  "This city is the capital of Alberta",
-					Answer:    "Edmonton",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:  "This city is the capital of Saskatchewan",
-					Answer:    "Regina",
-					Value:     600,
-					CanChoose: true,
-				},
-				// {
-				// 	Question:  "This city is the capital of Manitoba",
-				// 	Answer:    "Winnipeg",
-				// 	Value:     800,
-				// 	CanChoose: true,
-				// },
-				// {
-				// 	Question:  "This city is the capital of Ontario",
-				// 	Answer:    "Toronto",
-				// 	Value:     1000,
-				// 	CanChoose: true,
-				// },
-			},
-		},
+		// {
+		// 	Title: "State Capitals",
+		// 	Questions: [numQuestions]Question{
+		// 		{
+		// 			Question:  "This city is the capital of California",
+		// 			Answer:    "Sacramento",
+		// 			Value:     200,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This city is the capital of Texas",
+		// 			Answer:    "Austin",
+		// 			Value:     400,
+		// 			CanChoose: true,
+		// 		},
+		// 		// {
+		// 		// 	Question:  "This city is the capital of New York",
+		// 		// 	Answer:    "Albany",
+		// 		// 	Value:     600,
+		// 		// 	CanChoose: true,
+		// 		// },
+		// 		// {
+		// 		// 	Question:  "This city is the capital of Florida",
+		// 		// 	Answer:    "Tallahassee",
+		// 		// 	Value:     800,
+		// 		// 	CanChoose: true,
+		// 		// },
+		// 		// {
+		// 		// 	Question:  "This city is the capital of Washington",
+		// 		// 	Answer:    "Olympia",
+		// 		// 	Value:     1000,
+		// 		// 	CanChoose: true,
+		// 		// },
+		// 	},
+		// },
+		// {
+		// 	Title: "Provincial Capitals",
+		// 	Questions: [numQuestions]Question{
+		// 		{
+		// 			Question:  "This city is the capital of British Columbia",
+		// 			Answer:    "Victoria",
+		// 			Value:     200,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This city is the capital of Alberta",
+		// 			Answer:    "Edmonton",
+		// 			Value:     400,
+		// 			CanChoose: true,
+		// 		},
+		// 		// {
+		// 		// 	Question:  "This city is the capital of Saskatchewan",
+		// 		// 	Answer:    "Regina",
+		// 		// 	Value:     600,
+		// 		// 	CanChoose: true,
+		// 		// },
+		// 		// {
+		// 		// 	Question:  "This city is the capital of Manitoba",
+		// 		// 	Answer:    "Winnipeg",
+		// 		// 	Value:     800,
+		// 		// 	CanChoose: true,
+		// 		// },
+		// 		// {
+		// 		// 	Question:  "This city is the capital of Ontario",
+		// 		// 	Answer:    "Toronto",
+		// 		// 	Value:     1000,
+		// 		// 	CanChoose: true,
+		// 		// },
+		// 	},
+		// },
 		// {
 		// 	Title: "Sports Trivia",
 		// 	Questions: [numQuestions]Question{
@@ -685,18 +692,18 @@ func (g *Game) setQuestions() error {
 					Value:     400,
 					CanChoose: true,
 				},
-				{
-					Question:  "This movie won the 2019 Oscar for Best Animated Feature",
-					Answer:    "Spider-Man: Into the Spider-Verse",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:  "This movie won the 2019 Oscar for Best Actor",
-					Answer:    "Rami Malek",
-					Value:     1200,
-					CanChoose: true,
-				},
+				// {
+				// 	Question:  "This movie won the 2019 Oscar for Best Animated Feature",
+				// 	Answer:    "Spider-Man: Into the Spider-Verse",
+				// 	Value:     800,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This movie won the 2019 Oscar for Best Actor",
+				// 	Answer:    "Rami Malek",
+				// 	Value:     1200,
+				// 	CanChoose: true,
+				// },
 				// {
 				// 	Question:  "This movie won the 2019 Oscar for Best Actress",
 				// 	Answer:    "Olivia Colman",
@@ -711,77 +718,77 @@ func (g *Game) setQuestions() error {
 				// },
 			},
 		},
-		{
-			Title: "TV Trivia",
-			Questions: [numQuestions]Question{
-				{
-					Question:  "This show won the 2019 Emmy for Best Drama Series",
-					Answer:    "Game of Thrones",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:  "This show won the 2019 Emmy for Best Comedy Series",
-					Answer:    "Fleabag",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:  "This actor won the 2019 Emmy for Best Actor in a Drama Series",
-					Answer:    "Billy Porter",
-					Value:     1200,
-					CanChoose: true,
-				},
-				// {
-				// 	Question:  "This actress won the 2019 Emmy for Best Actress in a Drama Series",
-				// 	Answer:    "Jodie Comer",
-				// 	Value:     1600,
-				// 	CanChoose: true,
-				// },
-				// {
-				// 	Question:  "This actress won the 2019 Emmy for Best Actress in a Comedy Series",
-				// 	Answer:    "Phoebe Waller-Bridge",
-				// 	Value:     2000,
-				// 	CanChoose: true,
-				// },
-			},
-		},
-		{
-			Title: "Science Trivia",
-			Questions: [numQuestions]Question{
-				{
-					Question:  "This is the largest planet in the solar system",
-					Answer:    "Jupiter",
-					Value:     400,
-					CanChoose: true,
-				},
-				{
-					Question:  "This is the smallest planet in the solar system",
-					Answer:    "Mercury",
-					Value:     800,
-					CanChoose: true,
-				},
-				{
-					Question:    "This is the largest organ in the human body",
-					Answer:      "The skin",
-					Value:       1200,
-					CanChoose:   true,
-					DailyDouble: true,
-				},
-				// {
-				// 	Question:  "This is the largest bone in the human body",
-				// 	Answer:    "The femur",
-				// 	Value:     1600,
-				// 	CanChoose: true,
-				// },
-				// {
-				// 	Question:  "This is the world's largest animal",
-				// 	Answer:    "The Antarctic blue whale",
-				// 	Value:     2000,
-				// 	CanChoose: true,
-				// },
-			},
-		},
+		// {
+		// 	Title: "TV Trivia",
+		// 	Questions: [numQuestions]Question{
+		// 		{
+		// 			Question:  "This show won the 2019 Emmy for Best Drama Series",
+		// 			Answer:    "Game of Thrones",
+		// 			Value:     400,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This show won the 2019 Emmy for Best Comedy Series",
+		// 			Answer:    "Fleabag",
+		// 			Value:     800,
+		// 			CanChoose: true,
+		// 		},
+		// 		// {
+		// 		// 	Question:  "This actor won the 2019 Emmy for Best Actor in a Drama Series",
+		// 		// 	Answer:    "Billy Porter",
+		// 		// 	Value:     1200,
+		// 		// 	CanChoose: true,
+		// 		// },
+		// 		// {
+		// 		// 	Question:  "This actress won the 2019 Emmy for Best Actress in a Drama Series",
+		// 		// 	Answer:    "Jodie Comer",
+		// 		// 	Value:     1600,
+		// 		// 	CanChoose: true,
+		// 		// },
+		// 		// {
+		// 		// 	Question:  "This actress won the 2019 Emmy for Best Actress in a Comedy Series",
+		// 		// 	Answer:    "Phoebe Waller-Bridge",
+		// 		// 	Value:     2000,
+		// 		// 	CanChoose: true,
+		// 		// },
+		// 	},
+		// },
+		// {
+		// 	Title: "Science Trivia",
+		// 	Questions: [numQuestions]Question{
+		// 		{
+		// 			Question:  "This is the largest planet in the solar system",
+		// 			Answer:    "Jupiter",
+		// 			Value:     400,
+		// 			CanChoose: true,
+		// 		},
+		// 		{
+		// 			Question:  "This is the smallest planet in the solar system",
+		// 			Answer:    "Mercury",
+		// 			Value:     800,
+		// 			CanChoose: true,
+		// 		},
+		// 		// {
+		// 		// 	Question:    "This is the largest organ in the human body",
+		// 		// 	Answer:      "The skin",
+		// 		// 	Value:       1200,
+		// 		// 	CanChoose:   true,
+		// 		// 	DailyDouble: true,
+		// 		// },
+		// 		// {
+		// 		// 	Question:  "This is the largest bone in the human body",
+		// 		// 	Answer:    "The femur",
+		// 		// 	Value:     1600,
+		// 		// 	CanChoose: true,
+		// 		// },
+		// 		// {
+		// 		// 	Question:  "This is the world's largest animal",
+		// 		// 	Answer:    "The Antarctic blue whale",
+		// 		// 	Value:     2000,
+		// 		// 	CanChoose: true,
+		// 		// },
+		// 	},
+		// },
 		// {
 		// 	Title: "History Trivia",
 		// 	Questions: [numQuestions]Question{
@@ -928,7 +935,7 @@ func (g *Game) validWager(wager, score int) (int, int, bool) {
 
 func (g *Game) roundEnded() bool {
 	if g.Round == FinalRound {
-		return g.FinalAnswers == g.numFinalAnswers()
+		return g.FinalAnswersRecvd == g.NumFinalWagers
 	}
 	curRound := g.FirstRound
 	if g.Round == SecondRound {
@@ -957,21 +964,11 @@ func (g *Game) lowestPlayer() string {
 func (g *Game) numFinalWagers() int {
 	numWagers := 0
 	for _, player := range g.Players {
-		if player.CanWager {
+		if player.Score > 0 {
 			numWagers++
 		}
 	}
 	return numWagers
-}
-
-func (g *Game) numFinalAnswers() int {
-	numAnswers := 0
-	for _, player := range g.Players {
-		if player.CanAnswer {
-			numAnswers++
-		}
-	}
-	return numAnswers
 }
 
 func NewPlayer(name string) *Player {

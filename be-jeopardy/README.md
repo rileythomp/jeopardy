@@ -8,11 +8,13 @@ To run the example, start the server:
 
 **TODO**
  * Fix answer check 
- * Implement daily double
  * Don't clear names after submitting wager
  * Hide final jeopardy answer input after answering
  * Skip final jeopardy if only 1 player eligible
  * Handle tie at end of final jeopardy
+ * Handle error synchronization
+ * Alert other players who answered
+ * Handle unanswered question at end of round
 
 ```bash
 go run server/server.go
