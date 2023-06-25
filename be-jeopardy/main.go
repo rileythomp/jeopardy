@@ -10,6 +10,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/jeopardy"
 )
 
 type (
@@ -46,14 +47,6 @@ type (
 		Request
 		Wager int `json:"wager"`
 	}
-
-	Response struct {
-		Code      int     `json:"code"`
-		Token     string  `json:"token,omitempty"`
-		Message   string  `json:"message"`
-		Game      *Game   `json:"game,omitempty"`
-		CurPlayer *Player `json:"curPlayer,omitempty"`
-	}
 )
 
 var (
@@ -63,11 +56,11 @@ var (
 		},
 	}
 
-	game = NewGame()
+	game = jeopardy.NewGame()
 )
 
 func closeConnWithMsg(conn *websocket.Conn, msg string, code int) {
-	_ = conn.WriteJSON(Response{Message: msg, Code: code})
+	_ = conn.WriteJSON(jeopardy.Response{Message: msg, Code: code})
 	conn.Close()
 }
 
@@ -91,12 +84,12 @@ func joinGame(c *gin.Context) {
 		return
 	}
 
-	if game.hasStarted() {
+	if game.HasStarted() {
 		log.Println("Game already in progress")
 		closeConnWithMsg(conn, "Game already in progress", http.StatusForbidden)
 		return
 	}
-	playerId := game.addPlayer(joinReq.PlayerName)
+	playerId := game.AddPlayer(joinReq.PlayerName)
 
 	jwt, err := generateJWT(playerId)
 	if err != nil {
@@ -104,7 +97,7 @@ func joinGame(c *gin.Context) {
 		closeConnWithMsg(conn, "Failed to generate token", http.StatusInternalServerError)
 		return
 	}
-	resp := Response{
+	resp := jeopardy.Response{
 		Code:    200,
 		Token:   jwt,
 		Message: "Authorized to join game",
@@ -145,34 +138,34 @@ func playGame(c *gin.Context) {
 		return
 	}
 
-	player := game.getPlayerById(playerId)
+	player := game.GetPlayerById(playerId)
 	if player == nil {
 		log.Println("Player not found")
 		closeConnWithMsg(conn, "Player not found", http.StatusForbidden)
 		return
 	}
-	player.conn = conn
+	player.Conn = conn
 
-	resp := Response{
+	resp := jeopardy.Response{
 		Code:    200,
 		Message: "Waiting for more players",
 		Game:    game,
 	}
-	if game.readyToPlay() {
-		if err := game.setQuestions(); err != nil {
+	if game.ReadyToPlay() {
+		if err := game.SetQuestions(); err != nil {
 			log.Println("Failed to set questions:", err)
 			closeConnWithMsg(conn, "Failed to set questions", http.StatusInternalServerError)
 			return
 		}
-		game.setState(RecvPick, game.Players[0].Id)
-		resp = Response{
+		game.SetState(jeopardy.RecvPick, game.Players[0].Id)
+		resp = jeopardy.Response{
 			Code:    200,
 			Message: "We are ready to play",
 			Game:    game,
 		}
 	}
 
-	if err := game.messageAllPlayers(resp); err != nil {
+	if err := game.MessageAllPlayers(resp); err != nil {
 		log.Println("Error sending message to players:", err)
 		closeConnWithMsg(conn, "Error sending message to players", http.StatusInternalServerError)
 		return
@@ -187,7 +180,7 @@ func playGame(c *gin.Context) {
 		}
 
 		switch game.State {
-		case RecvPick:
+		case jeopardy.RecvPick:
 			var pickReq PickRequest
 			if err := json.Unmarshal(msg, &pickReq); err != nil {
 				log.Println("Failed to parse pick request:", err)
@@ -200,13 +193,13 @@ func playGame(c *gin.Context) {
 				closeConnWithMsg(conn, "Failed to get playerId from token", http.StatusForbidden)
 				return
 			}
-			err = game.handlePick(playerId, pickReq.TopicIdx, pickReq.ValIdx)
+			err = game.HandlePick(playerId, pickReq.TopicIdx, pickReq.ValIdx)
 			if err != nil {
 				log.Println("Failed to handle pick:", err)
 				closeConnWithMsg(conn, fmt.Sprintf("Failed to handle pick: %s", err), http.StatusInternalServerError)
 				return
 			}
-		case RecvBuzz:
+		case jeopardy.RecvBuzz:
 			var buzzReq BuzzRequest
 			if err := json.Unmarshal(msg, &buzzReq); err != nil {
 				log.Println("Failed to parse buzz request:", err)
@@ -219,13 +212,13 @@ func playGame(c *gin.Context) {
 				closeConnWithMsg(conn, "Failed to get playerId from token", http.StatusForbidden)
 				return
 			}
-			err = game.handleBuzz(playerId, buzzReq.IsPass)
+			err = game.HandleBuzz(playerId, buzzReq.IsPass)
 			if err != nil {
 				log.Println("Failed to handle buzz:", err)
 				closeConnWithMsg(conn, fmt.Sprintf("Failed to handle buzz: %s", err), http.StatusInternalServerError)
 				return
 			}
-		case RecvAns:
+		case jeopardy.RecvAns:
 			var ansReq AnswerRequest
 			if err := json.Unmarshal(msg, &ansReq); err != nil {
 				log.Println("Failed to parse answer request:", err)
@@ -237,13 +230,13 @@ func playGame(c *gin.Context) {
 				conn.Close()
 				continue
 			}
-			err = game.handleAnswer(playerId, ansReq.Answer)
+			err = game.HandleAnswer(playerId, ansReq.Answer)
 			if err != nil {
 				log.Println("Failed to handle answer:", err)
 				closeConnWithMsg(conn, fmt.Sprintf("Failed to handle answer: %s", err), http.StatusInternalServerError)
 				return
 			}
-		case RecvWager:
+		case jeopardy.RecvWager:
 			var wagerReq WagerRequest
 			if err := json.Unmarshal(msg, &wagerReq); err != nil {
 				log.Println("Failed to parse wager request:", err)
@@ -256,7 +249,7 @@ func playGame(c *gin.Context) {
 				closeConnWithMsg(conn, "Failed to get playerId from token", http.StatusForbidden)
 				return
 			}
-			err = game.handleWager(playerId, wagerReq.Wager)
+			err = game.HandleWager(playerId, wagerReq.Wager)
 			if err != nil {
 				log.Println("Failed to handle wager:", err)
 				closeConnWithMsg(conn, fmt.Sprintf("Failed to handle wager: %s", err), http.StatusInternalServerError)

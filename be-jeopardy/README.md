@@ -11,6 +11,7 @@ To run the example, start the server:
  * Implement daily double
  * Don't clear names after submitting wager
  * Hide final jeopardy answer input after answering
+ * Skip final jeopardy if only 1 player eligible
 
 ```bash
 go run server/server.go

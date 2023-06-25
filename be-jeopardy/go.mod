@@ -1,4 +1,4 @@
-module example
+module github.com/rileythomp/jeopardy/be-jeopardy
 
 go 1.19
 
