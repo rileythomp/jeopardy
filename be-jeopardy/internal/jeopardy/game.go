@@ -86,7 +86,7 @@ func NewGame() *Game {
 }
 
 func (g *Game) AddPlayer(name string) (string, error) {
-	if g.HasStarted() {
+	if g.State != PreGame {
 		return "", fmt.Errorf("game already in progress")
 	}
 	if len(g.Players) > 2 {
@@ -97,7 +97,34 @@ func (g *Game) AddPlayer(name string) (string, error) {
 	return player.Id, nil
 }
 
-func (g *Game) ReadyToPlay() bool {
+func (g *Game) SetPlayerConnection(playerId string, conn *websocket.Conn) error {
+	player := g.getPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("player not found")
+	}
+	player.conn = conn
+	resp := Response{
+		Code:    200,
+		Message: "Waiting for more players",
+		Game:    g,
+	}
+	if g.readyToPlay() {
+		if err := g.startGame(); err != nil {
+			return fmt.Errorf("error starting game: %w", err)
+		}
+		resp = Response{
+			Code:    200,
+			Message: "We are ready to play",
+			Game:    g,
+		}
+	}
+	if err := g.messageAllPlayers(resp); err != nil {
+		return fmt.Errorf("error sending message to players: %w", err)
+	}
+	return nil
+}
+
+func (g *Game) readyToPlay() bool {
 	playersReady := 0
 	for i := range g.Players {
 		if g.Players[i].conn != nil {
@@ -107,11 +134,8 @@ func (g *Game) ReadyToPlay() bool {
 	return playersReady == 3
 }
 
-func (g *Game) StartGame() error {
-	if !g.ReadyToPlay() {
-		return fmt.Errorf("not enough players")
-	}
-	if err := g.SetQuestions(); err != nil {
+func (g *Game) startGame() error {
+	if err := g.setQuestions(); err != nil {
 		return err
 	}
 	g.setState(RecvPick, g.Players[0].Id)
@@ -152,7 +176,7 @@ func (g *Game) HandleRequest(playerId string, msg []byte) error {
 }
 
 func (g *Game) handlePick(playerId string, topicIdx, valIdx int) error {
-	player := g.GetPlayerById(playerId)
+	player := g.getPlayerById(playerId)
 	if player == nil {
 		return fmt.Errorf("player not found")
 	}
@@ -188,14 +212,14 @@ func (g *Game) handlePick(playerId string, topicIdx, valIdx int) error {
 			Game:    g,
 		}
 	}
-	if err := g.MessageAllPlayers(resp); err != nil {
+	if err := g.messageAllPlayers(resp); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (g *Game) handleBuzz(playerId string, isPass bool) error {
-	player := g.GetPlayerById(playerId)
+	player := g.getPlayerById(playerId)
 	if player == nil {
 		return fmt.Errorf("player not found")
 	}
@@ -225,14 +249,14 @@ func (g *Game) handleBuzz(playerId string, isPass bool) error {
 			Game:    g,
 		}
 	}
-	if err := g.MessageAllPlayers(resp); err != nil {
+	if err := g.messageAllPlayers(resp); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (g *Game) handleAnswer(playerId, answer string) error {
-	player := g.GetPlayerById(playerId)
+	player := g.getPlayerById(playerId)
 	if player == nil {
 		return fmt.Errorf("player not found")
 	}
@@ -310,14 +334,14 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 			}
 		}
 	}
-	if err := g.MessageAllPlayers(resp); err != nil {
+	if err := g.messageAllPlayers(resp); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (g *Game) handleWager(playerId string, wager int) error {
-	player := g.GetPlayerById(playerId)
+	player := g.getPlayerById(playerId)
 	if player == nil {
 		return fmt.Errorf("player not found")
 	}
@@ -357,8 +381,17 @@ func (g *Game) handleWager(playerId string, wager int) error {
 			Game:    g,
 		}
 	}
-	if err := g.MessageAllPlayers(resp); err != nil {
+	if err := g.messageAllPlayers(resp); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (g *Game) getPlayerById(id string) *Player {
+	for _, player := range g.Players {
+		if player.Id == id {
+			return player
+		}
 	}
 	return nil
 }
@@ -410,11 +443,7 @@ func (g *Game) setState(state GameState, id string) {
 	g.State = state
 }
 
-func (g *Game) HasStarted() bool {
-	return g.State != PreGame
-}
-
-func (g *Game) MessageAllPlayers(resp Response) error {
+func (g *Game) messageAllPlayers(resp Response) error {
 	for _, player := range g.Players {
 		if player.conn != nil {
 			resp.CurPlayer = player
@@ -426,61 +455,7 @@ func (g *Game) MessageAllPlayers(resp Response) error {
 	return nil
 }
 
-func (g *Game) roundEnded() bool {
-	if g.Round == FinalRound {
-		return g.FinalAnswers == g.numFinalAnswers()
-	}
-	curRound := g.FirstRound
-	if g.Round == SecondRound {
-		curRound = g.SecondRound
-	}
-	for _, topic := range curRound {
-		for _, question := range topic.Questions {
-			if question.CanChoose {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func (g *Game) SetPlayerConnection(playerId string, conn *websocket.Conn) error {
-	player := g.GetPlayerById(playerId)
-	if player == nil {
-		return fmt.Errorf("player not found")
-	}
-	player.conn = conn
-	resp := Response{
-		Code:    200,
-		Message: "Waiting for more players",
-		Game:    g,
-	}
-	if g.ReadyToPlay() {
-		if err := g.StartGame(); err != nil {
-			return fmt.Errorf("error starting game: %w", err)
-		}
-		resp = Response{
-			Code:    200,
-			Message: "We are ready to play",
-			Game:    g,
-		}
-	}
-	if err := g.MessageAllPlayers(resp); err != nil {
-		return fmt.Errorf("error sending message to players: %w", err)
-	}
-	return nil
-}
-
-func (g *Game) GetPlayerById(id string) *Player {
-	for _, player := range g.Players {
-		if player.Id == id {
-			return player
-		}
-	}
-	return nil
-}
-
-func (g *Game) SetQuestions() error {
+func (g *Game) setQuestions() error {
 	g.FirstRound = [numTopics]Topic{
 		{
 			Title: "World Capitals",
@@ -946,6 +921,34 @@ func (g *Game) validWager(wager, score int) bool {
 	return wager >= minWager && wager <= max(score, roundMax)
 }
 
+func (g *Game) roundEnded() bool {
+	if g.Round == FinalRound {
+		return g.FinalAnswers == g.numFinalAnswers()
+	}
+	curRound := g.FirstRound
+	if g.Round == SecondRound {
+		curRound = g.SecondRound
+	}
+	for _, topic := range curRound {
+		for _, question := range topic.Questions {
+			if question.CanChoose {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (g *Game) lowestPlayer() string {
+	lowest := g.Players[0]
+	for _, player := range g.Players {
+		if player.Score < lowest.Score {
+			lowest = player
+		}
+	}
+	return lowest.Id
+}
+
 func (g *Game) numFinalWagers() int {
 	numWagers := 0
 	for _, player := range g.Players {
@@ -964,16 +967,6 @@ func (g *Game) numFinalAnswers() int {
 		}
 	}
 	return numAnswers
-}
-
-func (g *Game) lowestPlayer() string {
-	lowest := g.Players[0]
-	for _, player := range g.Players {
-		if player.Score < lowest.Score {
-			lowest = player
-		}
-	}
-	return lowest.Id
 }
 
 func NewPlayer(name string) *Player {
