@@ -7,7 +7,7 @@ The server echoes messages sent to it. The client sends a message every second a
 To run the example, start the server:
 
 **TODO**
- * Handle unanswered question at end of round
+ * Hide pass and buzz buttons after passing
  * Hide final jeopardy answer input after answering
  * Skip final jeopardy if only 1 player eligible
  * Handle tie at end of final jeopardy

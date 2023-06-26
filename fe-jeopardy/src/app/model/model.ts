@@ -4,7 +4,7 @@ export type Game = {
     players: Player[];
     firstRound: Topic[];
     secondRound: Topic[];
-    finalRound: Question;
+    finalQuestion: Question;
     curQuestion: Question;
 };
 

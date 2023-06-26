@@ -113,10 +113,11 @@ export class GameComponent implements OnInit {
 		}
 	}
 
-	handleBuzz() {
+	handleBuzz(pass: boolean) {
 		if (this.player.canBuzz()) {
 			this.websocketService.send({
 				"token": this.jwtService.getJwt(),
+				"isPass": pass,
 			})
 		}
 	}

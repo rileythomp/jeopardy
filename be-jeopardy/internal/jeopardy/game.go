@@ -42,7 +42,7 @@ type (
 		Players           []*Player        `json:"players"`
 		FirstRound        [numTopics]Topic `json:"firstRound"`
 		SecondRound       [numTopics]Topic `json:"secondRound"`
-		FinalRound        Question         `json:"finalRound"`
+		FinalQuestion     Question         `json:"finalQuestion"`
 		CurQuestion       Question         `json:"curQuestion"`
 		GuessedWrong      []string         `json:"guessedWrong"`
 		LastPicker        string           `json:"lastPicker"`
@@ -211,17 +211,35 @@ func (g *Game) handleBuzz(playerId string, isPass bool) error {
 	if !player.CanBuzz {
 		return fmt.Errorf("player cannot buzz")
 	}
+	var msg string
 	if isPass {
 		g.Passes++
-	}
-	var msg string
-	if g.Passes+len(g.GuessedWrong) == len(g.Players) {
+		player.CanBuzz = false
+		if g.Passes+len(g.GuessedWrong) != len(g.Players) {
+			return nil
+		}
 		g.disableQuestion()
-		g.GuessedWrong = []string{}
-		g.Passes = 0
-		g.setState(RecvPick, g.LastPicker)
-		msg = "Question unanswered"
-		// TODO: Handle unanswered question at end of round
+		roundOver := g.roundEnded()
+		if roundOver && g.Round == FirstRound {
+			g.Round = SecondRound
+			g.GuessedWrong = []string{}
+			g.Passes = 0
+			g.setState(RecvPick, g.lowestPlayer())
+			msg = "First round ended"
+		} else if roundOver && g.Round == SecondRound {
+			g.Round = FinalRound
+			g.GuessedWrong = []string{}
+			g.Passes = 0
+			g.CurQuestion = g.FinalQuestion
+			g.NumFinalWagers = g.numFinalWagers()
+			g.setState(RecvWager, "")
+			msg = "Second round ended"
+		} else {
+			g.GuessedWrong = []string{}
+			g.Passes = 0
+			g.setState(RecvPick, g.LastPicker)
+			msg = "Question unanswered"
+		}
 	} else {
 		g.setState(RecvAns, player.Id)
 		msg = "Player buzzed"
@@ -271,7 +289,7 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 			g.Round = FinalRound
 			g.GuessedWrong = []string{}
 			g.Passes = 0
-			g.CurQuestion = g.FinalRound
+			g.CurQuestion = g.FinalQuestion
 			g.NumFinalWagers = g.numFinalWagers()
 			g.setState(RecvWager, "")
 			msg = "Second round ended"
@@ -844,7 +862,7 @@ func (g *Game) setQuestions() error {
 		// 	},
 		// },
 	}
-	g.FinalRound = Question{
+	g.FinalQuestion = Question{
 		Question: "An MLB team got this name in 1902 after some of its players defected to a new crosstown rival, leaving young replacements",
 		Answer:   "Chicago Cubs",
 	}

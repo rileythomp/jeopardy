@@ -31,7 +31,8 @@
         <br>
         Value: {{ gameState.curValue() }}
         <br>
-        <button *ngIf="player.canBuzz()" (click)="handleBuzz()">Buzz</button>
+        <button *ngIf="player.canBuzz()" (click)="handleBuzz(false)">Buzz</button>
+        <button *ngIf="player.canBuzz()" (click)="handleBuzz(true)">Pass</button>
     </div>
     
     <div *ngIf="gameState.recvingAns() && player.canAnswer()">
