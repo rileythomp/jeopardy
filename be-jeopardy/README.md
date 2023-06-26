@@ -7,14 +7,13 @@ The server echoes messages sent to it. The client sends a message every second a
 To run the example, start the server:
 
 **TODO**
- * Fix answer check 
- * Don't clear names after submitting wager
+ * Handle unanswered question at end of round
  * Hide final jeopardy answer input after answering
  * Skip final jeopardy if only 1 player eligible
  * Handle tie at end of final jeopardy
+ * Alert other players who answered and wagered
+ * Fix answer check 
  * Handle error synchronization
- * Alert other players who answered
- * Handle unanswered question at end of round
 
 ```bash
 go run server/server.go

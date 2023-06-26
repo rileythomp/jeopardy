@@ -308,6 +308,7 @@ func (g *Game) handleWager(playerId string, wager int) error {
 		player.conn.WriteJSON(Response{
 			Code:      400,
 			Message:   fmt.Sprintf("invalid wager, must be between %d and %d", min, max),
+			Game:      g,
 			CurPlayer: player,
 		})
 		return nil
@@ -426,19 +427,19 @@ func (g *Game) setQuestions() error {
 					Value:     200,
 					CanChoose: true,
 				},
-				// {
-				// 	Question:  "This city is the capital of the United Kingdom",
-				// 	Answer:    "London",
-				// 	Value:     400,
-				// 	CanChoose: true,
-				// },
-				// {
-				// 	Question:    "This city is the capital of France",
-				// 	Answer:      "Paris",
-				// 	Value:       600,
-				// 	CanChoose:   true,
-				// 	DailyDouble: true,
-				// },
+				{
+					Question:  "This city is the capital of the United Kingdom",
+					Answer:    "London",
+					Value:     400,
+					CanChoose: true,
+				},
+				{
+					Question:    "This city is the capital of France",
+					Answer:      "Paris",
+					Value:       600,
+					CanChoose:   true,
+					DailyDouble: true,
+				},
 				// {
 				// 	Question:    "This city is the capital of Germany",
 				// 	Answer:      "Berlin",
@@ -453,76 +454,76 @@ func (g *Game) setQuestions() error {
 				// },
 			},
 		},
-		// {
-		// 	Title: "State Capitals",
-		// 	Questions: [numQuestions]Question{
-		// 		{
-		// 			Question:  "This city is the capital of California",
-		// 			Answer:    "Sacramento",
-		// 			Value:     200,
-		// 			CanChoose: true,
-		// 		},
-		// 		{
-		// 			Question:  "This city is the capital of Texas",
-		// 			Answer:    "Austin",
-		// 			Value:     400,
-		// 			CanChoose: true,
-		// 		},
-		// 		// {
-		// 		// 	Question:  "This city is the capital of New York",
-		// 		// 	Answer:    "Albany",
-		// 		// 	Value:     600,
-		// 		// 	CanChoose: true,
-		// 		// },
-		// 		// {
-		// 		// 	Question:  "This city is the capital of Florida",
-		// 		// 	Answer:    "Tallahassee",
-		// 		// 	Value:     800,
-		// 		// 	CanChoose: true,
-		// 		// },
-		// 		// {
-		// 		// 	Question:  "This city is the capital of Washington",
-		// 		// 	Answer:    "Olympia",
-		// 		// 	Value:     1000,
-		// 		// 	CanChoose: true,
-		// 		// },
-		// 	},
-		// },
-		// {
-		// 	Title: "Provincial Capitals",
-		// 	Questions: [numQuestions]Question{
-		// 		{
-		// 			Question:  "This city is the capital of British Columbia",
-		// 			Answer:    "Victoria",
-		// 			Value:     200,
-		// 			CanChoose: true,
-		// 		},
-		// 		{
-		// 			Question:  "This city is the capital of Alberta",
-		// 			Answer:    "Edmonton",
-		// 			Value:     400,
-		// 			CanChoose: true,
-		// 		},
-		// 		// {
-		// 		// 	Question:  "This city is the capital of Saskatchewan",
-		// 		// 	Answer:    "Regina",
-		// 		// 	Value:     600,
-		// 		// 	CanChoose: true,
-		// 		// },
-		// 		// {
-		// 		// 	Question:  "This city is the capital of Manitoba",
-		// 		// 	Answer:    "Winnipeg",
-		// 		// 	Value:     800,
-		// 		// 	CanChoose: true,
-		// 		// },
-		// 		// {
-		// 		// 	Question:  "This city is the capital of Ontario",
-		// 		// 	Answer:    "Toronto",
-		// 		// 	Value:     1000,
-		// 		// 	CanChoose: true,
-		// 		// },
-		// 	},
-		// },
+		{
+			Title: "State Capitals",
+			Questions: [numQuestions]Question{
+				{
+					Question:  "This city is the capital of California",
+					Answer:    "Sacramento",
+					Value:     200,
+					CanChoose: true,
+				},
+				{
+					Question:  "This city is the capital of Texas",
+					Answer:    "Austin",
+					Value:     400,
+					CanChoose: true,
+				},
+				{
+					Question:  "This city is the capital of New York",
+					Answer:    "Albany",
+					Value:     600,
+					CanChoose: true,
+				},
+				// {
+				// 	Question:  "This city is the capital of Florida",
+				// 	Answer:    "Tallahassee",
+				// 	Value:     800,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This city is the capital of Washington",
+				// 	Answer:    "Olympia",
+				// 	Value:     1000,
+				// 	CanChoose: true,
+				// },
+			},
+		},
+		{
+			Title: "Provincial Capitals",
+			Questions: [numQuestions]Question{
+				{
+					Question:  "This city is the capital of British Columbia",
+					Answer:    "Victoria",
+					Value:     200,
+					CanChoose: true,
+				},
+				{
+					Question:  "This city is the capital of Alberta",
+					Answer:    "Edmonton",
+					Value:     400,
+					CanChoose: true,
+				},
+				{
+					Question:  "This city is the capital of Saskatchewan",
+					Answer:    "Regina",
+					Value:     600,
+					CanChoose: true,
+				},
+				// {
+				// 	Question:  "This city is the capital of Manitoba",
+				// 	Answer:    "Winnipeg",
+				// 	Value:     800,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This city is the capital of Ontario",
+				// 	Answer:    "Toronto",
+				// 	Value:     1000,
+				// 	CanChoose: true,
+				// },
+			},
+		},
 		// {
 		// 	Title: "Sports Trivia",
 		// 	Questions: [numQuestions]Question{
@@ -640,18 +641,18 @@ func (g *Game) setQuestions() error {
 					Value:     400,
 					CanChoose: true,
 				},
-				// {
-				// 	Question:  "This movie won the 2019 Oscar for Best Animated Feature",
-				// 	Answer:    "Spider-Man: Into the Spider-Verse",
-				// 	Value:     800,
-				// 	CanChoose: true,
-				// },
-				// {
-				// 	Question:  "This movie won the 2019 Oscar for Best Actor",
-				// 	Answer:    "Rami Malek",
-				// 	Value:     1200,
-				// 	CanChoose: true,
-				// },
+				{
+					Question:  "This movie won the 2019 Oscar for Best Animated Feature",
+					Answer:    "Spider-Man: Into the Spider-Verse",
+					Value:     800,
+					CanChoose: true,
+				},
+				{
+					Question:  "This movie won the 2019 Oscar for Best Actor",
+					Answer:    "Rami Malek",
+					Value:     1200,
+					CanChoose: true,
+				},
 				// {
 				// 	Question:  "This movie won the 2019 Oscar for Best Actress",
 				// 	Answer:    "Olivia Colman",
@@ -666,77 +667,77 @@ func (g *Game) setQuestions() error {
 				// },
 			},
 		},
-		// {
-		// 	Title: "TV Trivia",
-		// 	Questions: [numQuestions]Question{
-		// 		{
-		// 			Question:  "This show won the 2019 Emmy for Best Drama Series",
-		// 			Answer:    "Game of Thrones",
-		// 			Value:     400,
-		// 			CanChoose: true,
-		// 		},
-		// 		{
-		// 			Question:  "This show won the 2019 Emmy for Best Comedy Series",
-		// 			Answer:    "Fleabag",
-		// 			Value:     800,
-		// 			CanChoose: true,
-		// 		},
-		// 		// {
-		// 		// 	Question:  "This actor won the 2019 Emmy for Best Actor in a Drama Series",
-		// 		// 	Answer:    "Billy Porter",
-		// 		// 	Value:     1200,
-		// 		// 	CanChoose: true,
-		// 		// },
-		// 		// {
-		// 		// 	Question:  "This actress won the 2019 Emmy for Best Actress in a Drama Series",
-		// 		// 	Answer:    "Jodie Comer",
-		// 		// 	Value:     1600,
-		// 		// 	CanChoose: true,
-		// 		// },
-		// 		// {
-		// 		// 	Question:  "This actress won the 2019 Emmy for Best Actress in a Comedy Series",
-		// 		// 	Answer:    "Phoebe Waller-Bridge",
-		// 		// 	Value:     2000,
-		// 		// 	CanChoose: true,
-		// 		// },
-		// 	},
-		// },
-		// {
-		// 	Title: "Science Trivia",
-		// 	Questions: [numQuestions]Question{
-		// 		{
-		// 			Question:  "This is the largest planet in the solar system",
-		// 			Answer:    "Jupiter",
-		// 			Value:     400,
-		// 			CanChoose: true,
-		// 		},
-		// 		{
-		// 			Question:  "This is the smallest planet in the solar system",
-		// 			Answer:    "Mercury",
-		// 			Value:     800,
-		// 			CanChoose: true,
-		// 		},
-		// 		// {
-		// 		// 	Question:    "This is the largest organ in the human body",
-		// 		// 	Answer:      "The skin",
-		// 		// 	Value:       1200,
-		// 		// 	CanChoose:   true,
-		// 		// 	DailyDouble: true,
-		// 		// },
-		// 		// {
-		// 		// 	Question:  "This is the largest bone in the human body",
-		// 		// 	Answer:    "The femur",
-		// 		// 	Value:     1600,
-		// 		// 	CanChoose: true,
-		// 		// },
-		// 		// {
-		// 		// 	Question:  "This is the world's largest animal",
-		// 		// 	Answer:    "The Antarctic blue whale",
-		// 		// 	Value:     2000,
-		// 		// 	CanChoose: true,
-		// 		// },
-		// 	},
-		// },
+		{
+			Title: "TV Trivia",
+			Questions: [numQuestions]Question{
+				{
+					Question:  "This show won the 2019 Emmy for Best Drama Series",
+					Answer:    "Game of Thrones",
+					Value:     400,
+					CanChoose: true,
+				},
+				{
+					Question:  "This show won the 2019 Emmy for Best Comedy Series",
+					Answer:    "Fleabag",
+					Value:     800,
+					CanChoose: true,
+				},
+				{
+					Question:  "This actor won the 2019 Emmy for Best Actor in a Drama Series",
+					Answer:    "Billy Porter",
+					Value:     1200,
+					CanChoose: true,
+				},
+				// {
+				// 	Question:  "This actress won the 2019 Emmy for Best Actress in a Drama Series",
+				// 	Answer:    "Jodie Comer",
+				// 	Value:     1600,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This actress won the 2019 Emmy for Best Actress in a Comedy Series",
+				// 	Answer:    "Phoebe Waller-Bridge",
+				// 	Value:     2000,
+				// 	CanChoose: true,
+				// },
+			},
+		},
+		{
+			Title: "Science Trivia",
+			Questions: [numQuestions]Question{
+				{
+					Question:  "This is the largest planet in the solar system",
+					Answer:    "Jupiter",
+					Value:     400,
+					CanChoose: true,
+				},
+				{
+					Question:  "This is the smallest planet in the solar system",
+					Answer:    "Mercury",
+					Value:     800,
+					CanChoose: true,
+				},
+				{
+					Question:    "This is the largest organ in the human body",
+					Answer:      "The skin",
+					Value:       1200,
+					CanChoose:   true,
+					DailyDouble: true,
+				},
+				// {
+				// 	Question:  "This is the largest bone in the human body",
+				// 	Answer:    "The femur",
+				// 	Value:     1600,
+				// 	CanChoose: true,
+				// },
+				// {
+				// 	Question:  "This is the world's largest animal",
+				// 	Answer:    "The Antarctic blue whale",
+				// 	Value:     2000,
+				// 	CanChoose: true,
+				// },
+			},
+		},
 		// {
 		// 	Title: "History Trivia",
 		// 	Questions: [numQuestions]Question{
