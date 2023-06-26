@@ -98,8 +98,11 @@ export class GameStateService {
 	}
 
 	getWinner(): string {
-		let max = 0;
-		let winner = '';
+		if (this.game.state != GameState.PostGame || this.game.players.length < 1) {
+			return '';
+		}
+		let max = this.game.players[0].score;
+		let winner = this.game.players[0].name;
 		for (let player of this.game.players) {
 			if (player.score > max) {
 				max = player.score;

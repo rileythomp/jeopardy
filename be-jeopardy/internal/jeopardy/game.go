@@ -905,7 +905,11 @@ func (g *Game) startFinalRound() {
 	g.resetGuesses()
 	g.CurQuestion = g.FinalQuestion
 	g.NumFinalWagers = g.numFinalWagers()
-	g.setState(RecvWager, "")
+	if g.NumFinalWagers < 2 {
+		g.setState(PostGame, "")
+	} else {
+		g.setState(RecvWager, "")
+	}
 }
 
 func (g *Game) lowestPlayer() string {
