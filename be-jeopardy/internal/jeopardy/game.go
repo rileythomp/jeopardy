@@ -216,7 +216,12 @@ func (g *Game) handleBuzz(playerId string, isPass bool) error {
 		g.Passes++
 		player.CanBuzz = false
 		if g.Passes+len(g.GuessedWrong) != len(g.Players) {
-			return nil
+			return player.conn.WriteJSON(Response{
+				Code:      200,
+				Message:   "You passed",
+				Game:      g,
+				CurPlayer: player,
+			})
 		}
 		g.disableQuestion()
 		roundOver := g.roundEnded()
@@ -323,13 +328,12 @@ func (g *Game) handleWager(playerId string, wager int) error {
 		return fmt.Errorf("player cannot wager")
 	}
 	if min, max, ok := g.validWager(wager, player.Score); !ok {
-		player.conn.WriteJSON(Response{
+		return player.conn.WriteJSON(Response{
 			Code:      400,
 			Message:   fmt.Sprintf("invalid wager, must be between %d and %d", min, max),
 			Game:      g,
 			CurPlayer: player,
 		})
-		return nil
 	}
 	var msg string
 	if g.Round == FinalRound {
@@ -337,16 +341,12 @@ func (g *Game) handleWager(playerId string, wager int) error {
 		player.CanWager = false
 		g.FinalWagersRecvd++
 		if g.FinalWagersRecvd != g.NumFinalWagers {
-			resp := Response{
+			return player.conn.WriteJSON(Response{
 				Code:      200,
 				Message:   "Player wagered",
 				Game:      g,
 				CurPlayer: player,
-			}
-			if err := player.conn.WriteJSON(resp); err != nil {
-				return err
-			}
-			return nil
+			})
 		}
 		g.setState(RecvAns, "")
 		msg = "All wagers received"
