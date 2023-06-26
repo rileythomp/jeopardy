@@ -3,7 +3,6 @@ package jeopardy
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/agnivade/levenshtein"
@@ -270,9 +269,12 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 		g.FinalAnswersRecvd++
 		player.CanAnswer = false
 		if !g.roundEnded() {
-			// TODO: Alert other players who answered
-			log.Printf("received answer from %s: %s\n", player.Name, answer)
-			return nil
+			return player.conn.WriteJSON(Response{
+				Code:      200,
+				Message:   "You answered",
+				Game:      g,
+				CurPlayer: player,
+			})
 		}
 		g.setState(PostGame, "")
 		msg = "Final round ended"
