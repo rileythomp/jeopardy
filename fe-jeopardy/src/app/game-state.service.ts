@@ -97,19 +97,22 @@ export class GameStateService {
 		return this.game.round == RoundState.FinalRound;
 	}
 
-	getWinner(): string {
+	getHighestScorers(): string[] {
+		const maxScore = Math.max(...this.game.players.map(player => player.score));
+		return this.game.players.filter(player => player.score == maxScore).map(player => player.name);
+	  }
+
+	  endGameMessage(): string {
 		if (this.game.state != GameState.PostGame || this.game.players.length < 1) {
 			return '';
 		}
-		let max = this.game.players[0].score;
-		let winner = this.game.players[0].name;
-		for (let player of this.game.players) {
-			if (player.score > max) {
-				max = player.score;
-				winner = player.name;
-			}
+		let winners = this.getHighestScorers();
+		if (winners.length == 1) {
+			return `The winner is ${winners[0]}`;
+		} else if (winners.length == 2) {
+			return `The winners are ${winners[0]} and ${winners[1]}`;
 		}
-		return winner;
+		return `All players have tied`
 	}
 
 	gameOver(): boolean {

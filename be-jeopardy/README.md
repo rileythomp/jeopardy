@@ -7,8 +7,6 @@ The server echoes messages sent to it. The client sends a message every second a
 To run the example, start the server:
 
 **TODO**
- * Skip final jeopardy if only 1 player eligible
- * Handle tie at end of final jeopardy
  * Alert other players who answered and wagered
  * Fix answer check 
  * Handle error synchronization
