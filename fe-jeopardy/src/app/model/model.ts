@@ -9,6 +9,7 @@ export type Game = {
     lastAnswer: string;
     ansCorrectness: boolean;
     lastAnswerer: Player;
+    guessedWrong: string[];
 };
 
 export type Player = {
@@ -23,6 +24,7 @@ export type Player = {
     canAnswer: boolean;
     canWager: boolean;
     canConfirmAns: boolean;
+    buzzBlocked: boolean;
 };
 
 type Topic = {

@@ -154,4 +154,8 @@ export class GameStateService {
 		}
 		return round[topicIdx].questions[valIdx].canChoose;
 	}
+
+	curQuestionFirstBuzz(): boolean {
+		return !this.game.guessedWrong || this.game.guessedWrong.length == 0;
+	}
 }

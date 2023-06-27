@@ -45,6 +45,13 @@ export class GameComponent implements OnInit {
 
 					this.players = this.gameState.getPlayers();
 					this.questionRows = this.gameState.getQuestionRows();
+
+					if (this.gameState.curQuestionFirstBuzz()) {
+						this.player.blockBuzz(true)
+						setTimeout(() => {
+							this.player.blockBuzz(false)
+						}, 2000);
+					}
 					break;
 
 				case GameState.RecvAns:
