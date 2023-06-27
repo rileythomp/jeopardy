@@ -43,4 +43,8 @@ export class PlayerService {
 	canWager(): boolean {
 		return this.player.canWager;
 	}
+
+	canConfirmAns(): boolean {
+		return this.player.canConfirmAns;
+	}
 }

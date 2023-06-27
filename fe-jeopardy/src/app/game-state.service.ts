@@ -73,8 +73,20 @@ export class GameStateService {
 		return this.game.players.find((player: Player) => player.canAnswer)?.name ?? '';
 	}
 
+	getLastAnswerer(): string {
+		return this.game.lastAnswerer.name;
+	}
+
 	getWageringPlayer(): string {
 		return this.game.players.find((player: Player) => player.canWager)?.name ?? '';
+	}
+
+	getLastAnswer(): string {
+		return this.game.lastAnswer;
+	}
+
+	getAnsCorrectness(): boolean {
+		return this.game.ansCorrectness;
 	}
 
 	recvingPick(): boolean {
@@ -89,6 +101,10 @@ export class GameStateService {
 		return this.game.state == GameState.RecvAns;
 	}
 
+	recvingAnsConfirmation(): boolean {
+		return this.game.state == GameState.RecvAnsConfirmation;
+	}
+
 	recvingWager(): boolean {
 		return this.game.state == GameState.RecvWager;
 	}
@@ -100,9 +116,9 @@ export class GameStateService {
 	getHighestScorers(): string[] {
 		const maxScore = Math.max(...this.game.players.map(player => player.score));
 		return this.game.players.filter(player => player.score == maxScore).map(player => player.name);
-	  }
+	}
 
-	  endGameMessage(): string {
+	endGameMessage(): string {
 		if (this.game.state != GameState.PostGame || this.game.players.length < 1) {
 			return '';
 		}

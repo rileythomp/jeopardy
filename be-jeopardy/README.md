@@ -7,8 +7,6 @@ The server echoes messages sent to it. The client sends a message every second a
 To run the example, start the server:
 
 **TODO**
- * Alert other players who answered and wagered
- * Fix answer check 
  * Handle error synchronization
 
 ```bash

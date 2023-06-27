@@ -67,6 +67,15 @@ export class GameComponent implements OnInit {
 					this.questionRows = this.gameState.getQuestionRows();
 					break;
 
+				case GameState.RecvAnsConfirmation: 
+					console.log("show the answers correctness, accept a confirmation");
+					console.log(resp);
+
+					this.gameState.updateGameState(resp.game);
+					this.player.updatePlayer(resp.curPlayer);
+
+					break
+
 				case GameState.RecvWager:
 					console.log('show the question, accept a wager');
 					console.log(resp);
@@ -130,6 +139,15 @@ export class GameComponent implements OnInit {
 			})
 		}
 		this.questionAnswer = '';
+	}
+
+	handleAnsConfirmation(confirm: boolean) {
+		if (this.player.canConfirmAns()) {
+			this.websocketService.send({
+				"token": this.jwtService.getJwt(),
+				"confirm": confirm,
+			})
+		}
 	}
 
 	handleWager() {

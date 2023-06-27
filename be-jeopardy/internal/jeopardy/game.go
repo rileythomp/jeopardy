@@ -18,6 +18,7 @@ const (
 	RecvBuzz
 	RecvWager
 	RecvAns
+	RecvAnsConfirmation
 	PostGame
 )
 
@@ -49,17 +50,23 @@ type (
 		FinalWagersRecvd  int              `json:"finalWagers"`
 		FinalAnswersRecvd int              `json:"finalAnswers"`
 		Passes            int              `json:"passes"`
+		LastAnswer        string           `json:"lastAnswer"`
+		AnsCorrectness    bool             `json:"ansCorrectness"`
+		Confirmations     int              `json:"confirmations"`
+		Challenges        int              `json:"challenges"`
+		LastAnswerer      *Player          `json:"lastAnswerer"`
 	}
 
 	Player struct {
-		Id         string `json:"id"`
-		Name       string `json:"name"`
-		Score      int    `json:"score"`
-		CanPick    bool   `json:"canPick"`
-		CanBuzz    bool   `json:"canBuzz"`
-		CanAnswer  bool   `json:"canAnswer"`
-		CanWager   bool   `json:"canWager"`
-		FinalWager int    `json:"finalWager"`
+		Id            string `json:"id"`
+		Name          string `json:"name"`
+		Score         int    `json:"score"`
+		CanPick       bool   `json:"canPick"`
+		CanBuzz       bool   `json:"canBuzz"`
+		CanAnswer     bool   `json:"canAnswer"`
+		CanWager      bool   `json:"canWager"`
+		CanConfirmAns bool   `json:"canConfirmAns"`
+		FinalWager    int    `json:"finalWager"`
 
 		conn *websocket.Conn
 	}
@@ -155,6 +162,12 @@ func (g *Game) HandleRequest(playerId string, msg []byte) error {
 			return fmt.Errorf("failed to parse answer request: %w", err)
 		}
 		err = g.handleAnswer(playerId, ansReq.Answer)
+	case RecvAnsConfirmation:
+		var confAnsReq ConfirmAnsRequest
+		if err := json.Unmarshal(msg, &confAnsReq); err != nil {
+			return fmt.Errorf("failed to parse confirm answer request: %w", err)
+		}
+		err = g.handleAnsConfirmation(playerId, confAnsReq.Confirm)
 	case RecvWager:
 		var wagerReq WagerRequest
 		if err := json.Unmarshal(msg, &wagerReq); err != nil {
@@ -248,7 +261,59 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 		return fmt.Errorf("player cannot answer")
 	}
 	isCorrect := g.CurQuestion.checkAnswer(answer)
-	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
+	var msg string
+	if g.Round == FinalRound {
+		player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
+		g.FinalAnswersRecvd++
+		player.CanAnswer = false
+		if !g.roundEnded() {
+			return player.conn.WriteJSON(Response{
+				Code:      200,
+				Message:   "You answered",
+				Game:      g,
+				CurPlayer: player,
+			})
+		}
+		g.setState(PostGame, "")
+		msg = "Final round ended"
+	} else {
+		isCorrect := g.CurQuestion.checkAnswer(answer)
+		g.AnsCorrectness = isCorrect
+		g.LastAnswer = answer
+		g.LastAnswerer = player
+		g.setState(RecvAnsConfirmation, "")
+		msg = "Player answered"
+	}
+	return g.messageAllPlayers(msg)
+}
+
+func (g *Game) handleAnsConfirmation(playerId string, confirm bool) error {
+	player := g.getPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("player not found")
+	}
+	if !player.CanConfirmAns {
+		return fmt.Errorf("player cannot confirm")
+	}
+
+	player.CanConfirmAns = false
+	if confirm {
+		g.Confirmations++
+	} else {
+		g.Challenges++
+	}
+	if g.Confirmations != 2 && g.Challenges != 2 {
+		return player.conn.WriteJSON(Response{
+			Code:      200,
+			Message:   "You confirmed",
+			Game:      g,
+			CurPlayer: player,
+		})
+	}
+
+	isCorrect := (g.Confirmations == 2 && g.AnsCorrectness) || (g.Challenges == 2 && !g.AnsCorrectness)
+	g.LastAnswerer.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
+
 	var msg string
 	if g.Round == FinalRound {
 		g.FinalAnswersRecvd++
@@ -265,7 +330,7 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 		msg = "Final round ended"
 	} else {
 		if !isCorrect {
-			g.GuessedWrong = append(g.GuessedWrong, player.Id)
+			g.GuessedWrong = append(g.GuessedWrong, g.LastAnswerer.Id)
 		}
 		if isCorrect || g.CurQuestion.DailyDouble || g.Passes+len(g.GuessedWrong) == len(g.Players) {
 			g.disableQuestion()
@@ -283,9 +348,11 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 			msg = "All players guessed wrong"
 		} else if isCorrect || g.CurQuestion.DailyDouble {
 			g.resetGuesses()
-			g.setState(RecvPick, playerId)
+			g.setState(RecvPick, g.LastAnswerer.Id)
 			msg = "Question is complete"
 		} else {
+			g.Confirmations = 0
+			g.Challenges = 0
 			g.setState(RecvBuzz, "")
 			msg = "Player answered incorrectly"
 		}
@@ -317,7 +384,7 @@ func (g *Game) handleWager(playerId string, wager int) error {
 		if g.FinalWagersRecvd != g.NumFinalWagers {
 			return player.conn.WriteJSON(Response{
 				Code:      200,
-				Message:   "Player wagered",
+				Message:   "You wagered",
 				Game:      g,
 				CurPlayer: player,
 			})
@@ -349,6 +416,7 @@ func (g *Game) setState(state GameState, id string) {
 			player.CanBuzz = false
 			player.CanAnswer = false
 			player.CanWager = false
+			player.CanConfirmAns = false
 		}
 	case RecvBuzz:
 		for _, player := range g.Players {
@@ -356,6 +424,7 @@ func (g *Game) setState(state GameState, id string) {
 			player.CanBuzz = player.canBuzz(g.GuessedWrong)
 			player.CanAnswer = false
 			player.CanWager = false
+			player.CanConfirmAns = false
 		}
 	case RecvAns:
 		for _, player := range g.Players {
@@ -366,6 +435,15 @@ func (g *Game) setState(state GameState, id string) {
 				player.CanAnswer = player.Score > 0
 			}
 			player.CanWager = false
+			player.CanConfirmAns = false
+		}
+	case RecvAnsConfirmation:
+		for _, player := range g.Players {
+			player.CanPick = false
+			player.CanBuzz = false
+			player.CanAnswer = false
+			player.CanWager = false
+			player.CanConfirmAns = true
 		}
 	case RecvWager:
 		for _, player := range g.Players {
@@ -376,6 +454,7 @@ func (g *Game) setState(state GameState, id string) {
 			if g.Round == FinalRound {
 				player.CanWager = player.Score > 0
 			}
+			player.CanConfirmAns = false
 		}
 	default:
 		for _, player := range g.Players {
@@ -383,6 +462,7 @@ func (g *Game) setState(state GameState, id string) {
 			player.CanBuzz = false
 			player.CanAnswer = false
 			player.CanWager = false
+			player.CanConfirmAns = false
 		}
 	}
 	g.State = state
@@ -892,6 +972,8 @@ func (g *Game) roundEnded() bool {
 func (g *Game) resetGuesses() {
 	g.GuessedWrong = []string{}
 	g.Passes = 0
+	g.Confirmations = 0
+	g.Challenges = 0
 }
 
 func (g *Game) startSecondRound() {
@@ -965,10 +1047,20 @@ func (p *Player) canBuzz(guessedWrong []string) bool {
 func (q *Question) checkAnswer(ans string) bool {
 	ans = strings.ToLower(ans)
 	corrAns := strings.ToLower(q.Answer)
-	if strings.Contains(ans, corrAns) || strings.Contains(corrAns, ans) {
-		return true
+	if len(ans) < 5 {
+		return ans == corrAns
+	} else if len(corrAns) < 7 {
+		return levenshtein.ComputeDistance(ans, corrAns) < 2
+	} else if len(corrAns) < 9 {
+		return levenshtein.ComputeDistance(ans, corrAns) < 3
+	} else if len(corrAns) < 11 {
+		return levenshtein.ComputeDistance(ans, corrAns) < 4
+	} else if len(corrAns) < 13 {
+		return levenshtein.ComputeDistance(ans, corrAns) < 5
+	} else if len(corrAns) < 15 {
+		return levenshtein.ComputeDistance(ans, corrAns) < 6
 	}
-	return levenshtein.ComputeDistance(ans, corrAns) < 3
+	return levenshtein.ComputeDistance(ans, corrAns) < 7
 }
 
 func (q *Question) equal(q0 Question) bool {

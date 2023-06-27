@@ -6,6 +6,9 @@ export type Game = {
     secondRound: Topic[];
     finalQuestion: Question;
     curQuestion: Question;
+    lastAnswer: string;
+    ansCorrectness: boolean;
+    lastAnswerer: Player;
 };
 
 export type Player = {
@@ -16,6 +19,7 @@ export type Player = {
     canBuzz: boolean;
     canAnswer: boolean;
     canWager: boolean;
+    canConfirmAns: boolean;
 };
 
 type Topic = {
@@ -37,6 +41,7 @@ export enum GameState {
     RecvBuzz,
     RecvWager,
     RecvAns,
+    RecvAnsConfirmation,
     PostGame,
     Error,
 }

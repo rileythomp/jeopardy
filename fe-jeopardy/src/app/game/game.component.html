@@ -43,6 +43,18 @@
     <div *ngIf="gameState.recvingAns() && !player.canAnswer()">
         {{ gameState.getAnsweringPlayer() }} is answering the question
     </div>
+
+    <div *ngIf="gameState.recvingAnsConfirmation() && player.canConfirmAns()">
+        {{ gameState.getLastAnswerer() }} answered <br>
+        {{ gameState.curQuestion() }} <br>
+        <b>{{ gameState.getAnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{ gameState.getLastAnswer() }}</b>. <br>
+        <button (click)="handleAnsConfirmation(true)">Accept</button>
+        <button (click)="handleAnsConfirmation(false)">Challenge</button>
+    </div>
+
+    <div *ngIf="gameState.recvingAnsConfirmation() && !player.canConfirmAns()">
+        Waiting for other players to accept or challenge the answer
+    </div>
     
     <div *ngIf="gameState.recvingWager() && player.canWager()">
         <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">

@@ -38,6 +38,11 @@ type (
 		Answer string `json:"answer"`
 	}
 
+	ConfirmAnsRequest struct {
+		Request
+		Confirm bool `json:"confirm"`
+	}
+
 	WagerRequest struct {
 		Request
 		Wager int `json:"wager"`
