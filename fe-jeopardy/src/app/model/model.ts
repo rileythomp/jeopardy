@@ -15,6 +15,9 @@ export type Player = {
     id: string;
     name: string;
     score: number;
+    finalCorrect: boolean;
+    finalAnswer: string;
+    finalProtestors: any;
     canPick: boolean;
     canBuzz: boolean;
     canAnswer: boolean;

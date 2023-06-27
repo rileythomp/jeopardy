@@ -7,6 +7,7 @@ The server echoes messages sent to it. The client sends a message every second a
 To run the example, start the server:
 
 **TODO**
+ * Handle play again flow
  * Handle error synchronization
 
 ```bash

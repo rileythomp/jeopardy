@@ -48,7 +48,7 @@ export class LobbyComponent implements OnInit {
 				this.player.updatePlayer(resp.curPlayer);
 				this.playerName = this.player.getName();
 			}
-			else if (resp.game.state == GameState.RecvPick) {
+			else if (resp.game.state == GameState.RecvPick || resp.game.state == GameState.RecvWager) {
 				this.lobbyMessage = resp.message;
 				this.gameState.updateGameState(resp.game);
 				this.players = this.gameState.getPlayers();
@@ -56,7 +56,7 @@ export class LobbyComponent implements OnInit {
 				this.router.navigate(['/game']);
 			}
 			else {
-				alert('Unable to join game');
+				alert('Unable to start the game');
 			}
 		})
 	}

@@ -47,4 +47,9 @@ type (
 		Request
 		Wager int `json:"wager"`
 	}
+
+	ProtestRequest struct {
+		Request
+		ProtestFor string `json:"protestFor"`
+	}
 )

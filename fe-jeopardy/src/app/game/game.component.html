@@ -84,5 +84,15 @@
 </div>
 
 <div *ngIf="gameState.gameOver()">
+
+    <ol>
+        <li *ngFor="let player of players">
+            {{ player.name }} answered <b>{{ player.finalCorrect ? 'correctly': 'incorrectly' }}</b> with <b>{{ player.finalAnswer }}</b>
+            <button *ngIf="canProtestForPlayer(player)" (click)="protestFinalCorrectness(player.id)">Protest</button>
+        </li>
+    </ol>
+
+    <p>Final Jeopardy Answer: {{ gameState.getFinalAnswer() }}</p>
+
     {{ gameState.endGameMessage() }}
 </div>

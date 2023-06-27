@@ -58,15 +58,18 @@ type (
 	}
 
 	Player struct {
-		Id            string `json:"id"`
-		Name          string `json:"name"`
-		Score         int    `json:"score"`
-		CanPick       bool   `json:"canPick"`
-		CanBuzz       bool   `json:"canBuzz"`
-		CanAnswer     bool   `json:"canAnswer"`
-		CanWager      bool   `json:"canWager"`
-		CanConfirmAns bool   `json:"canConfirmAns"`
-		FinalWager    int    `json:"finalWager"`
+		Id              string          `json:"id"`
+		Name            string          `json:"name"`
+		Score           int             `json:"score"`
+		CanPick         bool            `json:"canPick"`
+		CanBuzz         bool            `json:"canBuzz"`
+		CanAnswer       bool            `json:"canAnswer"`
+		CanWager        bool            `json:"canWager"`
+		CanConfirmAns   bool            `json:"canConfirmAns"`
+		FinalWager      int             `json:"finalWager"`
+		FinalAnswer     string          `json:"finalAnswer"`
+		FinalCorrect    bool            `json:"finalCorrect"`
+		FinalProtestors map[string]bool `json:"finalProtestors"`
 
 		conn *websocket.Conn
 	}
@@ -138,6 +141,11 @@ func (g *Game) startGame() error {
 		return err
 	}
 	g.setState(RecvPick, g.Players[0].Id)
+	// for i := range g.Players {
+	// 	// random score between 1000 and 5000
+	// 	g.Players[i].Score = (rand.Intn(5) + 1) * 1000
+	// }
+	// g.startFinalRound()
 	return nil
 }
 
@@ -174,10 +182,38 @@ func (g *Game) HandleRequest(playerId string, msg []byte) error {
 			return fmt.Errorf("failed to parse wager request: %w", err)
 		}
 		err = g.handleWager(playerId, wagerReq.Wager)
+	case PostGame:
+		var protestReq ProtestRequest
+		if err := json.Unmarshal(msg, &protestReq); err != nil {
+			return fmt.Errorf("failed to parse protest request: %w", err)
+		}
+		err = g.handleProtest(protestReq.ProtestFor, playerId)
 	default:
 		err = fmt.Errorf("invalid game state")
 	}
 	return err
+}
+
+func (g *Game) handleProtest(protestFor, protestBy string) error {
+	protestForPlayer := g.getPlayerById(protestFor)
+	protestByPlayer := g.getPlayerById(protestBy)
+	if protestForPlayer == nil || protestByPlayer == nil {
+		return fmt.Errorf("player not found")
+	}
+	if _, ok := protestForPlayer.FinalProtestors[protestByPlayer.Id]; ok {
+		return nil
+	}
+	protestForPlayer.FinalProtestors[protestByPlayer.Id] = true
+	if len(protestForPlayer.FinalProtestors) == 2 {
+		if protestForPlayer.FinalCorrect {
+			protestForPlayer.Score -= 2 * protestForPlayer.FinalWager
+		} else {
+			protestForPlayer.Score += 2 * protestForPlayer.FinalWager
+		}
+		g.setState(PostGame, "")
+		g.messageAllPlayers("final jeopardy result changed")
+	}
+	return nil
 }
 
 func (g *Game) handlePick(playerId string, topicIdx, valIdx int) error {
@@ -266,6 +302,8 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 		player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
 		g.FinalAnswersRecvd++
 		player.CanAnswer = false
+		player.FinalAnswer = answer
+		player.FinalCorrect = isCorrect
 		if !g.roundEnded() {
 			return player.conn.WriteJSON(Response{
 				Code:      200,
@@ -1016,12 +1054,15 @@ func (g *Game) numFinalWagers() int {
 
 func NewPlayer(name string) *Player {
 	return &Player{
-		Id:        uuid.New().String(),
-		Name:      name,
-		Score:     0,
-		CanPick:   false,
-		CanBuzz:   false,
-		CanAnswer: false,
+		Id:              uuid.New().String(),
+		Name:            name,
+		Score:           0,
+		CanPick:         false,
+		CanBuzz:         false,
+		CanAnswer:       false,
+		CanWager:        false,
+		CanConfirmAns:   false,
+		FinalProtestors: map[string]bool{},
 	}
 }
 

@@ -85,6 +85,10 @@ export class GameStateService {
 		return this.game.lastAnswer;
 	}
 
+	getFinalAnswer(): string {
+		return this.game.finalQuestion.answer;
+	}
+
 	getAnsCorrectness(): boolean {
 		return this.game.ansCorrectness;
 	}
@@ -119,7 +123,7 @@ export class GameStateService {
 	}
 
 	endGameMessage(): string {
-		if (this.game.state != GameState.PostGame || this.game.players.length < 1) {
+		if (this.game.state != GameState.PostGame) {
 			return '';
 		}
 		let winners = this.getHighestScorers();

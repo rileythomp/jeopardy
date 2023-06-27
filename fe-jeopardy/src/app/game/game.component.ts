@@ -159,4 +159,15 @@ export class GameComponent implements OnInit {
 		}
 		this.wagerAmt = '';
 	}
+
+	protestFinalCorrectness(playerId: string) {
+		this.websocketService.send({
+			"token": this.jwtService.getJwt(),
+			"protestFor": playerId,
+		})
+	}
+
+	canProtestForPlayer(player: Player): boolean {
+		return Object.keys(player.finalProtestors).length < 2;
+	}
 }

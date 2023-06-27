@@ -40,7 +40,7 @@ export class JoinComponent implements OnInit {
 			if (resp.game.state == GameState.PreGame) {
 				this.router.navigate(['/lobby']);
 			} else {
-				alert('Unable to join game');
+				alert('Unable to join the lobby');
 			}
 		})
 	}
