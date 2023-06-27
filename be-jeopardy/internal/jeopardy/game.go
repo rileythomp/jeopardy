@@ -212,6 +212,13 @@ func (g *Game) handleProtest(protestFor, protestBy string) error {
 		}
 		g.setState(PostGame, "")
 		g.messageAllPlayers("final jeopardy result changed")
+	} else {
+		protestByPlayer.conn.WriteJSON(Response{
+			Code:      200,
+			Message:   "You protested for " + protestForPlayer.Name,
+			Game:      g,
+			CurPlayer: protestByPlayer,
+		})
 	}
 	return nil
 }

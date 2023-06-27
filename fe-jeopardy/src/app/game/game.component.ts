@@ -168,6 +168,6 @@ export class GameComponent implements OnInit {
 	}
 
 	canProtestForPlayer(player: Player): boolean {
-		return Object.keys(player.finalProtestors).length < 2;
+		return !Object.keys(player.finalProtestors).includes(this.player.getPlayer().id);
 	}
 }
