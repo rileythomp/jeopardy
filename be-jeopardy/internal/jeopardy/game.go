@@ -297,6 +297,7 @@ func (g *Game) handleBuzz(playerId string, isPass bool) error {
 		}
 		return g.skipQuestion()
 	}
+	g.cancelRecvBuzz()
 	g.setState(RecvAns, player.Id)
 	return g.messageAllPlayers("Player buzzed")
 }
@@ -443,6 +444,7 @@ func (g *Game) handleWager(playerId string, wager int) error {
 		g.setState(RecvAns, "")
 		msg = "All wagers received"
 	} else {
+		// daily double
 		g.CurQuestion.Value = wager
 		g.setState(RecvAns, player.Id)
 		msg = "Player wagered"
@@ -477,17 +479,17 @@ func (g *Game) setState(state GameState, id string) {
 			player.CanWager = false
 			player.CanConfirmAns = false
 		}
-		recvBuzzCtx, cancel := context.WithCancel(context.Background())
-		g.cancelRecvBuzz = cancel
+		recvBuzzCtx, cancelRecvBuzz := context.WithCancel(context.Background())
+		g.cancelRecvBuzz = cancelRecvBuzz
 		go func(recvBuzzCtx context.Context) {
 			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 7*time.Second)
 			defer timeoutCancel()
 			select {
 			case <-recvBuzzCtx.Done():
-				fmt.Println("Player answered, cancelling buzz in timeout")
+				fmt.Println("Player buzzed, cancelling buzz in timeout")
 				return
 			case <-timeoutCtx.Done():
-				fmt.Println("7 seconds elapsed, skipping question")
+				fmt.Println("7 seconds elapsed with no buzz, skipping question")
 				err := g.skipQuestion()
 				if err != nil {
 					panic(err)
@@ -506,7 +508,6 @@ func (g *Game) setState(state GameState, id string) {
 			player.CanWager = false
 			player.CanConfirmAns = false
 		}
-		g.cancelRecvBuzz()
 	case RecvAnsConfirmation:
 		for _, player := range g.Players {
 			player.CanPick = false
