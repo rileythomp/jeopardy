@@ -37,6 +37,17 @@ const (
 	numQuestions = 3
 )
 
+const (
+	pickQuestionTimeout       = 5 * time.Second
+	buzzInTimeout             = 5 * time.Second
+	defaultAnsTimeout         = 5 * time.Second
+	dailyDoubleAnsTimeout     = 10 * time.Second
+	finalJeopardyAnsTimeout   = 20 * time.Second
+	confirmAnsTimeout         = 5 * time.Second
+	dailyDoubleWagerTimeout   = 5 * time.Second
+	finalJeopardyWagerTimeout = 10 * time.Second
+)
+
 type (
 	Game struct {
 		cancelRecvAns             map[string]context.CancelFunc
@@ -516,7 +527,7 @@ func (g *Game) setState(state GameState, id string) {
 		recvPickCtx, cancelRecvPick := context.WithCancel(context.Background())
 		g.cancelRecvPick = cancelRecvPick
 		go func(recvPickCtx context.Context) {
-			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 2*time.Second)
+			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), pickQuestionTimeout)
 			defer timeoutCancel()
 			select {
 			case <-recvPickCtx.Done():
@@ -543,7 +554,7 @@ func (g *Game) setState(state GameState, id string) {
 		recvBuzzCtx, cancelRecvBuzz := context.WithCancel(context.Background())
 		g.cancelRecvBuzz = cancelRecvBuzz
 		go func(recvBuzzCtx context.Context) {
-			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 2*time.Second)
+			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), buzzInTimeout)
 			defer timeoutCancel()
 			select {
 			case <-recvBuzzCtx.Done():
@@ -576,11 +587,11 @@ func (g *Game) setState(state GameState, id string) {
 			recvAnsCtx, cancelRecvAns := context.WithCancel(context.Background())
 			g.cancelRecvAns[player.Id] = cancelRecvAns
 			go func(recvAnsCtx context.Context, playerId string) {
-				answerTimeout := 5 * time.Second
+				answerTimeout := defaultAnsTimeout
 				if g.CurQuestion.DailyDouble {
-					answerTimeout = 10 * time.Second
+					answerTimeout = dailyDoubleAnsTimeout
 				} else if g.Round == FinalRound {
-					answerTimeout = 20 * time.Second
+					answerTimeout = finalJeopardyAnsTimeout
 				}
 				timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), answerTimeout)
 				defer timeoutCancel()
@@ -609,7 +620,7 @@ func (g *Game) setState(state GameState, id string) {
 		recvAnsConfirmationCtx, cancelRecvAnsConfirmation := context.WithCancel(context.Background())
 		g.cancelRecvAnsConfirmation = cancelRecvAnsConfirmation
 		go func(recvAnsConfirmationCtx context.Context) {
-			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 5*time.Second)
+			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), confirmAnsTimeout)
 			defer timeoutCancel()
 			select {
 			case <-recvAnsConfirmationCtx.Done():
@@ -639,9 +650,9 @@ func (g *Game) setState(state GameState, id string) {
 			recvWagerCtx, cancelRecvWager := context.WithCancel(context.Background())
 			g.cancelRecvWager[player.Id] = cancelRecvWager
 			go func(recvWagerCtx context.Context, playerId string) {
-				wagerTimeout := 5 * time.Second
+				wagerTimeout := dailyDoubleWagerTimeout
 				if g.Round == FinalRound {
-					wagerTimeout = 10 * time.Second
+					wagerTimeout = finalJeopardyWagerTimeout
 				}
 				timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), wagerTimeout)
 				defer timeoutCancel()
