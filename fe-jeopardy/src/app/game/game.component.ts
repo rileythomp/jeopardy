@@ -50,7 +50,7 @@ export class GameComponent implements OnInit {
 						this.player.blockBuzz(true)
 						setTimeout(() => {
 							this.player.blockBuzz(false)
-						}, 2000);
+						}, 0);
 					}
 					break;
 

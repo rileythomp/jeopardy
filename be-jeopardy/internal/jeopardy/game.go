@@ -316,21 +316,7 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 	isCorrect := g.CurQuestion.checkAnswer(answer)
 	var msg string
 	if g.Round == FinalRound {
-		player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
-		g.FinalAnswersRecvd++
-		player.CanAnswer = false
-		player.FinalAnswer = answer
-		player.FinalCorrect = isCorrect
-		if !g.roundEnded() {
-			return player.conn.WriteJSON(Response{
-				Code:      200,
-				Message:   "You answered",
-				Game:      g,
-				CurPlayer: player,
-			})
-		}
-		g.setState(PostGame, "")
-		msg = "Final round ended"
+		return g.handleFinalRoundAns(player, isCorrect, answer)
 	} else {
 		isCorrect := g.CurQuestion.checkAnswer(answer)
 		g.AnsCorrectness = isCorrect
@@ -340,6 +326,41 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 		msg = "Player answered"
 	}
 	return g.messageAllPlayers(msg)
+}
+
+func (g *Game) handleFinalRoundAns(player *Player, isCorrect bool, answer string) error {
+	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
+	g.FinalAnswersRecvd++
+	player.CanAnswer = false
+	player.FinalAnswer = answer
+	player.FinalCorrect = isCorrect
+	if !g.roundEnded() {
+		return player.conn.WriteJSON(Response{
+			Code:      200,
+			Message:   "You answered",
+			Game:      g,
+			CurPlayer: player,
+		})
+	}
+	g.setState(PostGame, "")
+	return g.messageAllPlayers("Final round ended")
+}
+
+func (g *Game) handleAnswerTimeout(playerId string) error {
+	cancelRecvAns := g.cancelRecvAns[playerId]
+	cancelRecvAns()
+	player := g.getPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("player not found")
+	}
+	if !player.CanAnswer {
+		return fmt.Errorf("player cannot answer")
+	}
+	isCorrect := false
+	if g.Round == FinalRound {
+		return g.handleFinalRoundAns(player, isCorrect, "answer-timeout")
+	}
+	return g.nextQuestion(player, isCorrect)
 }
 
 func (g *Game) handleAnsConfirmation(playerId string, confirm bool) error {
@@ -366,52 +387,43 @@ func (g *Game) handleAnsConfirmation(playerId string, confirm bool) error {
 		})
 	}
 
-	isCorrect := (g.Confirmations == 2 && g.AnsCorrectness) || (g.Challenges == 2 && !g.AnsCorrectness)
-	g.LastAnswerer.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
-
-	var msg string
 	if g.Round == FinalRound {
-		panic("should not be here")
-		// g.FinalAnswersRecvd++
-		// player.CanAnswer = false
-		// if !g.roundEnded() {
-		// 	return player.conn.WriteJSON(Response{
-		// 		Code:      200,
-		// 		Message:   "You answered",
-		// 		Game:      g,
-		// 		CurPlayer: player,
-		// 	})
-		// }
-		// g.setState(PostGame, "")
-		// msg = "Final round ended 22222"
+		return fmt.Errorf("should not be handling answer confirmation in final round")
+	}
+
+	isCorrect := (g.AnsCorrectness && g.Confirmations == 2) || (!g.AnsCorrectness && g.Challenges == 2)
+	return g.nextQuestion(g.LastAnswerer, isCorrect)
+}
+
+func (g *Game) nextQuestion(player *Player, isCorrect bool) error {
+	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
+	if !isCorrect {
+		g.GuessedWrong = append(g.GuessedWrong, player.Id)
+	}
+	if isCorrect || g.CurQuestion.DailyDouble || g.Passes+len(g.GuessedWrong) == len(g.Players) {
+		g.disableQuestion()
+	}
+	var msg string
+	roundOver := g.roundEnded()
+	if roundOver && g.Round == FirstRound {
+		g.startSecondRound()
+		msg = "First round ended"
+	} else if roundOver && g.Round == SecondRound {
+		g.startFinalRound()
+		msg = "Second round ended"
+	} else if g.Passes+len(g.GuessedWrong) == len(g.Players) {
+		g.resetGuesses()
+		g.setState(RecvPick, g.LastPicker)
+		msg = "All players guessed wrong"
+	} else if isCorrect || g.CurQuestion.DailyDouble {
+		g.resetGuesses()
+		g.setState(RecvPick, player.Id)
+		msg = "Question is complete"
 	} else {
-		if !isCorrect {
-			g.GuessedWrong = append(g.GuessedWrong, g.LastAnswerer.Id)
-		}
-		if isCorrect || g.CurQuestion.DailyDouble || g.Passes+len(g.GuessedWrong) == len(g.Players) {
-			g.disableQuestion()
-		}
-		roundOver := g.roundEnded()
-		if roundOver && g.Round == FirstRound {
-			g.startSecondRound()
-			msg = "First round ended"
-		} else if roundOver && g.Round == SecondRound {
-			g.startFinalRound()
-			msg = "Second round ended"
-		} else if g.Passes+len(g.GuessedWrong) == len(g.Players) {
-			g.resetGuesses()
-			g.setState(RecvPick, g.LastPicker)
-			msg = "All players guessed wrong"
-		} else if isCorrect || g.CurQuestion.DailyDouble {
-			g.resetGuesses()
-			g.setState(RecvPick, g.LastAnswerer.Id)
-			msg = "Question is complete"
-		} else {
-			g.Confirmations = 0
-			g.Challenges = 0
-			g.setState(RecvBuzz, "")
-			msg = "Player answered incorrectly"
-		}
+		g.Confirmations = 0
+		g.Challenges = 0
+		g.setState(RecvBuzz, "")
+		msg = "Player answered incorrectly"
 	}
 	return g.messageAllPlayers(msg)
 }
@@ -519,11 +531,11 @@ func (g *Game) setState(state GameState, id string) {
 			recvAnsCtx, cancelRecvAns := context.WithCancel(context.Background())
 			g.cancelRecvAns[player.Id] = cancelRecvAns
 			go func(recvAnsCtx context.Context, playerId string) {
-				answerTimeout := 10 * time.Second
+				answerTimeout := 5 * time.Second
 				if g.CurQuestion.DailyDouble {
-					answerTimeout = 20 * time.Second
+					answerTimeout = 10 * time.Second
 				} else if g.Round == FinalRound {
-					answerTimeout = 30 * time.Second
+					answerTimeout = 20 * time.Second
 				}
 				timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), answerTimeout)
 				defer timeoutCancel()
@@ -533,7 +545,7 @@ func (g *Game) setState(state GameState, id string) {
 					return
 				case <-timeoutCtx.Done():
 					fmt.Printf("%d seconds elapsed with no answer, skipping question\n", answerTimeout/time.Second)
-					err := g.handleAnswer(playerId, "answer-timeout")
+					err := g.handleAnswerTimeout(playerId)
 					if err != nil {
 						panic(err)
 					}
