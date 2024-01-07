@@ -39,6 +39,7 @@ const (
 
 type (
 	Game struct {
+		cancelRecvAns     map[string]context.CancelFunc
 		cancelRecvBuzz    context.CancelFunc
 		State             GameState        `json:"state"`
 		Round             RoundState       `json:"round"`
@@ -93,8 +94,9 @@ type (
 
 func NewGame() *Game {
 	return &Game{
-		State:   PreGame,
-		Players: []*Player{},
+		State:         PreGame,
+		Players:       []*Player{},
+		cancelRecvAns: map[string]context.CancelFunc{},
 	}
 }
 
@@ -295,6 +297,7 @@ func (g *Game) handleBuzz(playerId string, isPass bool) error {
 				CurPlayer: player,
 			})
 		}
+		g.cancelRecvBuzz()
 		return g.skipQuestion()
 	}
 	g.cancelRecvBuzz()
@@ -303,6 +306,8 @@ func (g *Game) handleBuzz(playerId string, isPass bool) error {
 }
 
 func (g *Game) handleAnswer(playerId, answer string) error {
+	cancelRecvAns := g.cancelRecvAns[playerId]
+	cancelRecvAns()
 	player := g.getPlayerById(playerId)
 	if player == nil {
 		return fmt.Errorf("player not found")
@@ -368,18 +373,19 @@ func (g *Game) handleAnsConfirmation(playerId string, confirm bool) error {
 
 	var msg string
 	if g.Round == FinalRound {
-		g.FinalAnswersRecvd++
-		player.CanAnswer = false
-		if !g.roundEnded() {
-			return player.conn.WriteJSON(Response{
-				Code:      200,
-				Message:   "You answered",
-				Game:      g,
-				CurPlayer: player,
-			})
-		}
-		g.setState(PostGame, "")
-		msg = "Final round ended"
+		panic("should not be here")
+		// g.FinalAnswersRecvd++
+		// player.CanAnswer = false
+		// if !g.roundEnded() {
+		// 	return player.conn.WriteJSON(Response{
+		// 		Code:      200,
+		// 		Message:   "You answered",
+		// 		Game:      g,
+		// 		CurPlayer: player,
+		// 	})
+		// }
+		// g.setState(PostGame, "")
+		// msg = "Final round ended 22222"
 	} else {
 		if !isCorrect {
 			g.GuessedWrong = append(g.GuessedWrong, g.LastAnswerer.Id)
@@ -486,7 +492,7 @@ func (g *Game) setState(state GameState, id string) {
 			defer timeoutCancel()
 			select {
 			case <-recvBuzzCtx.Done():
-				fmt.Println("Player buzzed, cancelling buzz in timeout")
+				fmt.Println("Cancelling buzz in timeout")
 				return
 			case <-timeoutCtx.Done():
 				fmt.Println("7 seconds elapsed with no buzz, skipping question")
@@ -507,6 +513,35 @@ func (g *Game) setState(state GameState, id string) {
 			}
 			player.CanWager = false
 			player.CanConfirmAns = false
+		}
+		for _, player := range g.Players {
+			if !player.CanAnswer {
+				continue
+			}
+			recvAnsCtx, cancelRecvAns := context.WithCancel(context.Background())
+			g.cancelRecvAns[player.Id] = cancelRecvAns
+			go func(recvAnsCtx context.Context, playerId string) {
+				answerTimeout := 10 * time.Second
+				if g.CurQuestion.DailyDouble {
+					answerTimeout = 20 * time.Second
+				} else if g.Round == FinalRound {
+					answerTimeout = 30 * time.Second
+				}
+				timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), answerTimeout)
+				defer timeoutCancel()
+				select {
+				case <-recvAnsCtx.Done():
+					fmt.Println("Cancelling answer in timeout")
+					return
+				case <-timeoutCtx.Done():
+					fmt.Printf("%d seconds elapsed with no answer, skipping question\n", answerTimeout/time.Second)
+					err := g.handleAnswer(playerId, "answer-timeout")
+					if err != nil {
+						panic(err)
+					}
+					return
+				}
+			}(recvAnsCtx, player.Id)
 		}
 	case RecvAnsConfirmation:
 		for _, player := range g.Players {
