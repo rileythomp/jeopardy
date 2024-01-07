@@ -39,10 +39,12 @@ const (
 
 type (
 	Game struct {
-		cancelRecvAns     map[string]context.CancelFunc
-		cancelRecvWager   map[string]context.CancelFunc
-		cancelRecvBuzz    context.CancelFunc
-		cancelRecvPick    context.CancelFunc
+		cancelRecvAns             map[string]context.CancelFunc
+		cancelRecvWager           map[string]context.CancelFunc
+		cancelRecvAnsConfirmation context.CancelFunc
+		cancelRecvBuzz            context.CancelFunc
+		cancelRecvPick            context.CancelFunc
+
 		State             GameState        `json:"state"`
 		Round             RoundState       `json:"round"`
 		Players           []*Player        `json:"players"`
@@ -395,6 +397,8 @@ func (g *Game) handleAnsConfirmation(playerId string, confirm bool) error {
 		return fmt.Errorf("should not be handling answer confirmation in final round")
 	}
 
+	g.cancelRecvAnsConfirmation()
+
 	isCorrect := (g.AnsCorrectness && g.Confirmations == 2) || (!g.AnsCorrectness && g.Challenges == 2)
 	return g.nextQuestion(g.LastAnswerer, isCorrect)
 }
@@ -602,6 +606,21 @@ func (g *Game) setState(state GameState, id string) {
 			player.CanWager = false
 			player.CanConfirmAns = true
 		}
+		recvAnsConfirmationCtx, cancelRecvAnsConfirmation := context.WithCancel(context.Background())
+		g.cancelRecvAnsConfirmation = cancelRecvAnsConfirmation
+		go func(recvAnsConfirmationCtx context.Context) {
+			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer timeoutCancel()
+			select {
+			case <-recvAnsConfirmationCtx.Done():
+				fmt.Println("Cancelling answer confirmation in timeout")
+				return
+			case <-timeoutCtx.Done():
+				fmt.Println("5 seconds elapsed with no answer confirmation, automatically confirming")
+				g.nextQuestion(g.LastAnswerer, g.AnsCorrectness)
+				return
+			}
+		}(recvAnsConfirmationCtx)
 	case RecvWager:
 		for _, player := range g.Players {
 			player.CanPick = false
