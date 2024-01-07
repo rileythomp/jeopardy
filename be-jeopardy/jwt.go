@@ -4,6 +4,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -28,7 +29,7 @@ func setJWTKeys() error {
 	}
 
 	publicKeyFile := "keys/jwtRS512.key.pub"
-	publicKeyBytes, err := ioutil.ReadFile(publicKeyFile)
+	publicKeyBytes, err := os.ReadFile(publicKeyFile)
 	if err != nil {
 		return err
 	}

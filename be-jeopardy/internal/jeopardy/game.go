@@ -1,9 +1,11 @@
 package jeopardy
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/agnivade/levenshtein"
 	"github.com/google/uuid"
@@ -37,6 +39,7 @@ const (
 
 type (
 	Game struct {
+		cancelRecvBuzz    context.CancelFunc
 		State             GameState        `json:"state"`
 		Round             RoundState       `json:"round"`
 		Players           []*Player        `json:"players"`
@@ -255,6 +258,24 @@ func (g *Game) handlePick(playerId string, topicIdx, valIdx int) error {
 	return g.messageAllPlayers(msg)
 }
 
+func (g *Game) skipQuestion() error {
+	var msg string
+	g.disableQuestion()
+	roundOver := g.roundEnded()
+	if roundOver && g.Round == FirstRound {
+		g.startSecondRound()
+		msg = "First round ended"
+	} else if roundOver && g.Round == SecondRound {
+		g.startFinalRound()
+		msg = "Second round ended"
+	} else {
+		g.resetGuesses()
+		g.setState(RecvPick, g.LastPicker)
+		msg = "Question unanswered"
+	}
+	return g.messageAllPlayers(msg)
+}
+
 func (g *Game) handleBuzz(playerId string, isPass bool) error {
 	player := g.getPlayerById(playerId)
 	if player == nil {
@@ -263,7 +284,6 @@ func (g *Game) handleBuzz(playerId string, isPass bool) error {
 	if !player.CanBuzz {
 		return fmt.Errorf("player cannot buzz")
 	}
-	var msg string
 	if isPass {
 		g.Passes++
 		player.CanBuzz = false
@@ -275,24 +295,10 @@ func (g *Game) handleBuzz(playerId string, isPass bool) error {
 				CurPlayer: player,
 			})
 		}
-		g.disableQuestion()
-		roundOver := g.roundEnded()
-		if roundOver && g.Round == FirstRound {
-			g.startSecondRound()
-			msg = "First round ended"
-		} else if roundOver && g.Round == SecondRound {
-			g.startFinalRound()
-			msg = "Second round ended"
-		} else {
-			g.resetGuesses()
-			g.setState(RecvPick, g.LastPicker)
-			msg = "Question unanswered"
-		}
-	} else {
-		g.setState(RecvAns, player.Id)
-		msg = "Player buzzed"
+		return g.skipQuestion()
 	}
-	return g.messageAllPlayers(msg)
+	g.setState(RecvAns, player.Id)
+	return g.messageAllPlayers("Player buzzed")
 }
 
 func (g *Game) handleAnswer(playerId, answer string) error {
@@ -471,6 +477,24 @@ func (g *Game) setState(state GameState, id string) {
 			player.CanWager = false
 			player.CanConfirmAns = false
 		}
+		recvBuzzCtx, cancel := context.WithCancel(context.Background())
+		g.cancelRecvBuzz = cancel
+		go func(recvBuzzCtx context.Context) {
+			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 7*time.Second)
+			defer timeoutCancel()
+			select {
+			case <-recvBuzzCtx.Done():
+				fmt.Println("Player answered, cancelling buzz in timeout")
+				return
+			case <-timeoutCtx.Done():
+				fmt.Println("7 seconds elapsed, skipping question")
+				err := g.skipQuestion()
+				if err != nil {
+					panic(err)
+				}
+				return
+			}
+		}(recvBuzzCtx)
 	case RecvAns:
 		for _, player := range g.Players {
 			player.CanPick = false
@@ -482,6 +506,7 @@ func (g *Game) setState(state GameState, id string) {
 			player.CanWager = false
 			player.CanConfirmAns = false
 		}
+		g.cancelRecvBuzz()
 	case RecvAnsConfirmation:
 		for _, player := range g.Players {
 			player.CanPick = false

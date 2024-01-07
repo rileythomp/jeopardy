@@ -20,7 +20,9 @@ var (
 		},
 	}
 
-	game = jeopardy.NewGame()
+	// game = jeopardy.NewGame()
+
+	games = map[string]*jeopardy.Game{}
 )
 
 func closeConnWithMsg(conn *websocket.Conn, msg string, code int) {
@@ -47,12 +49,21 @@ func joinGame(c *gin.Context) {
 		closeConnWithMsg(conn, fmt.Sprintf("Failed to parse join request: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
+
+	var game = jeopardy.NewGame()
+	for _, g := range games {
+		if len(g.Players) < 3 {
+			game = g
+		}
+	}
 	playerId, err := game.AddPlayer(joinReq.PlayerName)
 	if err != nil {
 		log.Println("Failed to add player:", err)
 		closeConnWithMsg(conn, fmt.Sprintf("Failed to add player: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
+	games[playerId] = game
+
 	jwt, err := generateJWT(playerId)
 	if err != nil {
 		log.Println("Failed to generate token:", err)
@@ -100,6 +111,7 @@ func playGame(c *gin.Context) {
 		return
 	}
 
+	game := games[playerId]
 	err = game.SetPlayerConnection(playerId, conn)
 	if err != nil {
 		log.Println("Failed to set player connection:", err)
