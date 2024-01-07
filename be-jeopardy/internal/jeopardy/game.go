@@ -40,6 +40,7 @@ const (
 type (
 	Game struct {
 		cancelRecvAns     map[string]context.CancelFunc
+		cancelRecvWager   map[string]context.CancelFunc
 		cancelRecvBuzz    context.CancelFunc
 		cancelRecvPick    context.CancelFunc
 		State             GameState        `json:"state"`
@@ -76,7 +77,7 @@ type (
 		FinalCorrect    bool            `json:"finalCorrect"`
 		FinalProtestors map[string]bool `json:"finalProtestors"`
 
-		conn *websocket.Conn
+		conn *safeConn
 	}
 
 	Topic struct {
@@ -95,9 +96,10 @@ type (
 
 func NewGame() *Game {
 	return &Game{
-		State:         PreGame,
-		Players:       []*Player{},
-		cancelRecvAns: map[string]context.CancelFunc{},
+		State:           PreGame,
+		Players:         []*Player{},
+		cancelRecvAns:   map[string]context.CancelFunc{},
+		cancelRecvWager: map[string]context.CancelFunc{},
 	}
 }
 
@@ -118,7 +120,7 @@ func (g *Game) SetPlayerConnection(playerId string, conn *websocket.Conn) error 
 	if player == nil {
 		return fmt.Errorf("player not found")
 	}
-	player.conn = conn
+	player.conn = &safeConn{conn: conn}
 	msg := "Waiting for more players"
 	if g.readyToPlay() {
 		if err := g.startGame(); err != nil {
@@ -431,6 +433,8 @@ func (g *Game) nextQuestion(player *Player, isCorrect bool) error {
 }
 
 func (g *Game) handleWager(playerId string, wager int) error {
+	cancelRecvWager := g.cancelRecvWager[playerId]
+	cancelRecvWager()
 	player := g.getPlayerById(playerId)
 	if player == nil {
 		return fmt.Errorf("player not found")
@@ -508,14 +512,14 @@ func (g *Game) setState(state GameState, id string) {
 		recvPickCtx, cancelRecvPick := context.WithCancel(context.Background())
 		g.cancelRecvPick = cancelRecvPick
 		go func(recvPickCtx context.Context) {
-			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 3*time.Second)
+			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer timeoutCancel()
 			select {
 			case <-recvPickCtx.Done():
 				fmt.Println("Cancelling pick question timeout")
 				return
 			case <-timeoutCtx.Done():
-				fmt.Println("3 seconds elapsed with no pick, automatically choosing question")
+				fmt.Println("2 seconds elapsed with no pick, automatically choosing question")
 				topicIdx, valIdx := g.firstAvailableQuestion()
 				err := g.handlePick(id, topicIdx, valIdx)
 				if err != nil {
@@ -535,14 +539,14 @@ func (g *Game) setState(state GameState, id string) {
 		recvBuzzCtx, cancelRecvBuzz := context.WithCancel(context.Background())
 		g.cancelRecvBuzz = cancelRecvBuzz
 		go func(recvBuzzCtx context.Context) {
-			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 3*time.Second)
+			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer timeoutCancel()
 			select {
 			case <-recvBuzzCtx.Done():
 				fmt.Println("Cancelling buzz in timeout")
 				return
 			case <-timeoutCtx.Done():
-				fmt.Println("3 seconds elapsed with no buzz, skipping question")
+				fmt.Println("2 seconds elapsed with no buzz, skipping question")
 				err := g.skipQuestion()
 				if err != nil {
 					panic(err)
@@ -608,6 +612,37 @@ func (g *Game) setState(state GameState, id string) {
 				player.CanWager = player.Score > 0
 			}
 			player.CanConfirmAns = false
+		}
+		for _, player := range g.Players {
+			if !player.CanWager {
+				continue
+			}
+			recvWagerCtx, cancelRecvWager := context.WithCancel(context.Background())
+			g.cancelRecvWager[player.Id] = cancelRecvWager
+			go func(recvWagerCtx context.Context, playerId string) {
+				wagerTimeout := 5 * time.Second
+				if g.Round == FinalRound {
+					wagerTimeout = 10 * time.Second
+				}
+				timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), wagerTimeout)
+				defer timeoutCancel()
+				select {
+				case <-recvWagerCtx.Done():
+					fmt.Println("Cancelling wager in timeout")
+					return
+				case <-timeoutCtx.Done():
+					fmt.Printf("%d seconds elapsed with no wager, wagering 0 automatically\n", wagerTimeout/time.Second)
+					wager := 5
+					if g.Round == FinalRound {
+						wager = 0
+					}
+					err := g.handleWager(playerId, wager)
+					if err != nil {
+						panic(err)
+					}
+					return
+				}
+			}(recvWagerCtx, player.Id)
 		}
 	default:
 		for _, player := range g.Players {

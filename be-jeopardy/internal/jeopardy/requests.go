@@ -1,5 +1,11 @@
 package jeopardy
 
+import (
+	"sync"
+
+	"github.com/gorilla/websocket"
+)
+
 type (
 	Response struct {
 		Code      int     `json:"code"`
@@ -53,3 +59,14 @@ type (
 		ProtestFor string `json:"protestFor"`
 	}
 )
+
+type safeConn struct {
+	mu   sync.Mutex
+	conn *websocket.Conn
+}
+
+func (s *safeConn) WriteJSON(v interface{}) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.conn.WriteJSON(v)
+}
