@@ -26,6 +26,10 @@ export class JoinComponent implements OnInit {
 			this.jwt = jwt;
 		});
 		this.websocketService.connect('ws://localhost:8080/jeopardy/join')
+		this.websocketService.onopen(() => {
+			this.playerName = this.generateRandomString(7);
+			this.joinGame();
+		})
 	}
 
 	joinGame() {
@@ -44,5 +48,15 @@ export class JoinComponent implements OnInit {
 			}
 		})
 	}
+
+	generateRandomString(length: number): string {
+		const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+		let result = '';
+		for (let i = 0; i < length; i++) {
+		  const randomIndex = Math.floor(Math.random() * characters.length);
+		  result += characters.charAt(randomIndex);
+		}
+		return result;
+	  }
 
 }
