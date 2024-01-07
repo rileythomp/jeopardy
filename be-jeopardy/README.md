@@ -7,14 +7,6 @@ The server echoes messages sent to it. The client sends a message every second a
 To run the example, start the server:
 
 **TODO**
- * Buzz timeout
-    when in a recvbuzz state and you can buzz, start a 5 second timer with a 3 second delay
- * Answer timeout
-    when in a recvans state and you can answer, start a 5 second timer 
-    when its daily double, make the timer 15 seconds
- * final jeopardy timeouts 
-    30 seconds to wager 
-    30 seconds to answer
  * Handle play again flow
  * Handle error synchronization
 
