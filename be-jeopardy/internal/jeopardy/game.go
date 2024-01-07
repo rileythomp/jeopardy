@@ -41,6 +41,7 @@ type (
 	Game struct {
 		cancelRecvAns     map[string]context.CancelFunc
 		cancelRecvBuzz    context.CancelFunc
+		cancelRecvPick    context.CancelFunc
 		State             GameState        `json:"state"`
 		Round             RoundState       `json:"round"`
 		Players           []*Player        `json:"players"`
@@ -227,6 +228,7 @@ func (g *Game) handleProtest(protestFor, protestBy string) error {
 }
 
 func (g *Game) handlePick(playerId string, topicIdx, valIdx int) error {
+	g.cancelRecvPick()
 	player := g.getPlayerById(playerId)
 	if player == nil {
 		return fmt.Errorf("player not found")
@@ -328,6 +330,23 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 	return g.messageAllPlayers(msg)
 }
 
+func (g *Game) handleAnswerTimeout(playerId string) error {
+	cancelRecvAns := g.cancelRecvAns[playerId]
+	cancelRecvAns()
+	player := g.getPlayerById(playerId)
+	if player == nil {
+		return fmt.Errorf("player not found")
+	}
+	if !player.CanAnswer {
+		return fmt.Errorf("player cannot answer")
+	}
+	isCorrect := false
+	if g.Round == FinalRound {
+		return g.handleFinalRoundAns(player, isCorrect, "answer-timeout")
+	}
+	return g.nextQuestion(player, isCorrect)
+}
+
 func (g *Game) handleFinalRoundAns(player *Player, isCorrect bool, answer string) error {
 	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
 	g.FinalAnswersRecvd++
@@ -344,23 +363,6 @@ func (g *Game) handleFinalRoundAns(player *Player, isCorrect bool, answer string
 	}
 	g.setState(PostGame, "")
 	return g.messageAllPlayers("Final round ended")
-}
-
-func (g *Game) handleAnswerTimeout(playerId string) error {
-	cancelRecvAns := g.cancelRecvAns[playerId]
-	cancelRecvAns()
-	player := g.getPlayerById(playerId)
-	if player == nil {
-		return fmt.Errorf("player not found")
-	}
-	if !player.CanAnswer {
-		return fmt.Errorf("player cannot answer")
-	}
-	isCorrect := false
-	if g.Round == FinalRound {
-		return g.handleFinalRoundAns(player, isCorrect, "answer-timeout")
-	}
-	return g.nextQuestion(player, isCorrect)
 }
 
 func (g *Game) handleAnsConfirmation(playerId string, confirm bool) error {
@@ -477,6 +479,22 @@ func (g *Game) getPlayerById(id string) *Player {
 	return nil
 }
 
+func (g *Game) firstAvailableQuestion() (int, int) {
+	curRound := g.FirstRound
+	if g.Round == SecondRound {
+		curRound = g.SecondRound
+	}
+	for valIdx := 0; valIdx < numQuestions; valIdx++ {
+		for topicIdx := 0; topicIdx < numTopics; topicIdx++ {
+			if curRound[topicIdx].Questions[valIdx].CanChoose {
+				return topicIdx, valIdx
+			}
+		}
+
+	}
+	return -1, -1
+}
+
 func (g *Game) setState(state GameState, id string) {
 	switch state {
 	case RecvPick:
@@ -487,6 +505,25 @@ func (g *Game) setState(state GameState, id string) {
 			player.CanWager = false
 			player.CanConfirmAns = false
 		}
+		recvPickCtx, cancelRecvPick := context.WithCancel(context.Background())
+		g.cancelRecvPick = cancelRecvPick
+		go func(recvPickCtx context.Context) {
+			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer timeoutCancel()
+			select {
+			case <-recvPickCtx.Done():
+				fmt.Println("Cancelling pick question timeout")
+				return
+			case <-timeoutCtx.Done():
+				fmt.Println("3 seconds elapsed with no pick, automatically choosing question")
+				topicIdx, valIdx := g.firstAvailableQuestion()
+				err := g.handlePick(id, topicIdx, valIdx)
+				if err != nil {
+					panic(err)
+				}
+				return
+			}
+		}(recvPickCtx)
 	case RecvBuzz:
 		for _, player := range g.Players {
 			player.CanPick = false
@@ -498,14 +535,14 @@ func (g *Game) setState(state GameState, id string) {
 		recvBuzzCtx, cancelRecvBuzz := context.WithCancel(context.Background())
 		g.cancelRecvBuzz = cancelRecvBuzz
 		go func(recvBuzzCtx context.Context) {
-			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 7*time.Second)
+			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer timeoutCancel()
 			select {
 			case <-recvBuzzCtx.Done():
 				fmt.Println("Cancelling buzz in timeout")
 				return
 			case <-timeoutCtx.Done():
-				fmt.Println("7 seconds elapsed with no buzz, skipping question")
+				fmt.Println("3 seconds elapsed with no buzz, skipping question")
 				err := g.skipQuestion()
 				if err != nil {
 					panic(err)
