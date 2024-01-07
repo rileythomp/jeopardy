@@ -216,16 +216,14 @@ func (g *Game) handleProtest(protestFor, protestBy string) error {
 			protestForPlayer.Score += 2 * protestForPlayer.FinalWager
 		}
 		g.setState(PostGame, "")
-		g.messageAllPlayers("final jeopardy result changed")
-	} else {
-		protestByPlayer.conn.WriteJSON(Response{
-			Code:      200,
-			Message:   "You protested for " + protestForPlayer.Name,
-			Game:      g,
-			CurPlayer: protestByPlayer,
-		})
+		return g.messageAllPlayers("final jeopardy result changed")
 	}
-	return nil
+	return protestByPlayer.conn.WriteJSON(Response{
+		Code:      200,
+		Message:   "You protested for " + protestForPlayer.Name,
+		Game:      g,
+		CurPlayer: protestByPlayer,
+	})
 }
 
 func (g *Game) handlePick(playerId string, topicIdx, valIdx int) error {
