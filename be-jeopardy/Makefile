@@ -1,4 +1,4 @@
-BINARY_NAME=jeopardy
+BINARY_NAME=bin/jeopardy
 GOBUILD=go build
 GOCLEAN=go clean
 
