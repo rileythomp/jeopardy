@@ -59,11 +59,9 @@ func closeConnWithMsg(conn *websocket.Conn, msg string, code int) {
 func terminateGames(c *gin.Context) {
 	log.Println("Closing all connections and terminating all games")
 
-	for i, game := range games {
-		log.Printf("Terminating game %d\n", i)
+	for _, game := range games {
 		game.TerminateGame()
 	}
-
 	playerGames = map[string]*jeopardy.Game{}
 	games = []*jeopardy.Game{}
 

@@ -517,6 +517,8 @@ func (g *Game) firstAvailableQuestion() (int, int) {
 }
 
 func (g *Game) TerminateGame() {
+	// TODO: HANDLE ERROR SYNCHRONIZATION
+	log.Print("Terminating game\n")
 	if g.cancelRecvPick != nil {
 		g.cancelRecvPick()
 	}
