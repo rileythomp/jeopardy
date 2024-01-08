@@ -38,13 +38,13 @@ const (
 )
 
 const (
-	pickQuestionTimeout       = 5 * time.Second
-	buzzInTimeout             = 5 * time.Second
-	defaultAnsTimeout         = 5 * time.Second
+	pickQuestionTimeout       = 9 * time.Second
+	buzzInTimeout             = 12 * time.Second
+	defaultAnsTimeout         = 10 * time.Second
 	dailyDoubleAnsTimeout     = 10 * time.Second
-	finalJeopardyAnsTimeout   = 20 * time.Second
-	confirmAnsTimeout         = 5 * time.Second
-	dailyDoubleWagerTimeout   = 5 * time.Second
+	finalJeopardyAnsTimeout   = 10 * time.Second
+	confirmAnsTimeout         = 10 * time.Second
+	dailyDoubleWagerTimeout   = 10 * time.Second
 	finalJeopardyWagerTimeout = 10 * time.Second
 )
 
@@ -534,7 +534,7 @@ func (g *Game) setState(state GameState, id string) {
 				fmt.Println("Cancelling pick question timeout")
 				return
 			case <-timeoutCtx.Done():
-				fmt.Println("2 seconds elapsed with no pick, automatically choosing question")
+				fmt.Printf("%d seconds elapsed with no pick, automatically choosing question\n", pickQuestionTimeout/time.Second)
 				topicIdx, valIdx := g.firstAvailableQuestion()
 				err := g.handlePick(id, topicIdx, valIdx)
 				if err != nil {
@@ -561,7 +561,7 @@ func (g *Game) setState(state GameState, id string) {
 				fmt.Println("Cancelling buzz in timeout")
 				return
 			case <-timeoutCtx.Done():
-				fmt.Println("2 seconds elapsed with no buzz, skipping question")
+				fmt.Printf("%d seconds elapsed with no buzz, skipping question", buzzInTimeout/time.Second)
 				err := g.skipQuestion()
 				if err != nil {
 					panic(err)

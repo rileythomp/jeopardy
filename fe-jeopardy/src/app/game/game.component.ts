@@ -16,6 +16,17 @@ export class GameComponent implements OnInit {
 	questionRows: Question[][];
 	questionAnswer: string;
 	wagerAmt: string;
+	countdownSeconds: number;
+	countdownInterval: any;
+
+	pickQuestionTimeout       = 9;
+	buzzInTimeout             = 12;
+	defaultAnsTimeout         = 10;
+	dailyDoubleAnsTimeout     = 10;
+	finalJeopardyAnsTimeout   = 10;
+	confirmAnsTimeout         = 10;
+	dailyDoubleWagerTimeout   = 10;
+	finalJeopardyWagerTimeout = 10;
 
 	constructor(
 		private websocketService: WebsocketService,
@@ -29,12 +40,23 @@ export class GameComponent implements OnInit {
 		this.titles = this.gameState.getTitles();
 		this.questionRows = this.gameState.getQuestionRows();
 
+		if (this.player.canPick()) {
+			this.startCountdownTimer(this.pickQuestionTimeout);
+		}
+
+		// if (this.player.canWager()) {
+		// 	this.startCountdownTimer(this.dailyDoubleWagerTimeout);
+		// }
+
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
 			if (resp.code != 200) {
 				alert(resp.message)
 				return
 			}
+
+			clearInterval(this.countdownInterval)
+
 			switch (resp.game.state) {
 				case GameState.RecvBuzz:
 					console.log('show the question, accept a buzz');
@@ -50,7 +72,14 @@ export class GameComponent implements OnInit {
 						this.player.blockBuzz(true)
 						setTimeout(() => {
 							this.player.blockBuzz(false)
-						}, 0);
+							if (this.player.canBuzz()) {
+								this.startCountdownTimer(this.buzzInTimeout - 2);
+							}
+						}, 2000);
+					} else {
+						if (this.player.canBuzz()) {
+							this.startCountdownTimer(this.buzzInTimeout);
+						}
 					}
 					break;
 
@@ -60,6 +89,11 @@ export class GameComponent implements OnInit {
 
 					this.gameState.updateGameState(resp.game);
 					this.player.updatePlayer(resp.curPlayer);
+
+					if (this.player.canAnswer()) {
+						this.startCountdownTimer(this.defaultAnsTimeout);
+					}
+
 					break;
 
 				case GameState.RecvPick:
@@ -72,6 +106,11 @@ export class GameComponent implements OnInit {
 					this.players = this.gameState.getPlayers();
 					this.titles = this.gameState.getTitles();
 					this.questionRows = this.gameState.getQuestionRows();
+
+					if (this.player.canPick()) {
+						this.startCountdownTimer(this.pickQuestionTimeout);
+					}
+
 					break;
 
 				case GameState.RecvAnsConfirmation: 
@@ -80,6 +119,10 @@ export class GameComponent implements OnInit {
 
 					this.gameState.updateGameState(resp.game);
 					this.player.updatePlayer(resp.curPlayer);
+
+					if (this.player.canConfirmAns()) {
+						this.startCountdownTimer(this.confirmAnsTimeout);
+					}
 
 					break
 
@@ -91,6 +134,11 @@ export class GameComponent implements OnInit {
 					this.player.updatePlayer(resp.curPlayer);
 
 					this.players = this.gameState.getPlayers();
+
+					if (this.player.canWager()) {
+						this.startCountdownTimer(this.dailyDoubleWagerTimeout);
+					}
+
 					break;
 
 				case GameState.PostGame:
@@ -108,6 +156,16 @@ export class GameComponent implements OnInit {
 					break;
 			}
 		})
+	}
+
+	startCountdownTimer(seconds: number) {
+		this.countdownSeconds = seconds;
+		this.countdownInterval = setInterval(() => {
+			this.countdownSeconds -= 1;
+			if (this.countdownSeconds <= 0) {
+				clearInterval(this.countdownInterval);
+			}
+		}, 1000);
 	}
 
 	highlightQuestion(event: any, color: string) {
