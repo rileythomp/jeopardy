@@ -16,11 +16,10 @@ import (
 var (
 	upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
-			return r.Header.Get("Origin") == "http://localhost:4200"
+			return true
+			// return r.Header.Get("Origin") == "http://localhost:4200"
 		},
 	}
-
-	// game = jeopardy.NewGame()
 
 	games = map[string]*jeopardy.Game{}
 )

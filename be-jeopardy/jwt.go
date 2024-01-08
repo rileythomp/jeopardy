@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/rsa"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -19,7 +18,7 @@ var (
 
 func setJWTKeys() error {
 	privateKeyFile := "keys/jwtRS512.key"
-	privateKeyBytes, err := ioutil.ReadFile(privateKeyFile)
+	privateKeyBytes, err := os.ReadFile(privateKeyFile)
 	if err != nil {
 		return err
 	}
