@@ -662,7 +662,11 @@ func (g *Game) setState(state GameState, id string) {
 				return
 			case <-timeoutCtx.Done():
 				fmt.Println("5 seconds elapsed with no answer confirmation, automatically confirming")
-				g.nextQuestion(g.LastAnswerer, g.AnsCorrectness)
+				err := g.nextQuestion(g.LastAnswerer, g.AnsCorrectness)
+				if err != nil {
+					log.Printf("Unexpected error skipping answer confirmation after timeout: %s\n", err)
+					g.TerminateGame()
+				}
 				return
 			}
 		}(recvAnsConfirmationCtx)
