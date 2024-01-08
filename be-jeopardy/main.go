@@ -22,7 +22,8 @@ var (
 		},
 	}
 
-	games = map[string]*jeopardy.Game{}
+	playerGames = map[string]*jeopardy.Game{}
+	games       = []*jeopardy.Game{}
 )
 
 func main() {
@@ -38,9 +39,11 @@ func main() {
 		log.Fatalf("Failed to set trusted proxies: %s", err)
 	}
 	r.Use(cors.Default())
+
+	r.GET("/jeopardy/health", checkHealth)
 	r.GET("/jeopardy/join", joinGame)
 	r.GET("/jeopardy/play", playGame)
-	r.GET("/jeopardy/health", checkHealth)
+	r.GET("/jeopardy/reset", terminateGames)
 
 	port := os.Getenv("PORT")
 	addr := flag.String("addr", ":"+port, "http service address")
@@ -51,6 +54,20 @@ func main() {
 func closeConnWithMsg(conn *websocket.Conn, msg string, code int) {
 	_ = conn.WriteJSON(jeopardy.Response{Message: msg, Code: code})
 	conn.Close()
+}
+
+func terminateGames(c *gin.Context) {
+	log.Println("Closing all connections and terminating all games")
+
+	for i, game := range games {
+		log.Printf("Terminating game %d\n", i)
+		game.TerminateGame()
+	}
+
+	playerGames = map[string]*jeopardy.Game{}
+	games = []*jeopardy.Game{}
+
+	c.String(http.StatusOK, "Terminated all games")
 }
 
 func joinGame(c *gin.Context) {
@@ -85,7 +102,10 @@ func joinGame(c *gin.Context) {
 		closeConnWithMsg(conn, fmt.Sprintf("Failed to add player: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
-	games[playerId] = game
+	playerGames[playerId] = game
+	if len(game.Players) == 1 {
+		games = append(games, game)
+	}
 
 	jwt, err := generateJWT(playerId)
 	if err != nil {
@@ -134,7 +154,7 @@ func playGame(c *gin.Context) {
 		return
 	}
 
-	game := games[playerId]
+	game := playerGames[playerId]
 	err = game.SetPlayerConnection(playerId, conn)
 	if err != nil {
 		log.Println("Failed to set player connection:", err)
@@ -142,6 +162,7 @@ func playGame(c *gin.Context) {
 		return
 	}
 
+	// TODO: USE A CHANNEL TO WAIT ON A MESSAGE OR TO END THE GAME
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
@@ -170,5 +191,6 @@ func playGame(c *gin.Context) {
 }
 
 func checkHealth(c *gin.Context) {
-	log.Println("received health check")
+	log.Println("Received health check")
+	c.String(http.StatusOK, "OK")
 }

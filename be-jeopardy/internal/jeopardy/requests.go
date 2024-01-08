@@ -70,3 +70,10 @@ func (s *safeConn) WriteJSON(v interface{}) error {
 	defer s.mu.Unlock()
 	return s.conn.WriteJSON(v)
 }
+
+func (s *safeConn) Close() error {
+	if s.conn == nil {
+		return nil
+	}
+	return s.conn.Close()
+}

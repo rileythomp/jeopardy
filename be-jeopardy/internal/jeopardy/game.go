@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"log"
+
 	"github.com/agnivade/levenshtein"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -514,6 +516,33 @@ func (g *Game) firstAvailableQuestion() (int, int) {
 	return -1, -1
 }
 
+func (g *Game) TerminateGame() {
+	if g.cancelRecvPick != nil {
+		g.cancelRecvPick()
+	}
+	if g.cancelRecvBuzz != nil {
+		g.cancelRecvBuzz()
+	}
+	if g.cancelRecvAnsConfirmation != nil {
+		g.cancelRecvAnsConfirmation()
+	}
+	for _, player := range g.Players {
+		cancelRecvAns, ok := g.cancelRecvAns[player.Id]
+		if ok {
+			cancelRecvAns()
+		}
+		cancelRecvWager, ok := g.cancelRecvWager[player.Id]
+		if ok {
+			cancelRecvWager()
+		}
+		if err := player.CloseConnection(); err != nil {
+			log.Printf("Failed to close connection: %s\n", err.Error())
+		} else {
+			log.Printf("Successfully closed connection for player %s\n", player.Name)
+		}
+	}
+}
+
 func (g *Game) setState(state GameState, id string) {
 	switch state {
 	case RecvPick:
@@ -538,7 +567,8 @@ func (g *Game) setState(state GameState, id string) {
 				topicIdx, valIdx := g.firstAvailableQuestion()
 				err := g.handlePick(id, topicIdx, valIdx)
 				if err != nil {
-					panic(err)
+					log.Printf("Unexpected error picking question after timeout: %s\n", err)
+					g.TerminateGame()
 				}
 				return
 			}
@@ -564,7 +594,8 @@ func (g *Game) setState(state GameState, id string) {
 				fmt.Printf("%d seconds elapsed with no buzz, skipping question", buzzInTimeout/time.Second)
 				err := g.skipQuestion()
 				if err != nil {
-					panic(err)
+					log.Printf("Unexpected error skipping question after timeout: %s\n", err)
+					g.TerminateGame()
 				}
 				return
 			}
@@ -603,7 +634,8 @@ func (g *Game) setState(state GameState, id string) {
 					fmt.Printf("%d seconds elapsed with no answer, skipping question\n", answerTimeout/time.Second)
 					err := g.handleAnswerTimeout(playerId)
 					if err != nil {
-						panic(err)
+						log.Printf("Unexpected error skipping answer after timeout: %s\n", err)
+						g.TerminateGame()
 					}
 					return
 				}
@@ -668,7 +700,8 @@ func (g *Game) setState(state GameState, id string) {
 					}
 					err := g.handleWager(playerId, wager)
 					if err != nil {
-						panic(err)
+						log.Printf("Unexpected error skipping wager after timeout: %s\n", err)
+						g.TerminateGame()
 					}
 					return
 				}
@@ -1263,6 +1296,13 @@ func (p *Player) canBuzz(guessedWrong []string) bool {
 		}
 	}
 	return true
+}
+
+func (p *Player) CloseConnection() error {
+	if p.conn == nil {
+		return nil
+	}
+	return p.conn.Close()
 }
 
 func (q *Question) checkAnswer(ans string) bool {

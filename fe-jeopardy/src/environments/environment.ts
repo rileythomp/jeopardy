@@ -4,7 +4,8 @@
 
 export const environment = {
   production: false,
-  apiServerUrl: 'localhost:8080'
+  apiServerUrl: 'localhost:8080',
+  websocketProtocol: 'ws',
 };
 
 /*
