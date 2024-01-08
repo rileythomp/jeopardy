@@ -5,6 +5,7 @@ import { JwtService } from '../jwt.service';
 import { GameStateService } from '../game-state.service';
 import { PlayerService } from '../player.service';
 import { Player, GameState as GameState } from '../model/model';
+import { environment } from 'src/environments/environment';
 
 @Component({
 	selector: 'app-lobby',
@@ -30,7 +31,7 @@ export class LobbyComponent implements OnInit {
 			this.jwt = jwt;
 		});
 
-		this.websocketService.connect('ws://arcane-hamlet-29350-57290d5ba8d9.herokuapp.com/jeopardy/play');
+		this.websocketService.connect(`ws://${environment.apiServerUrl}/jeopardy/play`);
 
 		this.websocketService.onopen(() => {
 			let playReq = {

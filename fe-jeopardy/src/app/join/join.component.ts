@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { JwtService } from '../jwt.service';
 import { WebsocketService } from '../websocket.service';
 import { GameState as GameState } from '../model/model';
+import { environment } from 'src/environments/environment';
 
 @Component({
 	selector: 'app-join',
@@ -25,7 +26,7 @@ export class JoinComponent implements OnInit {
 		this.jwtService.jwt$.subscribe(jwt => {
 			this.jwt = jwt;
 		});
-		this.websocketService.connect('ws://arcane-hamlet-29350-57290d5ba8d9.herokuapp.com/jeopardy/join')
+		this.websocketService.connect(`ws://${environment.apiServerUrl}/jeopardy/join`)
 		this.websocketService.onopen(() => {
 			this.playerName = this.generateRandomString(7);
 			this.joinGame();
