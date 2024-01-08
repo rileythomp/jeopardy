@@ -30,7 +30,7 @@ export class LobbyComponent implements OnInit {
 			this.jwt = jwt;
 		});
 
-		this.websocketService.connect('ws://localhost:8080/jeopardy/play');
+		this.websocketService.connect('ws://arcane-hamlet-29350-57290d5ba8d9.herokuapp.com/jeopardy/play');
 
 		this.websocketService.onopen(() => {
 			let playReq = {

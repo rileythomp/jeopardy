@@ -11,8 +11,8 @@ clean:
 	rm -f $(BINARY_NAME)
 
 run:
-	go build -o $(BINARY_NAME) -v
-	./$(BINARY_NAME)
+	go install -v ./...
+	heroku local web --port 8080
 
 all: build
 

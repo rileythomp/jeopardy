@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -23,6 +24,29 @@ var (
 
 	games = map[string]*jeopardy.Game{}
 )
+
+func main() {
+	flag.Parse()
+	log.SetFlags(0)
+
+	if err := setJWTKeys(); err != nil {
+		log.Fatalf("Failed to set JWT keys: %s", err)
+	}
+
+	r := gin.Default()
+	if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
+		log.Fatalf("Failed to set trusted proxies: %s", err)
+	}
+	r.Use(cors.Default())
+	r.GET("/jeopardy/join", joinGame)
+	r.GET("/jeopardy/play", playGame)
+	r.GET("/jeopardy/health", checkHealth)
+
+	port := os.Getenv("PORT")
+	addr := flag.String("addr", ":"+port, "http service address")
+	log.Fatal(r.Run(*addr))
+
+}
 
 func closeConnWithMsg(conn *websocket.Conn, msg string, code int) {
 	_ = conn.WriteJSON(jeopardy.Response{Message: msg, Code: code})
@@ -145,23 +169,6 @@ func playGame(c *gin.Context) {
 	}
 }
 
-func main() {
-	flag.Parse()
-	log.SetFlags(0)
-
-	if err := setJWTKeys(); err != nil {
-		log.Fatalf("Failed to set JWT keys: %s", err)
-	}
-
-	r := gin.Default()
-	if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
-		log.Fatalf("Failed to set trusted proxies: %s", err)
-	}
-	r.Use(cors.Default())
-	r.GET("/jeopardy/join", joinGame)
-	r.GET("/jeopardy/play", playGame)
-
-	addr := flag.String("addr", ":8080", "http service address")
-	log.Fatal(r.Run(*addr))
-
+func checkHealth(c *gin.Context) {
+	log.Println("received health check")
 }

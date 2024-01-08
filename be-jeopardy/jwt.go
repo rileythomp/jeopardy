@@ -17,21 +17,18 @@ var (
 )
 
 func setJWTKeys() error {
-	privateKeyFile := "keys/jwtRS512.key"
-	privateKeyBytes, err := os.ReadFile(privateKeyFile)
-	if err != nil {
-		return err
-	}
+	privateKeyStr := os.Getenv("JWT_RS512_KEY")
+	privateKeyBytes := []byte(privateKeyStr)
+
+	var err error
 	privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
 	if err != nil {
 		return err
 	}
 
-	publicKeyFile := "keys/jwtRS512.key.pub"
-	publicKeyBytes, err := os.ReadFile(publicKeyFile)
-	if err != nil {
-		return err
-	}
+	publicKeyStr := os.Getenv("JWT_RS512_PUB_KEY")
+	publicKeyBytes := []byte(publicKeyStr)
+
 	publicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicKeyBytes)
 	if err != nil {
 		return err
