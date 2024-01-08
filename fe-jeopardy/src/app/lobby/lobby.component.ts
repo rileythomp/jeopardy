@@ -31,7 +31,7 @@ export class LobbyComponent implements OnInit {
 			this.jwt = jwt;
 		});
 
-		this.websocketService.connect(`ws://${environment.apiServerUrl}/jeopardy/play`);
+		this.websocketService.connect(`wss://${environment.apiServerUrl}/jeopardy/play`);
 
 		this.websocketService.onopen(() => {
 			let playReq = {

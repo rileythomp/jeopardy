@@ -26,7 +26,7 @@ export class JoinComponent implements OnInit {
 		this.jwtService.jwt$.subscribe(jwt => {
 			this.jwt = jwt;
 		});
-		this.websocketService.connect(`ws://${environment.apiServerUrl}/jeopardy/join`)
+		this.websocketService.connect(`wss://${environment.apiServerUrl}/jeopardy/join`)
 		this.websocketService.onopen(() => {
 			this.playerName = this.generateRandomString(7);
 			this.joinGame();
