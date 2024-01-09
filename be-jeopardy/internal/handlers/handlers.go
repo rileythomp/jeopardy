@@ -102,6 +102,7 @@ func JoinGame(c *gin.Context) {
 		Game:    game,
 	}
 
+	// TODO: close this connection
 	err = conn.WriteJSON(resp)
 	if err != nil {
 		log.Printf("Error writing message to WebSocket: %s\n", err.Error())

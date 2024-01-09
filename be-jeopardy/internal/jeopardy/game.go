@@ -442,15 +442,13 @@ func (g *Game) handleProtest(playerId, protestFor string) error {
 	return g.messageAllPlayers("Final Jeopardy result changed")
 }
 
-func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, playerId, cancelMsg, timeoutMsg string, handleTimeout func(playerId string) error) {
+func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, playerId string, handleTimeout func(playerId string) error) {
 	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), timeout)
 	defer timeoutCancel()
 	select {
 	case <-ctx.Done():
-		fmt.Println(cancelMsg)
 		return
 	case <-timeoutCtx.Done():
-		fmt.Printf(timeoutMsg, timeout/time.Second)
 		if err := handleTimeout(playerId); err != nil {
 			log.Printf("Unexpected error after timeout: %s\n", err)
 			g.terminateGame()
@@ -467,7 +465,7 @@ func (g *Game) setState(state GameState, id string) {
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		g.cancelPickTimeout = cancel
-		go g.startTimeout(ctx, pickQuestionTimeout, "", "Cancelling pick question timeout", "%d seconds elapsed with no pick, automatically choosing question\n", func(_ string) error {
+		go g.startTimeout(ctx, pickQuestionTimeout, "", func(_ string) error {
 			topicIdx, valIdx := g.firstAvailableQuestion()
 			return g.handlePick(id, topicIdx, valIdx)
 		})
@@ -477,7 +475,7 @@ func (g *Game) setState(state GameState, id string) {
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		g.cancelBuzzTimeout = cancel
-		go g.startTimeout(ctx, buzzInTimeout, "", "Cancelling buzz in timeout", "%d seconds elapsed with no buzz, skipping question\n", func(_ string) error {
+		go g.startTimeout(ctx, buzzInTimeout, "", func(_ string) error {
 			return g.skipQuestion()
 		})
 	case RecvAns:
@@ -499,9 +497,7 @@ func (g *Game) setState(state GameState, id string) {
 			} else if g.Round == FinalRound {
 				answerTimeout = finalJeopardyAnsTimeout
 			}
-			go g.startTimeout(ctx, answerTimeout, player.Id, "Cancelling answer timeout", "%d seconds elapsed with no answer, skipping question\n", func(playerId string) error {
-				return g.handleAnswerTimeout(playerId)
-			})
+			go g.startTimeout(ctx, answerTimeout, player.Id, g.handleAnswerTimeout)
 		}
 	case RecvAnsConfirmation:
 		for _, player := range g.Players {
@@ -509,7 +505,7 @@ func (g *Game) setState(state GameState, id string) {
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		g.cancelConfirmationTimeout = cancel
-		go g.startTimeout(ctx, confirmAnsTimeout, "", "Cancelling answer confirmation timeout", "%d seconds elapsed with no answer confirmation, automatically confirming\n", func(_ string) error {
+		go g.startTimeout(ctx, confirmAnsTimeout, "", func(_ string) error {
 			return g.nextQuestion(g.LastAnswerer, g.AnsCorrectness)
 		})
 	case RecvWager:
@@ -529,7 +525,7 @@ func (g *Game) setState(state GameState, id string) {
 			if g.Round == FinalRound {
 				wagerTimeout = finalJeopardyWagerTimeout
 			}
-			go g.startTimeout(ctx, wagerTimeout, player.Id, "Cancelling wager timeout", "%d seconds elapsed with no wager, wagering 0 automatically\n", func(playerId string) error {
+			go g.startTimeout(ctx, wagerTimeout, player.Id, func(playerId string) error {
 				wager := 5
 				if g.Round == FinalRound {
 					wager = 0
