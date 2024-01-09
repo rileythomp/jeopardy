@@ -13,29 +13,29 @@ import (
 type (
 	Game struct {
 		State             GameState  `json:"state"`
-		Players           []*Player  `json:"players"`
 		Round             RoundState `json:"round"`
 		FirstRound        []Topic    `json:"firstRound"`
 		SecondRound       []Topic    `json:"secondRound"`
 		FinalQuestion     Question   `json:"finalQuestion"`
 		CurQuestion       Question   `json:"curQuestion"`
-		GuessedWrong      []string   `json:"guessedWrong"`
+		Players           []*Player  `json:"players"`
+		LastAnswerer      *Player    `json:"lastAnswerer"`
+		LastAnswer        string     `json:"lastAnswer"`
 		LastPicker        string     `json:"lastPicker"`
+		GuessedWrong      []string   `json:"guessedWrong"`
+		AnsCorrectness    bool       `json:"ansCorrectness"`
 		NumFinalWagers    int        `json:"numFinalWagers"`
 		FinalWagersRecvd  int        `json:"finalWagers"`
 		FinalAnswersRecvd int        `json:"finalAnswers"`
 		Passes            int        `json:"passes"`
-		LastAnswer        string     `json:"lastAnswer"`
-		AnsCorrectness    bool       `json:"ansCorrectness"`
 		Confirmations     int        `json:"confirmations"`
 		Challenges        int        `json:"challenges"`
-		LastAnswerer      *Player    `json:"lastAnswerer"`
 
+		cancelPickTimeout         context.CancelFunc
+		cancelBuzzTimeout         context.CancelFunc
+		cancelConfirmationTimeout context.CancelFunc
 		cancelAnswerTimeout       map[string]context.CancelFunc
 		cancelWagerTimeout        map[string]context.CancelFunc
-		cancelConfirmationTimeout context.CancelFunc
-		cancelBuzzTimeout         context.CancelFunc
-		cancelPickTimeout         context.CancelFunc
 	}
 
 	Request struct {
