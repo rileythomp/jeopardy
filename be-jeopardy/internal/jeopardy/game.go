@@ -31,11 +31,11 @@ type (
 		Challenges        int        `json:"challenges"`
 		LastAnswerer      *Player    `json:"lastAnswerer"`
 
-		cancelRecvAns             map[string]context.CancelFunc
-		cancelRecvWager           map[string]context.CancelFunc
-		cancelRecvAnsConfirmation context.CancelFunc
-		cancelRecvBuzz            context.CancelFunc
-		cancelRecvPick            context.CancelFunc
+		cancelAnswerTimeout       map[string]context.CancelFunc
+		cancelWagerTimeout        map[string]context.CancelFunc
+		cancelConfirmationTimeout context.CancelFunc
+		cancelBuzzTimeout         context.CancelFunc
+		cancelPickTimeout         context.CancelFunc
 	}
 
 	Request struct {
@@ -121,11 +121,11 @@ var (
 
 func NewGame() *Game {
 	return &Game{
-		State:           PreGame,
-		Players:         []*Player{},
-		Round:           FirstRound,
-		cancelRecvAns:   map[string]context.CancelFunc{},
-		cancelRecvWager: map[string]context.CancelFunc{},
+		State:               PreGame,
+		Players:             []*Player{},
+		Round:               FirstRound,
+		cancelAnswerTimeout: map[string]context.CancelFunc{},
+		cancelWagerTimeout:  map[string]context.CancelFunc{},
 	}
 }
 
@@ -231,7 +231,7 @@ func (g *Game) HandleRequest(playerId string, msg []byte) error {
 }
 
 func (g *Game) handlePick(playerId string, topicIdx, valIdx int) error {
-	g.cancelRecvPick()
+	g.cancelPickTimeout()
 	player := g.getPlayerById(playerId)
 	if player == nil {
 		return fmt.Errorf("player not found")
@@ -282,17 +282,17 @@ func (g *Game) handleBuzz(playerId string, isPass bool) error {
 				CurPlayer: player,
 			})
 		}
-		g.cancelRecvBuzz()
+		g.cancelBuzzTimeout()
 		return g.skipQuestion()
 	}
-	g.cancelRecvBuzz()
+	g.cancelBuzzTimeout()
 	g.setState(RecvAns, player.Id)
 	return g.messageAllPlayers("Player buzzed")
 }
 
 func (g *Game) handleAnswer(playerId, answer string) error {
-	cancelRecvAns := g.cancelRecvAns[playerId]
-	cancelRecvAns()
+	cancelAnswerTimeout := g.cancelAnswerTimeout[playerId]
+	cancelAnswerTimeout()
 	player := g.getPlayerById(playerId)
 	if player == nil {
 		return fmt.Errorf("player not found")
@@ -312,8 +312,8 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 }
 
 func (g *Game) handleAnswerTimeout(playerId string) error {
-	cancelRecvAns := g.cancelRecvAns[playerId]
-	cancelRecvAns()
+	cancelAnswerTimeout := g.cancelAnswerTimeout[playerId]
+	cancelAnswerTimeout()
 	player := g.getPlayerById(playerId)
 	if player == nil {
 		return fmt.Errorf("player not found")
@@ -368,14 +368,14 @@ func (g *Game) handleAnsConfirmation(playerId string, confirm bool) error {
 			CurPlayer: player,
 		})
 	}
-	g.cancelRecvAnsConfirmation()
+	g.cancelConfirmationTimeout()
 	isCorrect := (g.AnsCorrectness && g.Confirmations == 2) || (!g.AnsCorrectness && g.Challenges == 2)
 	return g.nextQuestion(g.LastAnswerer, isCorrect)
 }
 
 func (g *Game) handleWager(playerId string, wager int) error {
-	cancelRecvWager := g.cancelRecvWager[playerId]
-	cancelRecvWager()
+	cancelWagerTimeout := g.cancelWagerTimeout[playerId]
+	cancelWagerTimeout()
 	player := g.getPlayerById(playerId)
 	if player == nil {
 		return fmt.Errorf("player not found")
@@ -442,55 +442,44 @@ func (g *Game) handleProtest(playerId, protestFor string) error {
 	return g.messageAllPlayers("Final Jeopardy result changed")
 }
 
+func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, playerId, cancelMsg, timeoutMsg string, handleTimeout func(playerId string) error) {
+	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), timeout)
+	defer timeoutCancel()
+	select {
+	case <-ctx.Done():
+		fmt.Println(cancelMsg)
+		return
+	case <-timeoutCtx.Done():
+		fmt.Printf(timeoutMsg, timeout/time.Second)
+		if err := handleTimeout(playerId); err != nil {
+			log.Printf("Unexpected error after timeout: %s\n", err)
+			g.terminateGame()
+		}
+		return
+	}
+}
+
 func (g *Game) setState(state GameState, id string) {
 	switch state {
 	case RecvPick:
 		for _, player := range g.Players {
 			player.updateActions(player.Id == id, false, false, false, false)
 		}
-		recvPickCtx, cancelRecvPick := context.WithCancel(context.Background())
-		g.cancelRecvPick = cancelRecvPick
-		go func(recvPickCtx context.Context) {
-			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), pickQuestionTimeout)
-			defer timeoutCancel()
-			select {
-			case <-recvPickCtx.Done():
-				fmt.Println("Cancelling pick question timeout")
-				return
-			case <-timeoutCtx.Done():
-				fmt.Printf("%d seconds elapsed with no pick, automatically choosing question\n", pickQuestionTimeout/time.Second)
-				topicIdx, valIdx := g.firstAvailableQuestion()
-				err := g.handlePick(id, topicIdx, valIdx)
-				if err != nil {
-					log.Printf("Unexpected error picking question after timeout: %s\n", err)
-					g.terminateGame()
-				}
-				return
-			}
-		}(recvPickCtx)
+		ctx, cancel := context.WithCancel(context.Background())
+		g.cancelPickTimeout = cancel
+		go g.startTimeout(ctx, pickQuestionTimeout, "", "Cancelling pick question timeout", "%d seconds elapsed with no pick, automatically choosing question\n", func(_ string) error {
+			topicIdx, valIdx := g.firstAvailableQuestion()
+			return g.handlePick(id, topicIdx, valIdx)
+		})
 	case RecvBuzz:
 		for _, player := range g.Players {
 			player.updateActions(false, player.canBuzz(g.GuessedWrong), false, false, false)
 		}
-		recvBuzzCtx, cancelRecvBuzz := context.WithCancel(context.Background())
-		g.cancelRecvBuzz = cancelRecvBuzz
-		go func(recvBuzzCtx context.Context) {
-			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), buzzInTimeout)
-			defer timeoutCancel()
-			select {
-			case <-recvBuzzCtx.Done():
-				fmt.Println("Cancelling buzz in timeout")
-				return
-			case <-timeoutCtx.Done():
-				fmt.Printf("%d seconds elapsed with no buzz, skipping question", buzzInTimeout/time.Second)
-				err := g.skipQuestion()
-				if err != nil {
-					log.Printf("Unexpected error skipping question after timeout: %s\n", err)
-					g.terminateGame()
-				}
-				return
-			}
-		}(recvBuzzCtx)
+		ctx, cancel := context.WithCancel(context.Background())
+		g.cancelBuzzTimeout = cancel
+		go g.startTimeout(ctx, buzzInTimeout, "", "Cancelling buzz in timeout", "%d seconds elapsed with no buzz, skipping question\n", func(_ string) error {
+			return g.skipQuestion()
+		})
 	case RecvAns:
 		for _, player := range g.Players {
 			player.updateActions(false, false, player.Id == id, false, false)
@@ -502,55 +491,27 @@ func (g *Game) setState(state GameState, id string) {
 			if !player.CanAnswer {
 				continue
 			}
-			recvAnsCtx, cancelRecvAns := context.WithCancel(context.Background())
-			g.cancelRecvAns[player.Id] = cancelRecvAns
-			go func(recvAnsCtx context.Context, playerId string) {
-				answerTimeout := defaultAnsTimeout
-				if g.CurQuestion.DailyDouble {
-					answerTimeout = dailyDoubleAnsTimeout
-				} else if g.Round == FinalRound {
-					answerTimeout = finalJeopardyAnsTimeout
-				}
-				timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), answerTimeout)
-				defer timeoutCancel()
-				select {
-				case <-recvAnsCtx.Done():
-					fmt.Println("Cancelling answer in timeout")
-					return
-				case <-timeoutCtx.Done():
-					fmt.Printf("%d seconds elapsed with no answer, skipping question\n", answerTimeout/time.Second)
-					err := g.handleAnswerTimeout(playerId)
-					if err != nil {
-						log.Printf("Unexpected error skipping answer after timeout: %s\n", err)
-						g.terminateGame()
-					}
-					return
-				}
-			}(recvAnsCtx, player.Id)
+			ctx, cancel := context.WithCancel(context.Background())
+			g.cancelAnswerTimeout[player.Id] = cancel
+			answerTimeout := defaultAnsTimeout
+			if g.CurQuestion.DailyDouble {
+				answerTimeout = dailyDoubleAnsTimeout
+			} else if g.Round == FinalRound {
+				answerTimeout = finalJeopardyAnsTimeout
+			}
+			go g.startTimeout(ctx, answerTimeout, player.Id, "Cancelling answer timeout", "%d seconds elapsed with no answer, skipping question\n", func(playerId string) error {
+				return g.handleAnswerTimeout(playerId)
+			})
 		}
 	case RecvAnsConfirmation:
 		for _, player := range g.Players {
 			player.updateActions(false, false, false, false, true)
 		}
-		recvAnsConfirmationCtx, cancelRecvAnsConfirmation := context.WithCancel(context.Background())
-		g.cancelRecvAnsConfirmation = cancelRecvAnsConfirmation
-		go func(recvAnsConfirmationCtx context.Context) {
-			timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), confirmAnsTimeout)
-			defer timeoutCancel()
-			select {
-			case <-recvAnsConfirmationCtx.Done():
-				fmt.Println("Cancelling answer confirmation in timeout")
-				return
-			case <-timeoutCtx.Done():
-				fmt.Printf("%d seconds elapsed with no answer confirmation, automatically confirming\n", confirmAnsTimeout/time.Second)
-				err := g.nextQuestion(g.LastAnswerer, g.AnsCorrectness)
-				if err != nil {
-					log.Printf("Unexpected error skipping answer confirmation after timeout: %s\n", err)
-					g.terminateGame()
-				}
-				return
-			}
-		}(recvAnsConfirmationCtx)
+		ctx, cancel := context.WithCancel(context.Background())
+		g.cancelConfirmationTimeout = cancel
+		go g.startTimeout(ctx, confirmAnsTimeout, "", "Cancelling answer confirmation timeout", "%d seconds elapsed with no answer confirmation, automatically confirming\n", func(_ string) error {
+			return g.nextQuestion(g.LastAnswerer, g.AnsCorrectness)
+		})
 	case RecvWager:
 		for _, player := range g.Players {
 			player.updateActions(false, false, false, player.Id == id, false)
@@ -562,33 +523,19 @@ func (g *Game) setState(state GameState, id string) {
 			if !player.CanWager {
 				continue
 			}
-			recvWagerCtx, cancelRecvWager := context.WithCancel(context.Background())
-			g.cancelRecvWager[player.Id] = cancelRecvWager
-			go func(recvWagerCtx context.Context, playerId string) {
-				wagerTimeout := dailyDoubleWagerTimeout
+			ctx, cancel := context.WithCancel(context.Background())
+			g.cancelWagerTimeout[player.Id] = cancel
+			wagerTimeout := dailyDoubleWagerTimeout
+			if g.Round == FinalRound {
+				wagerTimeout = finalJeopardyWagerTimeout
+			}
+			go g.startTimeout(ctx, wagerTimeout, player.Id, "Cancelling wager timeout", "%d seconds elapsed with no wager, wagering 0 automatically\n", func(playerId string) error {
+				wager := 5
 				if g.Round == FinalRound {
-					wagerTimeout = finalJeopardyWagerTimeout
+					wager = 0
 				}
-				timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), wagerTimeout)
-				defer timeoutCancel()
-				select {
-				case <-recvWagerCtx.Done():
-					fmt.Println("Cancelling wager in timeout")
-					return
-				case <-timeoutCtx.Done():
-					fmt.Printf("%d seconds elapsed with no wager, wagering 0 automatically\n", wagerTimeout/time.Second)
-					wager := 5
-					if g.Round == FinalRound {
-						wager = 0
-					}
-					err := g.handleWager(playerId, wager)
-					if err != nil {
-						log.Printf("Unexpected error skipping wager after timeout: %s\n", err)
-						g.terminateGame()
-					}
-					return
-				}
-			}(recvWagerCtx, player.Id)
+				return g.handleWager(playerId, wager)
+			})
 		}
 	case PreGame, PostGame:
 		for _, player := range g.Players {
@@ -695,23 +642,23 @@ func (g *Game) skipQuestion() error {
 func (g *Game) terminateGame() {
 	// TODO: HANDLE ERROR SYNCHRONIZATION
 	log.Print("Terminating game\n")
-	if g.cancelRecvPick != nil {
-		g.cancelRecvPick()
+	if g.cancelPickTimeout != nil {
+		g.cancelPickTimeout()
 	}
-	if g.cancelRecvBuzz != nil {
-		g.cancelRecvBuzz()
+	if g.cancelBuzzTimeout != nil {
+		g.cancelBuzzTimeout()
 	}
-	if g.cancelRecvAnsConfirmation != nil {
-		g.cancelRecvAnsConfirmation()
+	if g.cancelConfirmationTimeout != nil {
+		g.cancelConfirmationTimeout()
 	}
 	for _, player := range g.Players {
-		cancelRecvAns, ok := g.cancelRecvAns[player.Id]
+		cancelAnswerTimeout, ok := g.cancelAnswerTimeout[player.Id]
 		if ok {
-			cancelRecvAns()
+			cancelAnswerTimeout()
 		}
-		cancelRecvWager, ok := g.cancelRecvWager[player.Id]
+		cancelWagerTimeout, ok := g.cancelWagerTimeout[player.Id]
 		if ok {
-			cancelRecvWager()
+			cancelWagerTimeout()
 		}
 		_ = player.closeConnection()
 	}
