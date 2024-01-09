@@ -77,7 +77,7 @@ func JoinGame(c *gin.Context) {
 
 	var joinReq JoinRequest
 	if err := json.Unmarshal(msg, &joinReq); err != nil {
-		log.Println("Error parsing join request:", err)
+		log.Printf("Error parsing join request: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error parsing join request", http.StatusInternalServerError)
 		return
 	}
@@ -114,28 +114,28 @@ func JoinGame(c *gin.Context) {
 func PlayGame(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Println("Error upgrading connection to WebSocket:", err)
+		log.Printf("Error upgrading connection to WebSocket: %s\n", err.Error())
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	_, msg, err := conn.ReadMessage()
 	if err != nil {
-		log.Println("Error reading message from WebSocket:", err)
+		log.Printf("Error reading message from WebSocket: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error reading message WebSocket", http.StatusInternalServerError)
 		return
 	}
 
 	var playReq PlayRequest
 	if err := json.Unmarshal(msg, &playReq); err != nil {
-		log.Println("Error unmarshalling play request:", err)
+		log.Printf("Error unmarshalling play request: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error parsing join request", http.StatusBadRequest)
 		return
 	}
 
 	playerId, err := auth.GetJWTSubject(playReq.Token)
 	if err != nil {
-		log.Println("Error getting playerId from token:", err)
+		log.Printf("Error getting playerId from token: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error getting playerId from token", http.StatusForbidden)
 		return
 	}
