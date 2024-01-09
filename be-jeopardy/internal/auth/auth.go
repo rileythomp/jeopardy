@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"crypto/rsa"
@@ -16,7 +16,7 @@ var (
 	publicKey  *rsa.PublicKey
 )
 
-func setJWTKeys() error {
+func SetJWTKeys() error {
 	privateKeyStr := os.Getenv("JWT_RS512_KEY")
 	privateKeyBytes := []byte(privateKeyStr)
 
@@ -37,7 +37,7 @@ func setJWTKeys() error {
 	return nil
 }
 
-func generateJWT(id string) (string, error) {
+func GenerateJWT(id string) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
 		"iss": issuer,
 		"sub": id,
@@ -45,8 +45,8 @@ func generateJWT(id string) (string, error) {
 	}).SignedString(privateKey)
 }
 
-func getJWTSubject(jwtStr string) (string, error) {
-	token, err := jwt.Parse(jwtStr, func(token *jwt.Token) (interface{}, error) {
+func GetJWTSubject(jwtStr string) (string, error) {
+	token, err := jwt.Parse(jwtStr, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
