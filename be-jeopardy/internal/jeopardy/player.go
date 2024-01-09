@@ -45,6 +45,14 @@ func NewPlayer(name string) *Player {
 	}
 }
 
+func (p *Player) updateActions(pick, buzz, answer, wager, confirm bool) {
+	p.CanPick = pick
+	p.CanBuzz = buzz
+	p.CanAnswer = answer
+	p.CanWager = wager
+	p.CanConfirmAns = confirm
+}
+
 func (p *Player) updateScore(val int, isCorrect bool, round RoundState) {
 	if round == FinalRound {
 		val = p.FinalWager

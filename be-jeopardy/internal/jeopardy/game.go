@@ -224,8 +224,8 @@ func (g *Game) HandleRequest(playerId string, msg []byte) error {
 		err = g.handleWager(playerId, req.Wager)
 	case PostGame:
 		err = g.handleProtest(playerId, req.ProtestFor)
-	default:
-		err = fmt.Errorf("invalid game state")
+	case PreGame:
+		err = fmt.Errorf("received unexpected request")
 	}
 	return err
 }
@@ -301,18 +301,14 @@ func (g *Game) handleAnswer(playerId, answer string) error {
 		return fmt.Errorf("player cannot answer")
 	}
 	isCorrect := g.CurQuestion.checkAnswer(answer)
-	var msg string
 	if g.Round == FinalRound {
 		return g.handleFinalRoundAns(player, isCorrect, answer)
-	} else {
-		isCorrect := g.CurQuestion.checkAnswer(answer)
-		g.AnsCorrectness = isCorrect
-		g.LastAnswer = answer
-		g.LastAnswerer = player
-		g.setState(RecvAnsConfirmation, "")
-		msg = "Player answered"
 	}
-	return g.messageAllPlayers(msg)
+	g.AnsCorrectness = isCorrect
+	g.LastAnswer = answer
+	g.LastAnswerer = player
+	g.setState(RecvAnsConfirmation, "")
+	return g.messageAllPlayers("Player answered")
 }
 
 func (g *Game) handleAnswerTimeout(playerId string) error {
@@ -338,16 +334,16 @@ func (g *Game) handleFinalRoundAns(player *Player, isCorrect bool, answer string
 	player.CanAnswer = false
 	player.FinalAnswer = answer
 	player.FinalCorrect = isCorrect
-	if !g.roundEnded() {
-		return player.sendMessage(Response{
-			Code:      200,
-			Message:   "You answered",
-			Game:      g,
-			CurPlayer: player,
-		})
+	if g.roundEnded() {
+		g.setState(PostGame, "")
+		return g.messageAllPlayers("Final round ended")
 	}
-	g.setState(PostGame, "")
-	return g.messageAllPlayers("Final round ended")
+	return player.sendMessage(Response{
+		Code:      200,
+		Message:   "You answered",
+		Game:      g,
+		CurPlayer: player,
+	})
 }
 
 func (g *Game) handleAnsConfirmation(playerId string, confirm bool) error {
@@ -371,9 +367,6 @@ func (g *Game) handleAnsConfirmation(playerId string, confirm bool) error {
 			Game:      g,
 			CurPlayer: player,
 		})
-	}
-	if g.Round == FinalRound {
-		return fmt.Errorf("should not be handling answer confirmation in final round")
 	}
 	g.cancelRecvAnsConfirmation()
 	isCorrect := (g.AnsCorrectness && g.Confirmations == 2) || (!g.AnsCorrectness && g.Challenges == 2)
@@ -432,32 +425,28 @@ func (g *Game) handleProtest(playerId, protestFor string) error {
 		return nil
 	}
 	protestForPlayer.FinalProtestors[protestByPlayer.Id] = true
-	if len(protestForPlayer.FinalProtestors) == 2 {
-		if protestForPlayer.FinalCorrect {
-			protestForPlayer.Score -= 2 * protestForPlayer.FinalWager
-		} else {
-			protestForPlayer.Score += 2 * protestForPlayer.FinalWager
-		}
-		g.setState(PostGame, "")
-		return g.messageAllPlayers("final jeopardy result changed")
+	if len(protestForPlayer.FinalProtestors) != 2 {
+		return protestByPlayer.sendMessage(Response{
+			Code:      200,
+			Message:   "You protested for " + protestForPlayer.Name,
+			Game:      g,
+			CurPlayer: protestByPlayer,
+		})
 	}
-	return protestByPlayer.sendMessage(Response{
-		Code:      200,
-		Message:   "You protested for " + protestForPlayer.Name,
-		Game:      g,
-		CurPlayer: protestByPlayer,
-	})
+	if protestForPlayer.FinalCorrect {
+		protestForPlayer.Score -= 2 * protestForPlayer.FinalWager
+	} else {
+		protestForPlayer.Score += 2 * protestForPlayer.FinalWager
+	}
+	g.setState(PostGame, "")
+	return g.messageAllPlayers("Final Jeopardy result changed")
 }
 
 func (g *Game) setState(state GameState, id string) {
 	switch state {
 	case RecvPick:
 		for _, player := range g.Players {
-			player.CanPick = player.Id == id
-			player.CanBuzz = false
-			player.CanAnswer = false
-			player.CanWager = false
-			player.CanConfirmAns = false
+			player.updateActions(player.Id == id, false, false, false, false)
 		}
 		recvPickCtx, cancelRecvPick := context.WithCancel(context.Background())
 		g.cancelRecvPick = cancelRecvPick
@@ -481,11 +470,7 @@ func (g *Game) setState(state GameState, id string) {
 		}(recvPickCtx)
 	case RecvBuzz:
 		for _, player := range g.Players {
-			player.CanPick = false
-			player.CanBuzz = player.canBuzz(g.GuessedWrong)
-			player.CanAnswer = false
-			player.CanWager = false
-			player.CanConfirmAns = false
+			player.updateActions(false, player.canBuzz(g.GuessedWrong), false, false, false)
 		}
 		recvBuzzCtx, cancelRecvBuzz := context.WithCancel(context.Background())
 		g.cancelRecvBuzz = cancelRecvBuzz
@@ -508,14 +493,10 @@ func (g *Game) setState(state GameState, id string) {
 		}(recvBuzzCtx)
 	case RecvAns:
 		for _, player := range g.Players {
-			player.CanPick = false
-			player.CanBuzz = false
-			player.CanAnswer = player.Id == id
+			player.updateActions(false, false, player.Id == id, false, false)
 			if g.Round == FinalRound {
 				player.CanAnswer = player.Score > 0
 			}
-			player.CanWager = false
-			player.CanConfirmAns = false
 		}
 		for _, player := range g.Players {
 			if !player.CanAnswer {
@@ -549,11 +530,7 @@ func (g *Game) setState(state GameState, id string) {
 		}
 	case RecvAnsConfirmation:
 		for _, player := range g.Players {
-			player.CanPick = false
-			player.CanBuzz = false
-			player.CanAnswer = false
-			player.CanWager = false
-			player.CanConfirmAns = true
+			player.updateActions(false, false, false, false, true)
 		}
 		recvAnsConfirmationCtx, cancelRecvAnsConfirmation := context.WithCancel(context.Background())
 		g.cancelRecvAnsConfirmation = cancelRecvAnsConfirmation
@@ -576,14 +553,10 @@ func (g *Game) setState(state GameState, id string) {
 		}(recvAnsConfirmationCtx)
 	case RecvWager:
 		for _, player := range g.Players {
-			player.CanPick = false
-			player.CanBuzz = false
-			player.CanAnswer = false
-			player.CanWager = player.Id == id
+			player.updateActions(false, false, false, player.Id == id, false)
 			if g.Round == FinalRound {
 				player.CanWager = player.Score > 0
 			}
-			player.CanConfirmAns = false
 		}
 		for _, player := range g.Players {
 			if !player.CanWager {
@@ -617,13 +590,9 @@ func (g *Game) setState(state GameState, id string) {
 				}
 			}(recvWagerCtx, player.Id)
 		}
-	default:
+	case PreGame, PostGame:
 		for _, player := range g.Players {
-			player.CanPick = false
-			player.CanBuzz = false
-			player.CanAnswer = false
-			player.CanWager = false
-			player.CanConfirmAns = false
+			player.updateActions(false, false, false, false, false)
 		}
 	}
 	g.State = state
