@@ -12,24 +12,24 @@ import (
 
 type (
 	Game struct {
-		State             GameState        `json:"state"`
-		Round             RoundState       `json:"round"`
-		Players           []*Player        `json:"players"`
-		FirstRound        [numTopics]Topic `json:"firstRound"`
-		SecondRound       [numTopics]Topic `json:"secondRound"`
-		FinalQuestion     Question         `json:"finalQuestion"`
-		CurQuestion       Question         `json:"curQuestion"`
-		GuessedWrong      []string         `json:"guessedWrong"`
-		LastPicker        string           `json:"lastPicker"`
-		NumFinalWagers    int              `json:"numFinalWagers"`
-		FinalWagersRecvd  int              `json:"finalWagers"`
-		FinalAnswersRecvd int              `json:"finalAnswers"`
-		Passes            int              `json:"passes"`
-		LastAnswer        string           `json:"lastAnswer"`
-		AnsCorrectness    bool             `json:"ansCorrectness"`
-		Confirmations     int              `json:"confirmations"`
-		Challenges        int              `json:"challenges"`
-		LastAnswerer      *Player          `json:"lastAnswerer"`
+		State             GameState  `json:"state"`
+		Players           []*Player  `json:"players"`
+		Round             RoundState `json:"round"`
+		FirstRound        []Topic    `json:"firstRound"`
+		SecondRound       []Topic    `json:"secondRound"`
+		FinalQuestion     Question   `json:"finalQuestion"`
+		CurQuestion       Question   `json:"curQuestion"`
+		GuessedWrong      []string   `json:"guessedWrong"`
+		LastPicker        string     `json:"lastPicker"`
+		NumFinalWagers    int        `json:"numFinalWagers"`
+		FinalWagersRecvd  int        `json:"finalWagers"`
+		FinalAnswersRecvd int        `json:"finalAnswers"`
+		Passes            int        `json:"passes"`
+		LastAnswer        string     `json:"lastAnswer"`
+		AnsCorrectness    bool       `json:"ansCorrectness"`
+		Confirmations     int        `json:"confirmations"`
+		Challenges        int        `json:"challenges"`
+		LastAnswerer      *Player    `json:"lastAnswerer"`
 
 		cancelRecvAns             map[string]context.CancelFunc
 		cancelRecvWager           map[string]context.CancelFunc
@@ -103,8 +103,7 @@ const (
 )
 
 const (
-	numTopics    = 3
-	numQuestions = 3
+	numPlayers = 3
 
 	pickQuestionTimeout       = 9 * time.Second
 	buzzInTimeout             = 12 * time.Second
@@ -117,8 +116,8 @@ const (
 )
 
 var (
-	playerGames = map[string]*Game{}
 	games       = []*Game{}
+	playerGames = map[string]*Game{}
 )
 
 func NewGame() *Game {
@@ -360,7 +359,6 @@ func (g *Game) handleAnsConfirmation(playerId string, confirm bool) error {
 	if !player.CanConfirmAns {
 		return fmt.Errorf("player cannot confirm")
 	}
-
 	player.CanConfirmAns = false
 	if confirm {
 		g.Confirmations++
@@ -375,13 +373,10 @@ func (g *Game) handleAnsConfirmation(playerId string, confirm bool) error {
 			CurPlayer: player,
 		})
 	}
-
 	if g.Round == FinalRound {
 		return fmt.Errorf("should not be handling answer confirmation in final round")
 	}
-
 	g.cancelRecvAnsConfirmation()
-
 	isCorrect := (g.AnsCorrectness && g.Confirmations == 2) || (!g.AnsCorrectness && g.Challenges == 2)
 	return g.nextQuestion(g.LastAnswerer, isCorrect)
 }
@@ -453,114 +448,6 @@ func (g *Game) handleProtest(playerId, protestFor string) error {
 		Game:      g,
 		CurPlayer: protestByPlayer,
 	})
-}
-
-func (g *Game) terminateGame() {
-	// TODO: HANDLE ERROR SYNCHRONIZATION
-	log.Print("Terminating game\n")
-	if g.cancelRecvPick != nil {
-		g.cancelRecvPick()
-	}
-	if g.cancelRecvBuzz != nil {
-		g.cancelRecvBuzz()
-	}
-	if g.cancelRecvAnsConfirmation != nil {
-		g.cancelRecvAnsConfirmation()
-	}
-	for _, player := range g.Players {
-		cancelRecvAns, ok := g.cancelRecvAns[player.Id]
-		if ok {
-			cancelRecvAns()
-		}
-		cancelRecvWager, ok := g.cancelRecvWager[player.Id]
-		if ok {
-			cancelRecvWager()
-		}
-		_ = player.closeConnection()
-	}
-}
-
-func (g *Game) readyToPlay() bool {
-	playersReady := 0
-	for i := range g.Players {
-		if g.Players[i].conn != nil {
-			playersReady++
-		}
-	}
-	return playersReady == 3
-}
-
-func (g *Game) startGame() error {
-	if err := g.setQuestions(); err != nil {
-		return err
-	}
-	g.setState(RecvPick, g.Players[0].Id)
-	// for i := range g.Players {
-	// 	// random score between 1000 and 5000
-	// 	g.Players[i].Score = (rand.Intn(5) + 1) * 1000
-	// }
-	// g.startFinalRound()
-	return nil
-}
-
-func (g *Game) nextQuestion(player *Player, isCorrect bool) error {
-	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
-	if !isCorrect {
-		g.GuessedWrong = append(g.GuessedWrong, player.Id)
-	}
-	if isCorrect || g.CurQuestion.DailyDouble || g.Passes+len(g.GuessedWrong) == len(g.Players) {
-		g.disableQuestion()
-	}
-	var msg string
-	roundOver := g.roundEnded()
-	if roundOver && g.Round == FirstRound {
-		g.startSecondRound()
-		msg = "First round ended"
-	} else if roundOver && g.Round == SecondRound {
-		g.startFinalRound()
-		msg = "Second round ended"
-	} else if g.Passes+len(g.GuessedWrong) == len(g.Players) {
-		g.resetGuesses()
-		g.setState(RecvPick, g.LastPicker)
-		msg = "All players guessed wrong"
-	} else if isCorrect || g.CurQuestion.DailyDouble {
-		g.resetGuesses()
-		g.setState(RecvPick, player.Id)
-		msg = "Question is complete"
-	} else {
-		g.Confirmations = 0
-		g.Challenges = 0
-		g.setState(RecvBuzz, "")
-		msg = "Player answered incorrectly"
-	}
-	return g.messageAllPlayers(msg)
-}
-
-func (g *Game) skipQuestion() error {
-	var msg string
-	g.disableQuestion()
-	roundOver := g.roundEnded()
-	if roundOver && g.Round == FirstRound {
-		g.startSecondRound()
-		msg = "First round ended"
-	} else if roundOver && g.Round == SecondRound {
-		g.startFinalRound()
-		msg = "Second round ended"
-	} else {
-		g.resetGuesses()
-		g.setState(RecvPick, g.LastPicker)
-		msg = "Question unanswered"
-	}
-	return g.messageAllPlayers(msg)
-}
-
-func (g *Game) getPlayerById(id string) *Player {
-	for _, player := range g.Players {
-		if player.Id == id {
-			return player
-		}
-	}
-	return nil
 }
 
 func (g *Game) setState(state GameState, id string) {
@@ -743,58 +630,29 @@ func (g *Game) setState(state GameState, id string) {
 	g.State = state
 }
 
-func (g *Game) messageAllPlayers(msg string) error {
-	for _, player := range g.Players {
-		if err := player.sendMessage(Response{
-			Code:      200,
-			Message:   msg,
-			Game:      g,
-			CurPlayer: player,
-		}); err != nil {
-			// TODO: HANDLE ERROR SYNCHRONIZATION
-			return err
-		}
+func (g *Game) addPlayer(name string) (string, error) {
+	if g.State != PreGame {
+		return "", fmt.Errorf("game already in progress")
 	}
+	if len(g.Players) > 2 {
+		return "", fmt.Errorf("game is full")
+	}
+	player := NewPlayer(name)
+	g.Players = append(g.Players, player)
+	return player.Id, nil
+}
+
+func (g *Game) startGame() error {
+	if err := g.setQuestions(); err != nil {
+		return err
+	}
+	g.setState(RecvPick, g.Players[0].Id)
+	// for i := range g.Players {
+	// 	// random score between 1000 and 5000
+	// 	g.Players[i].Score = (rand.Intn(5) + 1) * 1000
+	// }
+	// g.startFinalRound()
 	return nil
-}
-
-func (g *Game) validWager(wager, score int) (int, int, bool) {
-	minWager := 5
-	if g.Round == FinalRound {
-		minWager = 0
-	}
-	roundMax := 0
-	if g.Round == FirstRound {
-		roundMax = 1000
-	} else if g.Round == SecondRound {
-		roundMax = 2000
-	}
-	return minWager, max(score, roundMax), wager >= minWager && wager <= max(score, roundMax)
-}
-
-func (g *Game) roundEnded() bool {
-	if g.Round == FinalRound {
-		return g.FinalAnswersRecvd == g.NumFinalWagers
-	}
-	curRound := g.FirstRound
-	if g.Round == SecondRound {
-		curRound = g.SecondRound
-	}
-	for _, topic := range curRound {
-		for _, question := range topic.Questions {
-			if question.CanChoose {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func (g *Game) resetGuesses() {
-	g.GuessedWrong = []string{}
-	g.Passes = 0
-	g.Confirmations = 0
-	g.Challenges = 0
 }
 
 func (g *Game) startSecondRound() {
@@ -815,6 +673,141 @@ func (g *Game) startFinalRound() {
 	}
 }
 
+func (g *Game) nextQuestion(player *Player, isCorrect bool) error {
+	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
+	if !isCorrect {
+		g.GuessedWrong = append(g.GuessedWrong, player.Id)
+	}
+	if isCorrect || g.CurQuestion.DailyDouble || g.Passes+len(g.GuessedWrong) == len(g.Players) {
+		g.disableQuestion()
+	}
+	var msg string
+	roundOver := g.roundEnded()
+	if roundOver && g.Round == FirstRound {
+		g.startSecondRound()
+		msg = "First round ended"
+	} else if roundOver && g.Round == SecondRound {
+		g.startFinalRound()
+		msg = "Second round ended"
+	} else if g.Passes+len(g.GuessedWrong) == len(g.Players) {
+		g.resetGuesses()
+		g.setState(RecvPick, g.LastPicker)
+		msg = "All players guessed wrong"
+	} else if isCorrect || g.CurQuestion.DailyDouble {
+		g.resetGuesses()
+		g.setState(RecvPick, player.Id)
+		msg = "Question is complete"
+	} else {
+		g.Confirmations = 0
+		g.Challenges = 0
+		g.setState(RecvBuzz, "")
+		msg = "Player answered incorrectly"
+	}
+	return g.messageAllPlayers(msg)
+}
+
+func (g *Game) skipQuestion() error {
+	var msg string
+	g.disableQuestion()
+	roundOver := g.roundEnded()
+	if roundOver && g.Round == FirstRound {
+		g.startSecondRound()
+		msg = "First round ended"
+	} else if roundOver && g.Round == SecondRound {
+		g.startFinalRound()
+		msg = "Second round ended"
+	} else {
+		g.resetGuesses()
+		g.setState(RecvPick, g.LastPicker)
+		msg = "Question unanswered"
+	}
+	return g.messageAllPlayers(msg)
+}
+
+func (g *Game) terminateGame() {
+	// TODO: HANDLE ERROR SYNCHRONIZATION
+	log.Print("Terminating game\n")
+	if g.cancelRecvPick != nil {
+		g.cancelRecvPick()
+	}
+	if g.cancelRecvBuzz != nil {
+		g.cancelRecvBuzz()
+	}
+	if g.cancelRecvAnsConfirmation != nil {
+		g.cancelRecvAnsConfirmation()
+	}
+	for _, player := range g.Players {
+		cancelRecvAns, ok := g.cancelRecvAns[player.Id]
+		if ok {
+			cancelRecvAns()
+		}
+		cancelRecvWager, ok := g.cancelRecvWager[player.Id]
+		if ok {
+			cancelRecvWager()
+		}
+		_ = player.closeConnection()
+	}
+}
+
+func (g *Game) resetGuesses() {
+	g.GuessedWrong = []string{}
+	g.Passes = 0
+	g.Confirmations = 0
+	g.Challenges = 0
+}
+
+func (g *Game) getPlayerById(id string) *Player {
+	for _, player := range g.Players {
+		if player.Id == id {
+			return player
+		}
+	}
+	return nil
+}
+
+func (g *Game) messageAllPlayers(msg string) error {
+	for _, player := range g.Players {
+		if err := player.sendMessage(Response{
+			Code:      200,
+			Message:   msg,
+			Game:      g,
+			CurPlayer: player,
+		}); err != nil {
+			// TODO: HANDLE ERROR SYNCHRONIZATION
+			return err
+		}
+	}
+	return nil
+}
+
+func (g *Game) readyToPlay() bool {
+	ready := 0
+	for _, player := range g.Players {
+		if player.conn != nil {
+			ready++
+		}
+	}
+	return ready == numPlayers
+}
+
+func (g *Game) roundEnded() bool {
+	if g.Round == FinalRound {
+		return g.FinalAnswersRecvd == g.NumFinalWagers
+	}
+	curRound := g.FirstRound
+	if g.Round == SecondRound {
+		curRound = g.SecondRound
+	}
+	for _, topic := range curRound {
+		for _, question := range topic.Questions {
+			if question.CanChoose {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (g *Game) lowestPlayer() string {
 	lowest := g.Players[0]
 	for _, player := range g.Players {
@@ -833,6 +826,20 @@ func (g *Game) numFinalWagers() int {
 		}
 	}
 	return numWagers
+}
+
+func (g *Game) validWager(wager, score int) (int, int, bool) {
+	minWager := 5
+	if g.Round == FinalRound {
+		minWager = 0
+	}
+	roundMax := 0
+	if g.Round == FirstRound {
+		roundMax = 1000
+	} else if g.Round == SecondRound {
+		roundMax = 2000
+	}
+	return minWager, max(score, roundMax), wager >= minWager && wager <= max(score, roundMax)
 }
 
 func max(a, b int) int {

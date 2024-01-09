@@ -19,17 +19,12 @@ type (
 		Handler gin.HandlerFunc
 	}
 
-	Request struct {
-		Token string `json:"token,omitempty"`
-	}
-
 	JoinRequest struct {
-		Request
 		PlayerName string `json:"playerName"`
 	}
 
 	PlayRequest struct {
-		Request
+		Token string `json:"token,omitempty"`
 	}
 )
 
@@ -155,9 +150,7 @@ func PlayGame(c *gin.Context) {
 
 func TerminateGames(c *gin.Context) {
 	log.Println("Closing all connections and terminating all games")
-
 	jeopardy.TerminateGames()
-
 	c.String(http.StatusOK, "Terminated all games")
 }
 

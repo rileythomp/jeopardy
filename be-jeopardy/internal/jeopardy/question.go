@@ -8,8 +8,8 @@ import (
 
 type (
 	Topic struct {
-		Title     string                 `json:"title"`
-		Questions [numQuestions]Question `json:"questions"`
+		Title     string     `json:"title"`
+		Questions []Question `json:"questions"`
 	}
 
 	Question struct {
@@ -19,6 +19,11 @@ type (
 		CanChoose   bool   `json:"canChoose"`
 		DailyDouble bool   `json:"dailyDouble"`
 	}
+)
+
+const (
+	numTopics    = 3
+	numQuestions = 3
 )
 
 func (q *Question) checkAnswer(ans string) bool {
@@ -45,10 +50,10 @@ func (q *Question) equal(q0 Question) bool {
 }
 
 func (g *Game) setQuestions() error {
-	g.FirstRound = [numTopics]Topic{
+	g.FirstRound = []Topic{
 		{
 			Title: "World Capitals",
-			Questions: [numQuestions]Question{
+			Questions: []Question{
 				{
 					Question:  "This city is the capital of the United States",
 					Answer:    "Washington, D.C.",
@@ -84,7 +89,7 @@ func (g *Game) setQuestions() error {
 		},
 		{
 			Title: "State Capitals",
-			Questions: [numQuestions]Question{
+			Questions: []Question{
 				{
 					Question:  "This city is the capital of California",
 					Answer:    "Sacramento",
@@ -119,7 +124,7 @@ func (g *Game) setQuestions() error {
 		},
 		{
 			Title: "Provincial Capitals",
-			Questions: [numQuestions]Question{
+			Questions: []Question{
 				{
 					Question:  "This city is the capital of British Columbia",
 					Answer:    "Victoria",
@@ -154,7 +159,7 @@ func (g *Game) setQuestions() error {
 		},
 		// {
 		// 	Title: "Sports Trivia",
-		// 	Questions: [numQuestions]Question{
+		// 	Questions: []Question{
 		// 		{
 		// 			Question:  "This team won the 2019 NBA Finals",
 		// 			Answer:    "Toronto Raptors",
@@ -189,7 +194,7 @@ func (g *Game) setQuestions() error {
 		// },
 		// {
 		// 	Title: "Music Trivia",
-		// 	Questions: [numQuestions]Question{
+		// 	Questions: []Question{
 		// 		{
 		// 			Question:  "This artist won the 2019 Grammy for Album of the Year",
 		// 			Answer:    "Kacey Musgraves",
@@ -224,7 +229,7 @@ func (g *Game) setQuestions() error {
 		// },
 		// {
 		// 	Title: "Geography Trivia",
-		// 	Questions: [numQuestions]Question{
+		// 	Questions: []Question{
 		// 		{
 		// 			Question:  "This is the largest country in the world",
 		// 			Answer:    "Russia",
@@ -259,10 +264,10 @@ func (g *Game) setQuestions() error {
 		// },
 	}
 
-	g.SecondRound = [numTopics]Topic{
+	g.SecondRound = []Topic{
 		{
 			Title: "Movie Trivia",
-			Questions: [numQuestions]Question{
+			Questions: []Question{
 				{
 					Question:  "This movie won the 2019 Oscar for Best Picture",
 					Answer:    "Green Book",
@@ -297,7 +302,7 @@ func (g *Game) setQuestions() error {
 		},
 		{
 			Title: "TV Trivia",
-			Questions: [numQuestions]Question{
+			Questions: []Question{
 				{
 					Question:  "This show won the 2019 Emmy for Best Drama Series",
 					Answer:    "Game of Thrones",
@@ -332,7 +337,7 @@ func (g *Game) setQuestions() error {
 		},
 		{
 			Title: "Science Trivia",
-			Questions: [numQuestions]Question{
+			Questions: []Question{
 				{
 					Question:  "This is the largest planet in the solar system",
 					Answer:    "Jupiter",
@@ -368,7 +373,7 @@ func (g *Game) setQuestions() error {
 		},
 		// {
 		// 	Title: "History Trivia",
-		// 	Questions: [numQuestions]Question{
+		// 	Questions: []Question{
 		// 		{
 		// 			Question:  "This is the year that WWII ended",
 		// 			Answer:    "1945",
@@ -403,7 +408,7 @@ func (g *Game) setQuestions() error {
 		// },
 		// {
 		// 	Title: "Math Trivia",
-		// 	Questions: [numQuestions]Question{
+		// 	Questions: []Question{
 		// 		{
 		// 			Question:  "This is the longest side of a right triangle",
 		// 			Answer:    "Hypotenuse",
@@ -438,7 +443,7 @@ func (g *Game) setQuestions() error {
 		// },
 		// {
 		// 	Title: "Business Trivia",
-		// 	Questions: [numQuestions]Question{
+		// 	Questions: []Question{
 		// 		{
 		// 			Question:  "This 3-letter memorandum of debt is a strong but not legally binding promise to pay",
 		// 			Answer:    "I.O.U.",

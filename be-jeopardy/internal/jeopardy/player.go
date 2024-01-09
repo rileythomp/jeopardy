@@ -84,15 +84,3 @@ func (p *Player) closeConnWithMsg(msg string) {
 	_ = p.sendMessage(Response{Message: msg, Code: http.StatusInternalServerError})
 	_ = p.closeConnection()
 }
-
-func (g *Game) addPlayer(name string) (string, error) {
-	if g.State != PreGame {
-		return "", fmt.Errorf("game already in progress")
-	}
-	if len(g.Players) > 2 {
-		return "", fmt.Errorf("game is full")
-	}
-	player := NewPlayer(name)
-	g.Players = append(g.Players, player)
-	return player.Id, nil
-}
