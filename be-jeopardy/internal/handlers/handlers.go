@@ -95,18 +95,17 @@ func JoinGame(c *gin.Context) {
 		return
 	}
 
-	resp := jeopardy.Response{
+	if err = conn.WriteJSON(jeopardy.Response{
 		Code:    200,
 		Token:   jwt,
 		Message: "Authorized to join game",
 		Game:    game,
-	}
-
-	// TODO: close this connection
-	err = conn.WriteJSON(resp)
-	if err != nil {
+	}); err != nil {
 		log.Printf("Error writing message to WebSocket: %s\n", err.Error())
-		_ = conn.Close()
+		return
+	}
+	if err = conn.Close(); err != nil {
+		log.Printf("Error closing WebSocket: %s\n", err.Error())
 		return
 	}
 }
