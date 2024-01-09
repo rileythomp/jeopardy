@@ -475,9 +475,7 @@ func (g *Game) setState(state GameState, id string) {
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		g.cancelBuzzTimeout = cancel
-		go g.startTimeout(ctx, buzzInTimeout, "", func(_ string) error {
-			return g.skipQuestion()
-		})
+		go g.startTimeout(ctx, buzzInTimeout, "", func(_ string) error { return g.skipQuestion() })
 	case RecvAns:
 		for _, player := range g.Players {
 			player.updateActions(false, false, player.Id == id, false, false)
