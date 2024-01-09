@@ -72,7 +72,6 @@ type (
 		ProtestFor string `json:"protestFor"`
 	}
 
-	// TODO: MOVE THIS TO HANDLERS
 	Response struct {
 		Code      int     `json:"code"`
 		Token     string  `json:"token,omitempty"`
