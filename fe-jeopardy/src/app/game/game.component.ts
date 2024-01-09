@@ -56,8 +56,6 @@ export class GameComponent implements OnInit {
 				return
 			}
 
-			clearInterval(this.countdownInterval)
-
 			switch (resp.game.state) {
 				case GameState.RecvBuzz:
 					console.log('show the question, accept a buzz');
@@ -160,6 +158,7 @@ export class GameComponent implements OnInit {
 	}
 
 	startCountdownTimer(seconds: number) {
+		clearInterval(this.countdownInterval)
 		this.countdownSeconds = seconds;
 		this.countdownInterval = setInterval(() => {
 			this.countdownSeconds -= 1;
