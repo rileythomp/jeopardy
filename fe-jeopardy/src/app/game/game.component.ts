@@ -19,14 +19,15 @@ export class GameComponent implements OnInit {
 	countdownSeconds: number;
 	countdownInterval: any;
 
-	pickQuestionTimeout       = 9;
-	buzzInTimeout             = 12;
-	defaultAnsTimeout         = 10;
-	dailyDoubleAnsTimeout     = 10;
-	finalJeopardyAnsTimeout   = 10;
-	confirmAnsTimeout         = 10;
-	dailyDoubleWagerTimeout   = 10;
+	pickQuestionTimeout = 9;
+	buzzInTimeout = 12;
+	defaultAnsTimeout = 10;
+	dailyDoubleAnsTimeout = 10;
+	finalJeopardyAnsTimeout = 10;
+	confirmAnsTimeout = 10;
+	dailyDoubleWagerTimeout = 10;
 	finalJeopardyWagerTimeout = 10;
+	buzzInDelay = 2000;
 
 	constructor(
 		private websocketService: WebsocketService,
@@ -75,7 +76,7 @@ export class GameComponent implements OnInit {
 							if (this.player.canBuzz()) {
 								this.startCountdownTimer(this.buzzInTimeout - 2);
 							}
-						}, 2000);
+						}, this.buzzInDelay);
 					} else {
 						if (this.player.canBuzz()) {
 							this.startCountdownTimer(this.buzzInTimeout);
@@ -113,7 +114,7 @@ export class GameComponent implements OnInit {
 
 					break;
 
-				case GameState.RecvAnsConfirmation: 
+				case GameState.RecvAnsConfirmation:
 					console.log("show the answers correctness, accept a confirmation");
 					console.log(resp);
 

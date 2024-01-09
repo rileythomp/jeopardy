@@ -18,8 +18,6 @@ func NewSafeConn(conn jeopardy.SafeConn) *SafeConn {
 }
 
 func (s *SafeConn) ReadMessage() (messageType int, p []byte, err error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	return s.Conn.ReadMessage()
 }
 

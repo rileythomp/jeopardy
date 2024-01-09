@@ -38,9 +38,6 @@ type (
 		cancelRecvPick            context.CancelFunc
 	}
 
-	GameState  int
-	RoundState int
-
 	Request struct {
 		PickRequest
 		BuzzRequest
@@ -85,6 +82,8 @@ type (
 	}
 )
 
+type GameState int
+
 const (
 	PreGame GameState = iota
 	RecvPick
@@ -93,11 +92,17 @@ const (
 	RecvAns
 	RecvAnsConfirmation
 	PostGame
+)
 
+type RoundState int
+
+const (
 	FirstRound RoundState = iota
 	SecondRound
 	FinalRound
+)
 
+const (
 	numTopics    = 3
 	numQuestions = 3
 
@@ -120,6 +125,7 @@ func NewGame() *Game {
 	return &Game{
 		State:           PreGame,
 		Players:         []*Player{},
+		Round:           FirstRound,
 		cancelRecvAns:   map[string]context.CancelFunc{},
 		cancelRecvWager: map[string]context.CancelFunc{},
 	}
@@ -404,7 +410,7 @@ func (g *Game) handleWager(playerId string, wager int) error {
 		player.CanWager = false
 		g.FinalWagersRecvd++
 		if g.FinalWagersRecvd != g.NumFinalWagers {
-			player.sendMessage(Response{
+			return player.sendMessage(Response{
 				Code:      200,
 				Message:   "You wagered",
 				Game:      g,
