@@ -31,24 +31,29 @@ type (
 var (
 	Routes = []Route{
 		{
-			Method:  "GET",
+			Method:  http.MethodGet,
 			Path:    "/jeopardy/health",
 			Handler: CheckHealth,
 		},
 		{
-			Method:  "GET",
+			Method:  http.MethodGet,
 			Path:    "/jeopardy/join",
 			Handler: JoinGame,
 		},
 		{
-			Method:  "GET",
+			Method:  http.MethodGet,
 			Path:    "/jeopardy/play",
 			Handler: PlayGame,
 		},
 		{
-			Method:  "GET",
+			Method:  http.MethodGet,
 			Path:    "/jeopardy/reset",
 			Handler: TerminateGames,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/games",
+			Handler: GetGames,
 		},
 	}
 
@@ -61,6 +66,8 @@ var (
 )
 
 func JoinGame(c *gin.Context) {
+	log.Println("Received join request")
+
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("Error upgrading connection to WebSocket: %s\n", err.Error())
@@ -111,6 +118,8 @@ func JoinGame(c *gin.Context) {
 }
 
 func PlayGame(c *gin.Context) {
+	log.Println("Received play request")
+
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("Error upgrading connection to WebSocket: %s\n", err.Error())
@@ -149,9 +158,15 @@ func PlayGame(c *gin.Context) {
 }
 
 func TerminateGames(c *gin.Context) {
-	log.Println("Closing all connections and terminating all games")
+	log.Println("Received request to terminate all games")
 	jeopardy.TerminateGames()
 	c.String(http.StatusOK, "Terminated all games")
+}
+
+func GetGames(c *gin.Context) {
+	log.Println("Received request to get games")
+	games := jeopardy.GetGames()
+	c.JSON(http.StatusOK, games)
 }
 
 func CheckHealth(c *gin.Context) {

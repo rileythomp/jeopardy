@@ -42,6 +42,10 @@ export class LobbyComponent implements OnInit {
 
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
+			if (resp.message == 'ping') {
+				console.log('received ping')
+				return
+			}
 			if (resp.game.state == GameState.PreGame) {
 				this.lobbyMessage = resp.message;
 				this.gameState.updateGameState(resp.game);

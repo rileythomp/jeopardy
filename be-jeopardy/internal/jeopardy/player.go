@@ -72,6 +72,15 @@ func (p *Player) canBuzz(guessedWrong []string) bool {
 	return true
 }
 
+func (p *Player) readMessage() ([]byte, error) {
+	_, msg, err := p.conn.ReadMessage()
+	if err != nil {
+		log.Printf("Error reading message from WebSocket: %s\n", err.Error())
+		return nil, fmt.Errorf("error reading message from player")
+	}
+	return msg, nil
+}
+
 func (p *Player) sendMessage(message any) error {
 	if err := p.conn.WriteJSON(message); err != nil {
 		log.Printf("Error writing message to WebSocket: %s\n", err.Error())
