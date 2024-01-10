@@ -56,3 +56,5 @@ export enum RoundState {
 	SecondRound,
 	FinalRound,
 }
+
+export const Ping = 'ping';

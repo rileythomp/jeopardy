@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -29,20 +30,74 @@ type Player struct {
 	FinalProtestors map[string]bool `json:"finalProtestors"`
 
 	conn SafeConn
+
+	cancelSendingPing chan bool
+	sendPingTicker    *time.Ticker
 }
+
+const (
+	pingFrequency = 10 * time.Second
+	ping          = "ping"
+)
 
 func NewPlayer(name string) *Player {
 	return &Player{
-		Id:              uuid.New().String(),
-		Name:            name,
-		Score:           0,
-		CanPick:         false,
-		CanBuzz:         false,
-		CanAnswer:       false,
-		CanWager:        false,
-		CanConfirmAns:   false,
-		FinalProtestors: map[string]bool{},
+		Id:                uuid.New().String(),
+		Name:              name,
+		Score:             0,
+		CanPick:           false,
+		CanBuzz:           false,
+		CanAnswer:         false,
+		CanWager:          false,
+		CanConfirmAns:     false,
+		FinalProtestors:   map[string]bool{},
+		cancelSendingPing: make(chan bool),
+		sendPingTicker:    time.NewTicker(pingFrequency),
 	}
+}
+
+func (p *Player) processMessages(game *Game) {
+	go func() {
+		// TODO: USE A CHANNEL TO WAIT ON A MESSAGE OR TO END THE GAME
+		for {
+			msg, err := p.readMessage()
+			if err != nil {
+				p.closeConnWithMsg("Error reading message from WebSocket")
+				return
+			}
+			err = game.processMsg(p, msg)
+			if err != nil {
+				log.Printf("Error handling request: %s\n", err.Error())
+				p.closeConnWithMsg(err.Error())
+				return
+			}
+		}
+	}()
+}
+
+func (p *Player) sendPings() {
+	go func() {
+		for {
+			select {
+			case <-p.cancelSendingPing:
+				return
+			case t := <-p.sendPingTicker.C:
+				if err := p.sendMessage(Response{
+					Code:    http.StatusOK,
+					Message: ping,
+				}); err != nil {
+					log.Printf("Error sending ping to client: %s\n", err.Error())
+					p.closeConnWithMsg("Error sending ping to client")
+					return
+				}
+				fmt.Printf("sent ping to player: %s at %v\n", p.Name, t)
+			}
+		}
+	}()
+}
+
+func (p *Player) stopSendingPings() {
+	p.cancelSendingPing <- true
 }
 
 func (p *Player) updateActions(pick, buzz, answer, wager, confirm bool) {

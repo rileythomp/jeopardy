@@ -3,7 +3,17 @@ import { GameStateService } from '../game-state.service';
 import { WebsocketService } from '../websocket.service';
 import { PlayerService } from '../player.service';
 import { JwtService } from '../jwt.service';
-import { Player, Question, GameState } from '../model/model';
+import { Player, Question, GameState, Ping } from '../model/model';
+
+const pickQuestionTimeout = 9;
+const buzzInTimeout = 12;
+const defaultAnsTimeout = 10;
+const dailyDoubleAnsTimeout = 10;
+const finalJeopardyAnsTimeout = 10;
+const confirmAnsTimeout = 10;
+const dailyDoubleWagerTimeout = 10;
+const finalJeopardyWagerTimeout = 10;
+const buzzInDelay = 2000;
 
 @Component({
 	selector: 'app-game',
@@ -19,16 +29,6 @@ export class GameComponent implements OnInit {
 	countdownSeconds: number;
 	countdownInterval: any;
 
-	pickQuestionTimeout = 9;
-	buzzInTimeout = 12;
-	defaultAnsTimeout = 10;
-	dailyDoubleAnsTimeout = 10;
-	finalJeopardyAnsTimeout = 10;
-	confirmAnsTimeout = 10;
-	dailyDoubleWagerTimeout = 10;
-	finalJeopardyWagerTimeout = 10;
-	buzzInDelay = 2000;
-
 	constructor(
 		private websocketService: WebsocketService,
 		private jwtService: JwtService,
@@ -42,7 +42,7 @@ export class GameComponent implements OnInit {
 		this.questionRows = this.gameState.getQuestionRows();
 
 		if (this.player.canPick()) {
-			this.startCountdownTimer(this.pickQuestionTimeout);
+			this.startCountdownTimer(pickQuestionTimeout);
 		}
 
 		// if (this.player.canWager()) {
@@ -53,6 +53,11 @@ export class GameComponent implements OnInit {
 			let resp = JSON.parse(event.data);
 			if (resp.code != 200) {
 				alert(resp.message)
+				return
+			}
+
+			if (resp.message == Ping) {
+				console.log('received ping')
 				return
 			}
 
@@ -72,12 +77,12 @@ export class GameComponent implements OnInit {
 						setTimeout(() => {
 							this.player.blockBuzz(false)
 							if (this.player.canBuzz()) {
-								this.startCountdownTimer(this.buzzInTimeout - 2);
+								this.startCountdownTimer(buzzInTimeout - 2);
 							}
-						}, this.buzzInDelay);
+						}, buzzInDelay);
 					} else {
 						if (this.player.canBuzz()) {
-							this.startCountdownTimer(this.buzzInTimeout);
+							this.startCountdownTimer(buzzInTimeout);
 						}
 					}
 					break;
@@ -90,7 +95,7 @@ export class GameComponent implements OnInit {
 					this.player.updatePlayer(resp.curPlayer);
 
 					if (this.player.canAnswer()) {
-						this.startCountdownTimer(this.defaultAnsTimeout);
+						this.startCountdownTimer(defaultAnsTimeout);
 					}
 
 					break;
@@ -107,7 +112,7 @@ export class GameComponent implements OnInit {
 					this.questionRows = this.gameState.getQuestionRows();
 
 					if (this.player.canPick()) {
-						this.startCountdownTimer(this.pickQuestionTimeout);
+						this.startCountdownTimer(pickQuestionTimeout);
 					}
 
 					break;
@@ -120,7 +125,7 @@ export class GameComponent implements OnInit {
 					this.player.updatePlayer(resp.curPlayer);
 
 					if (this.player.canConfirmAns()) {
-						this.startCountdownTimer(this.confirmAnsTimeout);
+						this.startCountdownTimer(confirmAnsTimeout);
 					}
 
 					break
@@ -135,7 +140,7 @@ export class GameComponent implements OnInit {
 					this.players = this.gameState.getPlayers();
 
 					if (this.player.canWager()) {
-						this.startCountdownTimer(this.dailyDoubleWagerTimeout);
+						this.startCountdownTimer(dailyDoubleWagerTimeout);
 					}
 
 					break;

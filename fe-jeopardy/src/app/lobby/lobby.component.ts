@@ -4,7 +4,7 @@ import { WebsocketService } from '../websocket.service';
 import { JwtService } from '../jwt.service';
 import { GameStateService } from '../game-state.service';
 import { PlayerService } from '../player.service';
-import { Player, GameState as GameState } from '../model/model';
+import { Player, GameState, Ping } from '../model/model';
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -42,10 +42,12 @@ export class LobbyComponent implements OnInit {
 
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
-			if (resp.message == 'ping') {
+
+			if (resp.message == Ping) {
 				console.log('received ping')
 				return
 			}
+
 			if (resp.game.state == GameState.PreGame) {
 				this.lobbyMessage = resp.message;
 				this.gameState.updateGameState(resp.game);
