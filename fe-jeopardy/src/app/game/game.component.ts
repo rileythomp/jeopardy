@@ -15,17 +15,25 @@ import { Player, Question, GameState, Ping } from '../model/model';
 // const  finalJeopardyWagerTimeout = 10/2
 // const  buzzInDelay = 2000/2
 
-const  pickQuestionTimeout = 10
-const  buzzInTimeout = 10
-const  defaultAnsTimeout = 10
-const  dailyDoubleAnsTimeout = 10
-const  finalJeopardyAnsTimeout = 10
-const  confirmAnsTimeout = 10
-const  dailyDoubleWagerTimeout = 10
-const  finalJeopardyWagerTimeout = 10
-const  buzzInDelay = 2000/2
+// const  pickQuestionTimeout = 10
+// const  buzzInTimeout = 10
+// const  defaultAnsTimeout = 10
+// const  dailyDoubleAnsTimeout = 10
+// const  finalJeopardyAnsTimeout = 10
+// const  confirmAnsTimeout = 10
+// const  dailyDoubleWagerTimeout = 10
+// const  finalJeopardyWagerTimeout = 10
+// const  buzzInDelay = 2000/2
 
-const finalJeopardy = false;
+const pickQuestionTimeout       = 2
+const buzzInTimeout             = 2
+const defaultAnsTimeout         = 10
+const dailyDoubleAnsTimeout     = 10
+const finalJeopardyAnsTimeout   = 10
+const confirmAnsTimeout         = 2
+const dailyDoubleWagerTimeout   = 10
+const finalJeopardyWagerTimeout = 10
+const  buzzInDelay = 2000/2
 
 @Component({
 	selector: 'app-game',
@@ -53,39 +61,11 @@ export class GameComponent implements OnInit {
 		this.titles = this.gameState.getTitles();
 		this.questionRows = this.gameState.getQuestionRows();
 
-		switch (this.gameState.getGameState()) {
-			case GameState.RecvPick: 
-				if (this.player.canPick()) {
-					this.startCountdownTimer(pickQuestionTimeout);
-				}
-				break
-			case GameState.RecvBuzz:
-				if (this.player.canBuzz()) {
-					this.startCountdownTimer(buzzInTimeout);
-				}
-				break
-			case GameState.RecvAns:
-				if (this.player.canAnswer()) {
-					this.startCountdownTimer(defaultAnsTimeout);
-				}
-				break
-			case GameState.RecvAnsConfirmation:
-				if (this.player.canConfirmAns()) {
-					this.startCountdownTimer(confirmAnsTimeout);
-				}
-				break
-			case GameState.RecvWager:
-				if (this.player.canWager()) {
-					this.startCountdownTimer(dailyDoubleWagerTimeout);
-				}
-				break
-			case GameState.PostGame:
-				break
-			default: 
-				alert('Unable to update game');
-				break
+		if (this.gameState.isPaused()) {
+			alert('Game is paused, will resume when 3 players are ready');
+		} else {
+			this.initCountdownTimer(this.gameState.getGameState());
 		}
-
 
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
@@ -95,6 +75,13 @@ export class GameComponent implements OnInit {
 			}
 
 			if (resp.message == Ping) {
+				return
+			}
+
+			if (resp.game.paused) {
+				this.countdownSeconds = 0;
+				clearInterval(this.countdownInterval);
+				alert(`${resp.message}, will resume when 3 players are ready`);
 				return
 			}
 
@@ -123,7 +110,7 @@ export class GameComponent implements OnInit {
 						setTimeout(() => {
 							this.player.blockBuzz(false)
 							if (this.player.canBuzz()) {
-								this.startCountdownTimer(buzzInTimeout - 2);
+								this.startCountdownTimer(buzzInTimeout - buzzInDelay/1000);
 							}
 						}, buzzInDelay);
 					} else {
@@ -217,6 +204,24 @@ export class GameComponent implements OnInit {
 				clearInterval(this.countdownInterval);
 			}
 		}, 1000);
+	}
+
+	initCountdownTimer(gameState: GameState) {
+		if (gameState == GameState.RecvPick && this.player.canPick()) {
+			this.startCountdownTimer(pickQuestionTimeout);
+		}
+		else if (gameState == GameState.RecvBuzz && this.player.canBuzz()) {
+			this.startCountdownTimer(buzzInTimeout);
+		}
+		else if (gameState == GameState.RecvAns && this.player.canAnswer()) {
+			this.startCountdownTimer(defaultAnsTimeout);
+		}
+		else if (gameState == GameState.RecvAnsConfirmation && this.player.canConfirmAns()) {
+			this.startCountdownTimer(confirmAnsTimeout);
+		}
+		else if (gameState == GameState.RecvWager && this.player.canWager()) {
+			this.startCountdownTimer(dailyDoubleWagerTimeout);
+		}
 	}
 
 	highlightQuestion(event: any, color: string) {

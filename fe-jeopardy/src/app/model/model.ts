@@ -1,4 +1,5 @@
 export type Game = {
+    name: string;
     state: GameState;
     round: RoundState;
     players: Player[];
@@ -8,9 +9,9 @@ export type Game = {
     curQuestion: Question;
     lastAnswer: string;
     ansCorrectness: boolean;
-    lastAnswerer: Player;
+    lastToAnswer: Player;
     guessedWrong: string[];
-    name: string;
+    paused: boolean;
 };
 
 export type Player = {

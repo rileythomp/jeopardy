@@ -126,13 +126,23 @@ func (p *Player) updateScore(val int, isCorrect bool, round RoundState) {
 	p.Score += val
 }
 
-func (p *Player) canBuzz(guessedWrong []string) bool {
-	for _, id := range guessedWrong {
-		if id == p.Id {
-			return false
+func (p *Player) canBuzz(guessedWrong, passed []string) bool {
+	return !p.inLists(guessedWrong, passed)
+}
+
+func (p *Player) canConfirm(confirmers, challengers []string) bool {
+	return !p.inLists(confirmers, challengers)
+}
+
+func (p *Player) inLists(lists ...[]string) bool {
+	for _, list := range lists {
+		for _, id := range list {
+			if id == p.Id {
+				return true
+			}
 		}
 	}
-	return true
+	return false
 }
 
 func (p *Player) readMessage() ([]byte, error) {
@@ -144,13 +154,15 @@ func (p *Player) readMessage() ([]byte, error) {
 }
 
 func (p *Player) sendMessage(message any) error {
-	msg, ok := message.(Response)
-	if ok {
+	if msg, ok := message.(Response); ok {
 		if msg.Message != ping {
-			fmt.Println("Sending message to player", p.Name, ":", msg.Message)
+			log.Printf("Sending message to player %s: %s\n", p.Name, msg.Message)
 		}
 	}
-
+	if p.Conn == nil {
+		log.Printf("Skipping sending message to player %s because connection is nil\n", p.Name)
+		return nil
+	}
 	if err := p.Conn.WriteJSON(message); err != nil {
 		log.Printf("Error sending message to player %s: %s\n", p.Name, err.Error())
 		return fmt.Errorf("error sending message to player")

@@ -51,7 +51,7 @@
     </div>
 
     <div *ngIf="gameState.recvingAnsConfirmation() && player.canConfirmAns()">
-        {{ gameState.getLastAnswerer() }} answered <br>
+        {{ gameState.getLastToAnswer() }} answered <br>
         {{ gameState.curQuestion() }} <br>
         <b>{{ gameState.getAnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{ gameState.getLastAnswer() }}</b>. <br>
         <button (click)="handleAnsConfirmation(true)">Accept</button>

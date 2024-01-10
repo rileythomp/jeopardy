@@ -77,8 +77,8 @@ export class GameStateService {
 		return this.game.players.find((player: Player) => player.canAnswer)?.name ?? '';
 	}
 
-	getLastAnswerer(): string {
-		return this.game.lastAnswerer.name;
+	getLastToAnswer(): string {
+		return this.game.lastToAnswer.name;
 	}
 
 	getWageringPlayer(): string {
@@ -95,6 +95,10 @@ export class GameStateService {
 
 	getAnsCorrectness(): boolean {
 		return this.game.ansCorrectness;
+	}
+
+	isPaused(): boolean {
+		return this.game.paused;
 	}
 
 	recvingPick(): boolean {
