@@ -1,6 +1,7 @@
 package jeopardy
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -31,8 +32,12 @@ type Player struct {
 
 	conn SafeConn
 
-	cancelSendingPing chan bool
-	sendPingTicker    *time.Ticker
+	cancelAnswerTimeout context.CancelFunc
+	cancelWagerTimeout  context.CancelFunc
+
+	stopProcessingMessages chan bool
+	stopSendingPings       chan bool
+	sendPingTicker         *time.Ticker
 }
 
 const (
@@ -42,17 +47,30 @@ const (
 
 func NewPlayer(name string) *Player {
 	return &Player{
-		Id:                uuid.New().String(),
-		Name:              name,
-		Score:             0,
-		CanPick:           false,
-		CanBuzz:           false,
-		CanAnswer:         false,
-		CanWager:          false,
-		CanConfirmAns:     false,
-		FinalProtestors:   map[string]bool{},
-		cancelSendingPing: make(chan bool),
-		sendPingTicker:    time.NewTicker(pingFrequency),
+		Id:                     uuid.New().String(),
+		Name:                   name,
+		Score:                  0,
+		CanPick:                false,
+		CanBuzz:                false,
+		CanAnswer:              false,
+		CanWager:               false,
+		CanConfirmAns:          false,
+		FinalProtestors:        map[string]bool{},
+		sendPingTicker:         time.NewTicker(pingFrequency),
+		stopSendingPings:       make(chan bool),
+		stopProcessingMessages: make(chan bool),
+		cancelAnswerTimeout:    func() {},
+		cancelWagerTimeout:     func() {},
+	}
+}
+
+func (p *Player) terminate() {
+	p.stopSendingPings <- true
+	p.stopProcessingMessages <- true
+	p.cancelAnswerTimeout()
+	p.cancelWagerTimeout()
+	if err := p.closeConnection(); err != nil {
+		log.Printf("Error closing connection: %s\n", err.Error())
 	}
 }
 
@@ -60,16 +78,16 @@ func (p *Player) processMessages(game *Game) {
 	go func() {
 		// TODO: USE A CHANNEL TO WAIT ON A MESSAGE OR TO END THE GAME
 		for {
-			msg, err := p.readMessage()
-			if err != nil {
-				p.closeConnWithMsg("Error reading message from WebSocket")
+			select {
+			case <-p.stopProcessingMessages:
 				return
-			}
-			err = game.processMsg(p, msg)
-			if err != nil {
-				log.Printf("Error handling request: %s\n", err.Error())
-				p.closeConnWithMsg(err.Error())
-				return
+			case msg := <-p.readMessage():
+				err := game.processMsg(p, msg)
+				if err != nil {
+					log.Printf("Error handling request: %s\n", err.Error())
+					p.closeConnWithMsg(err.Error())
+					return
+				}
 			}
 		}
 	}()
@@ -79,25 +97,20 @@ func (p *Player) sendPings() {
 	go func() {
 		for {
 			select {
-			case <-p.cancelSendingPing:
+			case <-p.stopSendingPings:
 				return
-			case t := <-p.sendPingTicker.C:
+			case <-p.sendPingTicker.C:
 				if err := p.sendMessage(Response{
 					Code:    http.StatusOK,
 					Message: ping,
 				}); err != nil {
-					log.Printf("Error sending ping to client: %s\n", err.Error())
-					p.closeConnWithMsg("Error sending ping to client")
+					log.Printf("Error sending ping: %s\n", err.Error())
+					p.closeConnWithMsg("Error sending ping")
 					return
 				}
-				fmt.Printf("sent ping to player: %s at %v\n", p.Name, t)
 			}
 		}
 	}()
-}
-
-func (p *Player) stopSendingPings() {
-	p.cancelSendingPing <- true
 }
 
 func (p *Player) updateActions(pick, buzz, answer, wager, confirm bool) {
@@ -127,18 +140,22 @@ func (p *Player) canBuzz(guessedWrong []string) bool {
 	return true
 }
 
-func (p *Player) readMessage() ([]byte, error) {
-	_, msg, err := p.conn.ReadMessage()
-	if err != nil {
-		log.Printf("Error reading message from WebSocket: %s\n", err.Error())
-		return nil, fmt.Errorf("error reading message from player")
-	}
-	return msg, nil
+func (p *Player) readMessage() <-chan []byte {
+	ch := make(chan []byte)
+	go func() {
+		_, msg, err := p.conn.ReadMessage()
+		if err != nil {
+			log.Printf("Error reading message from player: %s\n", err.Error())
+			return
+		}
+		ch <- msg
+	}()
+	return ch
 }
 
 func (p *Player) sendMessage(message any) error {
 	if err := p.conn.WriteJSON(message); err != nil {
-		log.Printf("Error writing message to WebSocket: %s\n", err.Error())
+		log.Printf("Error sending message to player: %s\n", err.Error())
 		return fmt.Errorf("error sending message to player")
 	}
 	return nil
@@ -146,7 +163,7 @@ func (p *Player) sendMessage(message any) error {
 
 func (p *Player) closeConnection() error {
 	if err := p.conn.Close(); err != nil {
-		log.Printf("Error closing WebSocket: %s\n", err.Error())
+		log.Printf("Error closing connection: %s\n", err.Error())
 		return fmt.Errorf("error closing connection")
 	}
 	return nil

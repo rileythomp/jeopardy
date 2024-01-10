@@ -45,8 +45,9 @@ export class GameComponent implements OnInit {
 			this.startCountdownTimer(pickQuestionTimeout);
 		}
 
+		// start in final jeopardy
 		// if (this.player.canWager()) {
-		// 	this.startCountdownTimer(this.dailyDoubleWagerTimeout);
+		// 	this.startCountdownTimer(dailyDoubleWagerTimeout);
 		// }
 
 		this.websocketService.onmessage((event: { data: string; }) => {
