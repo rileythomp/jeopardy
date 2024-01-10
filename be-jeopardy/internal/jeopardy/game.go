@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"log"
 )
@@ -102,36 +101,7 @@ const (
 	FinalRound
 )
 
-const (
-	numPlayers = 3
-
-	// pickQuestionTimeout       = 10 / 2 * time.Second
-	// buzzInTimeout             = 10 / 2 * time.Second
-	// defaultAnsTimeout         = 10 / 2 * time.Second
-	// dailyDoubleAnsTimeout     = 10 / 2 * time.Second
-	// finalJeopardyAnsTimeout   = 10 / 2 * time.Second
-	// confirmAnsTimeout         = 10 / 2 * time.Second
-	// dailyDoubleWagerTimeout   = 10 / 2 * time.Second
-	// finalJeopardyWagerTimeout = 10 / 2 * time.Second
-
-	// pickQuestionTimeout       = 10 * time.Second
-	// buzzInTimeout             = 10 * time.Second
-	// defaultAnsTimeout         = 10 * time.Second
-	// dailyDoubleAnsTimeout     = 10 * time.Second
-	// finalJeopardyAnsTimeout   = 10 * time.Second
-	// confirmAnsTimeout         = 10 * time.Second
-	// dailyDoubleWagerTimeout   = 10 * time.Second
-	// finalJeopardyWagerTimeout = 10 * time.Second
-
-	pickQuestionTimeout       = 2 * time.Second
-	buzzInTimeout             = 2 * time.Second
-	defaultAnsTimeout         = 10 * time.Second
-	dailyDoubleAnsTimeout     = 10 * time.Second
-	finalJeopardyAnsTimeout   = 10 * time.Second
-	confirmAnsTimeout         = 2 * time.Second
-	dailyDoubleWagerTimeout   = 10 * time.Second
-	finalJeopardyWagerTimeout = 10 * time.Second
-)
+const numPlayers = 3
 
 var (
 	games       = map[string]*Game{}
@@ -391,6 +361,7 @@ func (g *Game) processWager(player *Player, wager int) error {
 		return fmt.Errorf("player cannot wager")
 	}
 	if min, max, ok := g.validWager(wager, player.Score); !ok {
+		g.startWagerTimeout(player)
 		return player.sendMessage(Response{
 			Code:      http.StatusBadRequest,
 			Message:   fmt.Sprintf("invalid wager, must be between %d and %d", min, max),
@@ -448,40 +419,18 @@ func (g *Game) processProtest(protestByPlayer *Player, protestFor string) error 
 	return g.messageAllPlayers("Final Jeopardy result changed")
 }
 
-func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *Player, processTimeout func(player *Player) error) {
-	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), timeout)
-	defer timeoutCancel()
-	select {
-	case <-ctx.Done():
-		return
-	case <-timeoutCtx.Done():
-		if err := processTimeout(player); err != nil {
-			log.Printf("Unexpected error after timeout for player %s: %s\n", player.Name, err)
-			panic("error processing a timeout")
-		}
-		return
-	}
-}
-
 func (g *Game) setState(state GameState, player *Player) {
 	switch state {
 	case RecvPick:
 		for _, p := range g.Players {
 			p.updateActions(p.Id == player.Id, false, false, false, false)
 		}
-		ctx, cancel := context.WithCancel(context.Background())
-		g.cancelPickTimeout = cancel
-		go g.startTimeout(ctx, pickQuestionTimeout, &Player{}, func(_ *Player) error {
-			topicIdx, valIdx := g.firstAvailableQuestion()
-			return g.processPick(player, topicIdx, valIdx)
-		})
+		g.startPickTimeout(player)
 	case RecvBuzz:
 		for _, p := range g.Players {
 			p.updateActions(false, p.canBuzz(g.GuessedWrong, g.Passed), false, false, false)
 		}
-		ctx, cancel := context.WithCancel(context.Background())
-		g.cancelBuzzTimeout = cancel
-		go g.startTimeout(ctx, buzzInTimeout, &Player{}, func(_ *Player) error { return g.skipQuestion() })
+		g.startBuzzTimeout(player)
 	case RecvAns:
 		for _, p := range g.Players {
 			canAnswer := p.Id == player.Id
@@ -494,25 +443,13 @@ func (g *Game) setState(state GameState, player *Player) {
 			if !p.CanAnswer {
 				continue
 			}
-			ctx, cancel := context.WithCancel(context.Background())
-			p.cancelAnswerTimeout = cancel
-			answerTimeout := defaultAnsTimeout
-			if g.CurQuestion.DailyDouble {
-				answerTimeout = dailyDoubleAnsTimeout
-			} else if g.Round == FinalRound {
-				answerTimeout = finalJeopardyAnsTimeout
-			}
-			go g.startTimeout(ctx, answerTimeout, p, g.processAnswerTimeout)
+			g.startAnswerTimeout(p)
 		}
 	case RecvAnsConfirmation:
 		for _, p := range g.Players {
 			p.updateActions(false, false, false, false, p.canConfirm(g.Confirmers, g.Challengers))
 		}
-		ctx, cancel := context.WithCancel(context.Background())
-		g.cancelConfirmationTimeout = cancel
-		go g.startTimeout(ctx, confirmAnsTimeout, &Player{}, func(_ *Player) error {
-			return g.nextQuestion(g.LastToAnswer, g.AnsCorrectness)
-		})
+		g.startConfirmationTimeout(player)
 	case RecvWager:
 		for _, p := range g.Players {
 			canWager := p.Id == player.Id
@@ -525,19 +462,7 @@ func (g *Game) setState(state GameState, player *Player) {
 			if !p.CanWager {
 				continue
 			}
-			ctx, cancel := context.WithCancel(context.Background())
-			p.cancelWagerTimeout = cancel
-			wagerTimeout := dailyDoubleWagerTimeout
-			if g.Round == FinalRound {
-				wagerTimeout = finalJeopardyWagerTimeout
-			}
-			go g.startTimeout(ctx, wagerTimeout, p, func(player *Player) error {
-				wager := 5
-				if g.Round == FinalRound {
-					wager = 0
-				}
-				return g.processWager(player, wager)
-			})
+			g.startWagerTimeout(p)
 		}
 	case PreGame, PostGame:
 		for _, p := range g.Players {
@@ -565,42 +490,25 @@ func (g *Game) addPlayer(name string) (string, error) {
 
 func (g *Game) startGame() error {
 	g.Paused = false
-	switch g.State {
-	case PreGame:
-		g.setState(RecvPick, g.Players[0])
-	case RecvPick:
-		var picker *Player
-		for _, player := range g.Players {
-			if player.CanPick {
-				picker = player
+	state, player := g.State, &Player{}
+	if state == PreGame {
+		state, player = RecvPick, g.Players[0]
+	} else if state == RecvWager && g.Round != FinalRound {
+		player = g.LastToPick
+	} else if state == RecvPick {
+		for _, p := range g.Players {
+			if p.CanPick {
+				player = p
 			}
 		}
-		g.setState(RecvPick, picker)
-	case RecvBuzz:
-		g.setState(RecvBuzz, &Player{})
-	case RecvWager:
-		if g.Round == FinalRound {
-			g.setState(RecvWager, &Player{})
-		} else {
-			g.setState(RecvWager, g.LastToPick)
-		}
-	case RecvAns:
-		if g.Round == FinalRound {
-			g.setState(RecvAns, &Player{})
-		} else {
-			var answerer *Player
-			for _, player := range g.Players {
-				if player.CanAnswer {
-					answerer = player
-				}
+	} else if state == RecvAns && g.Round != FinalRound {
+		for _, p := range g.Players {
+			if p.CanAnswer {
+				player = p
 			}
-			g.setState(RecvAns, answerer)
 		}
-	case RecvAnsConfirmation:
-		g.setState(RecvAnsConfirmation, &Player{})
-	case PostGame:
-		g.setState(PostGame, &Player{})
 	}
+	g.setState(state, player)
 	return nil
 }
 

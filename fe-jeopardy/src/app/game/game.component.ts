@@ -70,7 +70,10 @@ export class GameComponent implements OnInit {
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
 			if (resp.code != 200) {
-				alert(resp.message)
+				// TODO: REPLACE ALERTS WITH MODALS
+				// alert(resp.message)
+				console.log('restarting wager timeout')
+				this.startCountdownTimer(dailyDoubleWagerTimeout)
 				return
 			}
 
