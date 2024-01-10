@@ -17,6 +17,7 @@ export class LobbyComponent implements OnInit {
 	jwt: string;
 	players: Player[];
 	playerName: string;
+	gameName: string;
 
 	constructor(
 		private router: Router,
@@ -44,7 +45,6 @@ export class LobbyComponent implements OnInit {
 			let resp = JSON.parse(event.data);
 
 			if (resp.message == Ping) {
-				console.log('received ping')
 				return
 			}
 
@@ -54,8 +54,9 @@ export class LobbyComponent implements OnInit {
 				this.players = this.gameState.getPlayers();
 				this.player.updatePlayer(resp.curPlayer);
 				this.playerName = this.player.getName();
+				this.gameName = this.gameState.getName();
 			}
-			else if (resp.game.state == GameState.RecvPick || resp.game.state == GameState.RecvWager) {
+			else if (resp.game.state in GameState) {
 				this.lobbyMessage = resp.message;
 				this.gameState.updateGameState(resp.game);
 				this.players = this.gameState.getPlayers();

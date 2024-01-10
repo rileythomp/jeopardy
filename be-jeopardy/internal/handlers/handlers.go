@@ -21,6 +21,7 @@ type (
 
 	JoinRequest struct {
 		PlayerName string `json:"playerName"`
+		GameName   string `json:"gameName"`
 	}
 
 	PlayRequest struct {
@@ -44,11 +45,6 @@ var (
 			Method:  http.MethodGet,
 			Path:    "/jeopardy/play",
 			Handler: PlayGame,
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/jeopardy/reset",
-			Handler: TerminateGames,
 		},
 		{
 			Method:  http.MethodGet,
@@ -89,7 +85,7 @@ func JoinGame(c *gin.Context) {
 		return
 	}
 
-	game, playerId, err := jeopardy.JoinGame(joinReq.PlayerName)
+	game, playerId, err := jeopardy.JoinGame(joinReq.PlayerName, joinReq.GameName)
 	if err != nil {
 		closeConnWithMsg(conn, "Error joining game", http.StatusInternalServerError)
 		return
@@ -155,12 +151,6 @@ func PlayGame(c *gin.Context) {
 		closeConnWithMsg(conn, "Error during game", http.StatusInternalServerError)
 		return
 	}
-}
-
-func TerminateGames(c *gin.Context) {
-	log.Println("Received request to terminate all games")
-	jeopardy.TerminateGames()
-	c.String(http.StatusOK, "Terminated all games")
 }
 
 func GetGames(c *gin.Context) {

@@ -5,5 +5,7 @@
 
 <div>
     <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
-    <button (click)="joinGame()">Join Game</button>
+    <button (click)="joinGame()">Join public game</button>
+    <input type="text" [(ngModel)]="gameName" placeholder="Game code">
+    <button (click)="joinGame()">Join private game</button>
 </div>

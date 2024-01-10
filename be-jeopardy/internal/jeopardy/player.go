@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
 
 type SafeConn interface {
@@ -30,47 +31,35 @@ type Player struct {
 	FinalCorrect    bool            `json:"finalCorrect"`
 	FinalProtestors map[string]bool `json:"finalProtestors"`
 
-	conn SafeConn
+	Conn SafeConn `json:"conn"`
 
 	cancelAnswerTimeout context.CancelFunc
 	cancelWagerTimeout  context.CancelFunc
 
-	stopProcessingMessages chan bool
-	stopSendingPings       chan bool
-	sendPingTicker         *time.Ticker
+	stopSendingPings chan bool
+	sendPingTicker   *time.Ticker
 }
 
 const (
-	pingFrequency = 10 * time.Second
+	pingFrequency = 1 * time.Second
 	ping          = "ping"
 )
 
 func NewPlayer(name string) *Player {
 	return &Player{
-		Id:                     uuid.New().String(),
-		Name:                   name,
-		Score:                  0,
-		CanPick:                false,
-		CanBuzz:                false,
-		CanAnswer:              false,
-		CanWager:               false,
-		CanConfirmAns:          false,
-		FinalProtestors:        map[string]bool{},
-		sendPingTicker:         time.NewTicker(pingFrequency),
-		stopSendingPings:       make(chan bool),
-		stopProcessingMessages: make(chan bool),
-		cancelAnswerTimeout:    func() {},
-		cancelWagerTimeout:     func() {},
-	}
-}
-
-func (p *Player) terminate() {
-	p.stopSendingPings <- true
-	p.stopProcessingMessages <- true
-	p.cancelAnswerTimeout()
-	p.cancelWagerTimeout()
-	if err := p.closeConnection(); err != nil {
-		log.Printf("Error closing connection: %s\n", err.Error())
+		Id:                  uuid.New().String(),
+		Name:                name,
+		Score:               0,
+		CanPick:             false,
+		CanBuzz:             false,
+		CanAnswer:           false,
+		CanWager:            false,
+		CanConfirmAns:       false,
+		FinalProtestors:     map[string]bool{},
+		sendPingTicker:      time.NewTicker(pingFrequency),
+		stopSendingPings:    make(chan bool),
+		cancelAnswerTimeout: func() {},
+		cancelWagerTimeout:  func() {},
 	}
 }
 
@@ -78,19 +67,27 @@ func (p *Player) processMessages(game *Game) {
 	go func() {
 		// TODO: USE A CHANNEL TO WAIT ON A MESSAGE OR TO END THE GAME
 		for {
-			select {
-			case <-p.stopProcessingMessages:
-				return
-			case msg := <-p.readMessage():
-				err := game.processMsg(p, msg)
-				if err != nil {
-					log.Printf("Error handling request: %s\n", err.Error())
-					p.closeConnWithMsg(err.Error())
-					return
+			msg, err := p.readMessage()
+			if err != nil {
+				log.Printf("Error reading message from player %s: %s\n", p.Name, err.Error())
+				if websocket.IsCloseError(err, 1001) {
+					log.Printf("Player %s closed connection\n", p.Name)
 				}
+				break
+			}
+			if err := game.processMsg(p, msg); err != nil {
+				log.Printf("Error processing message: %s\n", err.Error())
+				panic("error processing message")
 			}
 		}
+
+		game.stopGame(p)
 	}()
+}
+
+func (p *Player) stopPlayer() {
+	p.cancelAnswerTimeout()
+	p.cancelWagerTimeout()
 }
 
 func (p *Player) sendPings() {
@@ -105,8 +102,6 @@ func (p *Player) sendPings() {
 					Message: ping,
 				}); err != nil {
 					log.Printf("Error sending ping: %s\n", err.Error())
-					p.closeConnWithMsg("Error sending ping")
-					return
 				}
 			}
 		}
@@ -140,36 +135,33 @@ func (p *Player) canBuzz(guessedWrong []string) bool {
 	return true
 }
 
-func (p *Player) readMessage() <-chan []byte {
-	ch := make(chan []byte)
-	go func() {
-		_, msg, err := p.conn.ReadMessage()
-		if err != nil {
-			log.Printf("Error reading message from player: %s\n", err.Error())
-			return
-		}
-		ch <- msg
-	}()
-	return ch
+func (p *Player) readMessage() ([]byte, error) {
+	_, msg, err := p.Conn.ReadMessage()
+	if err != nil {
+		return nil, err
+	}
+	return msg, nil
 }
 
 func (p *Player) sendMessage(message any) error {
-	if err := p.conn.WriteJSON(message); err != nil {
-		log.Printf("Error sending message to player: %s\n", err.Error())
+	msg, ok := message.(Response)
+	if ok {
+		if msg.Message != ping {
+			fmt.Println("Sending message to player", p.Name, ":", msg.Message)
+		}
+	}
+
+	if err := p.Conn.WriteJSON(message); err != nil {
+		log.Printf("Error sending message to player %s: %s\n", p.Name, err.Error())
 		return fmt.Errorf("error sending message to player")
 	}
 	return nil
 }
 
 func (p *Player) closeConnection() error {
-	if err := p.conn.Close(); err != nil {
+	if err := p.Conn.Close(); err != nil {
 		log.Printf("Error closing connection: %s\n", err.Error())
 		return fmt.Errorf("error closing connection")
 	}
 	return nil
-}
-
-func (p *Player) closeConnWithMsg(msg string) {
-	_ = p.sendMessage(Response{Message: msg, Code: http.StatusInternalServerError})
-	_ = p.closeConnection()
 }

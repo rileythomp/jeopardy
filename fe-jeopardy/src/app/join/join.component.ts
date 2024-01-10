@@ -14,6 +14,7 @@ import { environment } from 'src/environments/environment';
 export class JoinComponent implements OnInit {
 	title: string = 'Jeopardy';
 	playerName: string = '';
+	gameName: string = '';
 	jwt: string;
 
 	constructor(
@@ -30,6 +31,7 @@ export class JoinComponent implements OnInit {
 		// TODO: REMOVE THIS
 		this.websocketService.onopen(() => {
 			this.playerName = this.generateRandomString(7);
+			this.gameName = 'testroom'
 			this.joinGame();
 		})
 	}
@@ -37,13 +39,14 @@ export class JoinComponent implements OnInit {
 	joinGame() {
 		let joinReq = {
 			playerName: this.playerName,
+			gameName: this.gameName,
 		}
 		this.websocketService.send(joinReq);
 
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
 			this.jwtService.setJwt(resp.token);
-			if (resp.game.state == GameState.PreGame) {
+			if (resp.game.state in GameState) {
 				this.router.navigate(['/lobby']);
 			} else {
 				alert('Unable to join the lobby');

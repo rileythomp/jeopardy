@@ -24,6 +24,10 @@ export class GameStateService {
 		return this.game;
 	}
 
+	getName(): string {
+		return this.game.name;
+	}
+
 	getGameState(): GameState {
 		return this.game.state;
 	}

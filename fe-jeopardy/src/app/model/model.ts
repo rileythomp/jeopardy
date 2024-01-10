@@ -10,6 +10,7 @@ export type Game = {
     ansCorrectness: boolean;
     lastAnswerer: Player;
     guessedWrong: string[];
+    name: string;
 };
 
 export type Player = {

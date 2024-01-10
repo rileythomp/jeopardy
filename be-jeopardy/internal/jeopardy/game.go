@@ -21,6 +21,7 @@ type (
 		CurQuestion       Question   `json:"curQuestion"`
 		Players           []*Player  `json:"players"`
 		LastPicker        *Player    `json:"lastPicker"`
+		LastBuzzer        *Player    `json:"lastBuzzer"`
 		LastAnswerer      *Player    `json:"lastAnswerer"`
 		LastAnswer        string     `json:"lastAnswer"`
 		GuessedWrong      []string   `json:"guessedWrong"`
@@ -31,6 +32,8 @@ type (
 		Passes            int        `json:"passes"`
 		Confirmations     int        `json:"confirmations"`
 		Challenges        int        `json:"challenges"`
+
+		Name string `json:"name"`
 
 		cancelPickTimeout         context.CancelFunc
 		cancelBuzzTimeout         context.CancelFunc
@@ -104,8 +107,17 @@ const (
 	finalJeopardy = false
 	numPlayers    = 3
 
-	pickQuestionTimeout       = 9 * time.Second
-	buzzInTimeout             = 12 * time.Second
+	// pickQuestionTimeout       = 10 / 2 * time.Second
+	// buzzInTimeout             = 10 / 2 * time.Second
+	// defaultAnsTimeout         = 10 / 2 * time.Second
+	// dailyDoubleAnsTimeout     = 10 / 2 * time.Second
+	// finalJeopardyAnsTimeout   = 10 / 2 * time.Second
+	// confirmAnsTimeout         = 10 / 2 * time.Second
+	// dailyDoubleWagerTimeout   = 10 / 2 * time.Second
+	// finalJeopardyWagerTimeout = 10 / 2 * time.Second
+
+	pickQuestionTimeout       = 10 * time.Second
+	buzzInTimeout             = 10 * time.Second
 	defaultAnsTimeout         = 10 * time.Second
 	dailyDoubleAnsTimeout     = 10 * time.Second
 	finalJeopardyAnsTimeout   = 10 * time.Second
@@ -115,22 +127,27 @@ const (
 )
 
 var (
-	games       = []*Game{}
+	games       = map[string]*Game{}
 	playerGames = map[string]*Game{}
 )
 
-func NewGame() *Game {
-	return &Game{
+func NewGame(name string) (*Game, error) {
+	game := &Game{
 		State:                     PreGame,
 		Players:                   []*Player{},
 		Round:                     FirstRound,
+		Name:                      name,
 		cancelPickTimeout:         func() {},
 		cancelBuzzTimeout:         func() {},
 		cancelConfirmationTimeout: func() {},
 	}
+	if err := game.setQuestions(); err != nil {
+		return nil, err
+	}
+	return game, nil
 }
 
-func GetGames() []*Game {
+func GetGames() map[string]*Game {
 	return games
 }
 
@@ -138,30 +155,25 @@ func GetGame(playerId string) *Game {
 	return playerGames[playerId]
 }
 
-func TerminateGames() {
-	for _, game := range games {
-		game.terminate()
-	}
-	playerGames = map[string]*Game{}
-	games = []*Game{}
-}
-
-func JoinGame(playerName string) (*Game, string, error) {
-	var game = NewGame()
-	for _, g := range games {
-		if len(g.Players) < 3 {
-			game = g
+func JoinGame(playerName string, gameName string) (*Game, string, error) {
+	game, ok := games[gameName]
+	if !ok {
+		var err error
+		game, err = NewGame(gameName)
+		if err != nil {
+			log.Printf("Error creating game: %s", err.Error())
+			return &Game{}, "", fmt.Errorf("error creating game")
 		}
+		games[gameName] = game
 	}
+
 	playerId, err := game.addPlayer(playerName)
 	if err != nil {
 		log.Printf("Error adding player to game: %s", err.Error())
 		return &Game{}, "", err
 	}
 	playerGames[playerId] = game
-	if len(game.Players) == 1 {
-		games = append(games, game)
-	}
+
 	return game, playerId, nil
 }
 
@@ -175,23 +187,44 @@ func PlayGame(playerId string, conn SafeConn) error {
 	if player == nil {
 		return fmt.Errorf("no player found for player id")
 	}
-	player.conn = conn
-
-	player.sendPings()
-	player.processMessages(game)
+	player.Conn = conn
 
 	msg := "Waiting for more players"
-	if game.readyToPlay() {
+	if game.allPlayersReady() {
 		if err := game.startGame(); err != nil {
 			return err
 		}
 		msg = "We are ready to play"
 	}
+
+	player.sendPings()
+	player.processMessages(game)
+
 	if err := game.messageAllPlayers(msg); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (g *Game) stopGame(player *Player) {
+	g.cancelPickTimeout()
+	g.cancelBuzzTimeout()
+	g.cancelConfirmationTimeout()
+	player.stopSendingPings <- true
+	player.Conn = nil
+	for _, p := range g.Players {
+		p.stopPlayer()
+		// TODO: MAKE MESSAGEALLPLAYERS SAFE AND USE IT HERE
+		if p.Conn != nil {
+			p.sendMessage(Response{
+				Code:      http.StatusOK,
+				Message:   "Player " + player.Name + " left the game",
+				CurPlayer: p,
+				Game:      g,
+			})
+		}
+	}
 }
 
 func (g *Game) processMsg(player *Player, message []byte) error {
@@ -203,16 +236,22 @@ func (g *Game) processMsg(player *Player, message []byte) error {
 	}
 	switch g.State {
 	case RecvPick:
+		fmt.Printf("Player %s made a pick\n", player.Name)
 		err = g.processPick(player, msg.TopicIdx, msg.ValIdx)
 	case RecvBuzz:
+		fmt.Printf("Player %s buzzed\n", player.Name)
 		err = g.processBuzz(player, msg.IsPass)
 	case RecvAns:
+		fmt.Printf("Player %s answered\n", player.Name)
 		err = g.processAnswer(player, msg.Answer)
 	case RecvAnsConfirmation:
+		fmt.Printf("Player %s confirmed\n", player.Name)
 		err = g.processAnsConfirmation(player, msg.Confirm)
 	case RecvWager:
+		fmt.Printf("Player %s wagered\n", player.Name)
 		err = g.processWager(player, msg.Wager)
 	case PostGame:
+		fmt.Printf("Player %s protested\n", player.Name)
 		err = g.processProtest(player, msg.ProtestFor)
 	case PreGame:
 		err = fmt.Errorf("received unexpected message")
@@ -256,17 +295,18 @@ func (g *Game) processBuzz(player *Player, isPass bool) error {
 	if isPass {
 		g.Passes++
 		player.CanBuzz = false
-		if g.Passes+len(g.GuessedWrong) != len(g.Players) {
-			return player.sendMessage(Response{
-				Code:      http.StatusOK,
-				Message:   "You passed",
-				Game:      g,
-				CurPlayer: player,
-			})
+		if g.noPlayerCanBuzz() {
+			g.cancelBuzzTimeout()
+			return g.skipQuestion()
 		}
-		g.cancelBuzzTimeout()
-		return g.skipQuestion()
+		return player.sendMessage(Response{
+			Code:      http.StatusOK,
+			Message:   "You passed",
+			Game:      g,
+			CurPlayer: player,
+		})
 	}
+	g.LastBuzzer = player
 	g.cancelBuzzTimeout()
 	g.setState(RecvAns, player)
 	return g.messageAllPlayers("Player buzzed")
@@ -387,7 +427,7 @@ func (g *Game) processProtest(protestByPlayer *Player, protestFor string) error 
 		return nil
 	}
 	protestForPlayer.FinalProtestors[protestByPlayer.Id] = true
-	if len(protestForPlayer.FinalProtestors) != 2 {
+	if len(protestForPlayer.FinalProtestors) != numPlayers/2+1 {
 		return protestByPlayer.sendMessage(Response{
 			Code:      http.StatusOK,
 			Message:   "You protested for " + protestForPlayer.Name,
@@ -412,8 +452,8 @@ func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *
 		return
 	case <-timeoutCtx.Done():
 		if err := processTimeout(player); err != nil {
-			log.Printf("Unexpected error after timeout: %s\n", err)
-			g.terminate()
+			log.Printf("Unexpected error after timeout for player %s: %s\n", player.Name, err)
+			panic("error processing a timeout")
 		}
 		return
 	}
@@ -502,10 +542,13 @@ func (g *Game) setState(state GameState, player *Player) {
 }
 
 func (g *Game) addPlayer(name string) (string, error) {
-	if g.State != PreGame {
-		return "", fmt.Errorf("game already in progress")
+	for _, player := range g.Players {
+		if player.Conn == nil {
+			player.Name = name
+			return player.Id, nil
+		}
 	}
-	if len(g.Players) > 2 {
+	if len(g.Players) >= numPlayers {
 		return "", fmt.Errorf("game is full")
 	}
 	player := NewPlayer(name)
@@ -514,19 +557,33 @@ func (g *Game) addPlayer(name string) (string, error) {
 }
 
 func (g *Game) startGame() error {
-	if err := g.setQuestions(); err != nil {
-		return err
-	}
-
 	if finalJeopardy {
 		for _, p := range g.Players {
 			p.Score = (rand.Intn(5) + 1) * 1000
 		}
 		g.startFinalRound()
 	} else {
-		g.setState(RecvPick, g.Players[0])
+		switch g.State {
+		case PreGame:
+			g.setState(RecvPick, g.Players[0])
+		case RecvPick:
+			g.setState(RecvPick, g.LastPicker)
+		case RecvBuzz:
+			g.setState(RecvBuzz, &Player{})
+		case RecvWager:
+			if g.Round == FinalRound {
+				g.setState(RecvAns, &Player{})
+			} else {
+				g.setState(RecvWager, g.LastPicker)
+			}
+		case RecvAns:
+			g.setState(RecvAns, g.LastBuzzer)
+		case RecvAnsConfirmation:
+			g.setState(RecvAnsConfirmation, &Player{})
+		case PostGame:
+			g.setState(PostGame, &Player{})
+		}
 	}
-
 	return nil
 }
 
@@ -548,12 +605,16 @@ func (g *Game) startFinalRound() {
 	}
 }
 
+func (g *Game) noPlayerCanBuzz() bool {
+	return g.Passes+len(g.GuessedWrong) == numPlayers
+}
+
 func (g *Game) nextQuestion(player *Player, isCorrect bool) error {
 	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
 	if !isCorrect {
 		g.GuessedWrong = append(g.GuessedWrong, player.Id)
 	}
-	if isCorrect || g.CurQuestion.DailyDouble || g.Passes+len(g.GuessedWrong) == len(g.Players) {
+	if isCorrect || g.CurQuestion.DailyDouble || g.noPlayerCanBuzz() {
 		g.disableQuestion()
 	}
 	var msg string
@@ -564,7 +625,7 @@ func (g *Game) nextQuestion(player *Player, isCorrect bool) error {
 	} else if roundOver && g.Round == SecondRound {
 		g.startFinalRound()
 		msg = "Second round ended"
-	} else if g.Passes+len(g.GuessedWrong) == len(g.Players) {
+	} else if g.noPlayerCanBuzz() {
 		g.resetGuesses()
 		g.setState(RecvPick, g.LastPicker)
 		msg = "All players guessed wrong"
@@ -599,17 +660,6 @@ func (g *Game) skipQuestion() error {
 	return g.messageAllPlayers(msg)
 }
 
-func (g *Game) terminate() {
-	// TODO: HANDLE ERROR SYNCHRONIZATION
-	log.Print("Terminating game\n")
-	g.cancelPickTimeout()
-	g.cancelBuzzTimeout()
-	g.cancelConfirmationTimeout()
-	for _, player := range g.Players {
-		player.terminate()
-	}
-}
-
 func (g *Game) resetGuesses() {
 	g.GuessedWrong = []string{}
 	g.Passes = 0
@@ -641,10 +691,10 @@ func (g *Game) messageAllPlayers(msg string) error {
 	return nil
 }
 
-func (g *Game) readyToPlay() bool {
+func (g *Game) allPlayersReady() bool {
 	ready := 0
 	for _, player := range g.Players {
-		if player.conn != nil {
+		if player.Conn != nil {
 			ready++
 		}
 	}

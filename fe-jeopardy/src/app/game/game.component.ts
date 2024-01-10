@@ -5,15 +5,27 @@ import { PlayerService } from '../player.service';
 import { JwtService } from '../jwt.service';
 import { Player, Question, GameState, Ping } from '../model/model';
 
-const pickQuestionTimeout = 9;
-const buzzInTimeout = 12;
-const defaultAnsTimeout = 10;
-const dailyDoubleAnsTimeout = 10;
-const finalJeopardyAnsTimeout = 10;
-const confirmAnsTimeout = 10;
-const dailyDoubleWagerTimeout = 10;
-const finalJeopardyWagerTimeout = 10;
-const buzzInDelay = 2000;
+// const  pickQuestionTimeout = 10/2
+// const  buzzInTimeout = 10/2
+// const  defaultAnsTimeout = 10/2
+// const  dailyDoubleAnsTimeout = 10/2
+// const  finalJeopardyAnsTimeout = 10/2
+// const  confirmAnsTimeout = 10/2
+// const  dailyDoubleWagerTimeout = 10/2
+// const  finalJeopardyWagerTimeout = 10/2
+// const  buzzInDelay = 2000/2
+
+const  pickQuestionTimeout = 10
+const  buzzInTimeout = 10
+const  defaultAnsTimeout = 10
+const  dailyDoubleAnsTimeout = 10
+const  finalJeopardyAnsTimeout = 10
+const  confirmAnsTimeout = 10
+const  dailyDoubleWagerTimeout = 10
+const  finalJeopardyWagerTimeout = 10
+const  buzzInDelay = 2000/2
+
+const finalJeopardy = false;
 
 @Component({
 	selector: 'app-game',
@@ -41,14 +53,39 @@ export class GameComponent implements OnInit {
 		this.titles = this.gameState.getTitles();
 		this.questionRows = this.gameState.getQuestionRows();
 
-		if (this.player.canPick()) {
-			this.startCountdownTimer(pickQuestionTimeout);
+		switch (this.gameState.getGameState()) {
+			case GameState.RecvPick: 
+				if (this.player.canPick()) {
+					this.startCountdownTimer(pickQuestionTimeout);
+				}
+				break
+			case GameState.RecvBuzz:
+				if (this.player.canBuzz()) {
+					this.startCountdownTimer(buzzInTimeout);
+				}
+				break
+			case GameState.RecvAns:
+				if (this.player.canAnswer()) {
+					this.startCountdownTimer(defaultAnsTimeout);
+				}
+				break
+			case GameState.RecvAnsConfirmation:
+				if (this.player.canConfirmAns()) {
+					this.startCountdownTimer(confirmAnsTimeout);
+				}
+				break
+			case GameState.RecvWager:
+				if (this.player.canWager()) {
+					this.startCountdownTimer(dailyDoubleWagerTimeout);
+				}
+				break
+			case GameState.PostGame:
+				break
+			default: 
+				alert('Unable to update game');
+				break
 		}
 
-		// start in final jeopardy
-		// if (this.player.canWager()) {
-		// 	this.startCountdownTimer(dailyDoubleWagerTimeout);
-		// }
 
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
@@ -58,11 +95,19 @@ export class GameComponent implements OnInit {
 			}
 
 			if (resp.message == Ping) {
-				console.log('received ping')
 				return
 			}
 
 			switch (resp.game.state) {
+				case GameState.PreGame: 
+					console.log('a player has left the game');
+					console.log(resp);
+
+					this.gameState.updateGameState(resp.game);
+					this.player.updatePlayer(resp.curPlayer);
+
+					break
+
 				case GameState.RecvBuzz:
 					console.log('show the question, accept a buzz');
 					console.log(resp);
