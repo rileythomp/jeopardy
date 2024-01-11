@@ -54,23 +54,21 @@ export class LobbyComponent implements OnInit {
 				return
 			}
 
+			if (!(resp.game.state in GameState)) {
+				alert('Unable to start the game');
+				return
+			}
+
+			this.lobbyMessage = resp.message;
+			this.gameState.updateGameState(resp.game);
+			this.players = this.gameState.getPlayers();
+			this.player.updatePlayer(resp.curPlayer);
+
 			if (resp.game.state == GameState.PreGame) {
-				this.lobbyMessage = resp.message;
-				this.gameState.updateGameState(resp.game);
-				this.players = this.gameState.getPlayers();
-				this.player.updatePlayer(resp.curPlayer);
 				this.playerName = this.player.getName();
 				this.gameName = this.gameState.getName();
-			}
-			else if (resp.game.state in GameState) {
-				this.lobbyMessage = resp.message;
-				this.gameState.updateGameState(resp.game);
-				this.players = this.gameState.getPlayers();
-				this.player.updatePlayer(resp.curPlayer);
+			} else {
 				this.router.navigate(['/game']);
-			}
-			else {
-				alert('Unable to start the game');
 			}
 		})
 	}

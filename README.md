@@ -16,3 +16,9 @@ $ make run
 $ cd jeopardy-fe
 $ ng serve
 ```
+
+### TODO 
+
+* Handle end game 
+
+* Hanle blank answers, timeouts and closed connections on the UI more gracefully 

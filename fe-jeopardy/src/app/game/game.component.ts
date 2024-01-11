@@ -3,27 +3,28 @@ import { GameStateService } from '../game-state.service';
 import { WebsocketService } from '../websocket.service';
 import { PlayerService } from '../player.service';
 import { JwtService } from '../jwt.service';
+import { ApiService } from '../api.service';
 import { Player, Question, GameState, Ping } from '../model/model';
 
-const  pickTimeout = 10
-const  buzzTimeout = 10
-const  defaultAnsTimeout = 10
-const  dailyDoubleAnsTimeout = 10
-const  finalJeopardyAnsTimeout = 10
-const  voteTimeout = 10
-const  dailyDoubleWagerTimeout = 10
-const  finalJeopardyWagerTimeout = 10
-const  buzzDelay = 2000/2
-
-// const pickTimeout               = 2
-// const buzzTimeout               = 2
-// const defaultAnsTimeout         = 10
-// const dailyDoubleAnsTimeout     = 10
-// const finalJeopardyAnsTimeout   = 10
-// const voteTimeout               = 2
-// const dailyDoubleWagerTimeout   = 10
-// const finalJeopardyWagerTimeout = 10
+// const  pickTimeout = 10
+// const  buzzTimeout = 10
+// const  defaultAnsTimeout = 10
+// const  dailyDoubleAnsTimeout = 10
+// const  finalJeopardyAnsTimeout = 10
+// const  voteTimeout = 10
+// const  dailyDoubleWagerTimeout = 10
+// const  finalJeopardyWagerTimeout = 10
 // const  buzzDelay = 2000/2
+
+const pickTimeout               = 2
+const buzzTimeout               = 2
+const defaultAnsTimeout         = 10
+const dailyDoubleAnsTimeout     = 10
+const finalJeopardyAnsTimeout   = 10
+const voteTimeout               = 2
+const dailyDoubleWagerTimeout   = 10
+const finalJeopardyWagerTimeout = 10
+const  buzzDelay = 2000/2
 
 @Component({
 	selector: 'app-game',
@@ -44,6 +45,7 @@ export class GameComponent implements OnInit {
 		private jwtService: JwtService,
 		protected gameState: GameStateService,
 		protected player: PlayerService,
+		private apiService: ApiService,
 	) { }
 
 	ngOnInit(): void {
@@ -78,26 +80,22 @@ export class GameComponent implements OnInit {
 				return
 			}
 
+			console.log(resp);
+
+			if (!(resp.game.state in GameState)) {
+				alert('Unable to update game');
+				return
+			}
+
+			this.gameState.updateGameState(resp.game);
+			this.player.updatePlayer(resp.curPlayer);
+
 			switch (resp.game.state) {
 				case GameState.PreGame: 
-					console.log('a player has left the game');
-					console.log(resp);
-
-					this.gameState.updateGameState(resp.game);
-					this.player.updatePlayer(resp.curPlayer);
-
 					break
-
 				case GameState.RecvBuzz:
-					console.log('show the question, accept a buzz');
-					console.log(resp);
-
-					this.gameState.updateGameState(resp.game);
-					this.player.updatePlayer(resp.curPlayer);
-
 					this.players = this.gameState.getPlayers();
 					this.questionRows = this.gameState.getQuestionRows();
-
 					if (this.gameState.curQuestionFirstBuzz()) {
 						this.player.blockBuzz(true)
 						setTimeout(() => {
@@ -112,75 +110,33 @@ export class GameComponent implements OnInit {
 						}
 					}
 					break;
-
 				case GameState.RecvAns:
-					console.log('alert of buzz, accept an answer');
-					console.log(resp);
-
-					this.gameState.updateGameState(resp.game);
-					this.player.updatePlayer(resp.curPlayer);
-
 					if (this.player.canAnswer()) {
 						this.startCountdownTimer(defaultAnsTimeout);
 					}
-
 					break;
-
 				case GameState.RecvPick:
-					console.log('show the board, accept a pick');
-					console.log(resp);
-
-					this.gameState.updateGameState(resp.game);
-					this.player.updatePlayer(resp.curPlayer);
-
 					this.players = this.gameState.getPlayers();
 					this.titles = this.gameState.getTitles();
 					this.questionRows = this.gameState.getQuestionRows();
-
 					if (this.player.canPick()) {
 						this.startCountdownTimer(pickTimeout);
 					}
-
 					break;
-
 				case GameState.RecvVote:
-					console.log("show the answers correctness, accept a vote");
-					console.log(resp);
-
-					this.gameState.updateGameState(resp.game);
-					this.player.updatePlayer(resp.curPlayer);
-
 					if (this.player.canVote()) {
 						this.startCountdownTimer(voteTimeout);
 					}
-
 					break
-
 				case GameState.RecvWager:
-					console.log('show the question, accept a wager');
-					console.log(resp);
-
-					this.gameState.updateGameState(resp.game);
-					this.player.updatePlayer(resp.curPlayer);
-
 					this.players = this.gameState.getPlayers();
-
 					if (this.player.canWager()) {
 						this.startCountdownTimer(dailyDoubleWagerTimeout);
 					}
-
 					break;
-
 				case GameState.PostGame:
-					console.log('show who won the game');
-					console.log(resp);
-
-					this.gameState.updateGameState(resp.game);
-					this.player.updatePlayer(resp.curPlayer);
-
 					this.players = this.gameState.getPlayers();
 					break;
-
 				default:
 					alert('Unable to update game');
 					break;
@@ -226,7 +182,7 @@ export class GameComponent implements OnInit {
 		}
 	}
 
-	handleQuestionPick(topicIdx: number, valIdx: number) {
+	handlePick(topicIdx: number, valIdx: number) {
 		if (this.player.canPick() && this.gameState.questionCanBePicked(topicIdx, valIdx)) {
 			this.websocketService.send({
 				"token": this.jwtService.getJwt(),
@@ -283,5 +239,29 @@ export class GameComponent implements OnInit {
 
 	canProtestForPlayer(player: Player): boolean {
 		return !Object.keys(player.finalProtestors).includes(this.player.getPlayer().id);
+	}
+
+	playAgain() {
+		return this.apiService.playAgain({"hello": "world"}).subscribe({
+			next: (resp: any) => {
+				console.log('playing again', resp)
+			},
+			error: (err: any) => {
+				console.log('Error playing again', err)
+				alert('Error playing again')
+			},
+		})
+	}
+
+	leaveGame() {
+		return this.apiService.leaveGame({"hello": "world"}).subscribe({
+			next: (resp: any) => {
+				console.log('left game', resp)
+			},
+			error: (err: any) => {
+				console.log('Error leaving game', err)
+				alert('Error leaving game')
+			},
+		})
 	}
 }

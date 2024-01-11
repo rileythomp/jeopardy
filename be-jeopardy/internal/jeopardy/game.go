@@ -151,51 +151,52 @@ func GetPrivateGames() map[string]*Game {
 	return privateGames
 }
 
-func GetGame(playerId string) *Game {
+func getPlayerGame(playerId string) *Game {
 	return playerGames[playerId]
+}
+
+func getPublicGame(name string) (*Game, error) {
+	for _, game := range publicGames {
+		if len(game.Players) < numPlayers {
+			return game, nil
+		}
+		for _, p := range game.Players {
+			if p.Conn == nil {
+				return game, nil
+			}
+		}
+	}
+	game, err := NewGame(name)
+	if err != nil {
+		return &Game{}, err
+	}
+	publicGames = append(publicGames, game)
+	return game, nil
+}
+
+func getPrivateGame(name string) (*Game, error) {
+	if game, ok := privateGames[name]; ok {
+		return game, nil
+	}
+	game, err := NewGame(name)
+	if err != nil {
+		return &Game{}, err
+	}
+	privateGames[name] = game
+	return game, nil
 }
 
 func JoinGame(playerName, gameName string, private bool) (*Game, string, error) {
 	var game *Game
+	var err error
 	if private {
-		var ok bool
-		game, ok = privateGames[gameName]
-		if !ok {
-			var err error
-			game, err = NewGame(gameName)
-			if err != nil {
-				log.Errorf("Error creating game: %s", err.Error())
-				return &Game{}, "", fmt.Errorf("error creating game")
-			}
-			privateGames[gameName] = game
-		}
+		game, err = getPrivateGame(gameName)
 	} else {
-		for _, g := range publicGames {
-			if len(g.Players) < numPlayers {
-				game = g
-				break
-			}
-			broke := false
-			for _, p := range g.Players {
-				if p.Conn == nil {
-					game = g
-					broke = true
-					break
-				}
-			}
-			if broke {
-				break
-			}
-		}
-		if game == nil {
-			var err error
-			game, err = NewGame(gameName)
-			if err != nil {
-				log.Errorf("Error creating game: %s", err.Error())
-				return &Game{}, "", fmt.Errorf("error creating game")
-			}
-			publicGames = append(publicGames, game)
-		}
+		game, err = getPublicGame(gameName)
+	}
+	if err != nil {
+		log.Errorf("Error joining game: %s", err.Error())
+		return &Game{}, "", err
 	}
 
 	playerId, err := game.addPlayer(playerName)
@@ -209,7 +210,7 @@ func JoinGame(playerName, gameName string, private bool) (*Game, string, error) 
 }
 
 func PlayGame(playerId string, conn SafeConn) error {
-	game := GetGame(playerId)
+	game := getPlayerGame(playerId)
 	if game == nil {
 		return fmt.Errorf("no game found for player id: %s", playerId)
 	}
@@ -509,7 +510,6 @@ func (g *Game) setState(state GameState, player *Player) {
 }
 
 func (g *Game) addPlayer(name string) (string, error) {
-	// TODO: ADD PLAYER TO GAME BASED ON USER NAME IF PRIVATE GAME
 	for _, player := range g.Players {
 		if player.Conn == nil {
 			player.Name = name
@@ -529,6 +529,7 @@ func (g *Game) startGame() {
 	state, player := g.State, &Player{}
 	if state == PreGame {
 		state, player = RecvPick, g.Players[0]
+		// state, player = PostGame, &Player{}
 	} else if state == RecvWager && g.Round != FinalRound {
 		player = g.LastToPick
 	} else if state == RecvPick {

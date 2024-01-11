@@ -8,23 +8,23 @@ import (
 )
 
 const (
-	pickTimeout               = 10 * time.Second
-	buzzTimeout               = 10 * time.Second
+	// pickTimeout               = 10 * time.Second
+	// buzzTimeout               = 10 * time.Second
+	// defaultAnsTimeout         = 10 * time.Second
+	// dailyDoubleAnsTimeout     = 10 * time.Second
+	// finalJeopardyAnsTimeout   = 10 * time.Second
+	// voteTimeout               = 10 * time.Second
+	// dailyDoubleWagerTimeout   = 10 * time.Second
+	// finalJeopardyWagerTimeout = 10 * time.Second
+
+	pickTimeout               = 2 * time.Second
+	buzzTimeout               = 2 * time.Second
 	defaultAnsTimeout         = 10 * time.Second
 	dailyDoubleAnsTimeout     = 10 * time.Second
 	finalJeopardyAnsTimeout   = 10 * time.Second
-	voteTimeout               = 10 * time.Second
+	voteTimeout               = 2 * time.Second
 	dailyDoubleWagerTimeout   = 10 * time.Second
 	finalJeopardyWagerTimeout = 10 * time.Second
-
-// pickTimeout               = 2 * time.Second
-// buzzTimeout               = 2 * time.Second
-// defaultAnsTimeout         = 10 * time.Second
-// dailyDoubleAnsTimeout     = 10 * time.Second
-// finalJeopardyAnsTimeout   = 10 * time.Second
-// voteTimeout               = 2 * time.Second
-// dailyDoubleWagerTimeout   = 10 * time.Second
-// finalJeopardyWagerTimeout = 10 * time.Second
 )
 
 func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *Player, processTimeout func(player *Player) error) {
@@ -70,6 +70,7 @@ func (g *Game) startAnswerTimeout(player *Player) {
 	}
 	go g.startTimeout(ctx, answerTimeout, player, func(player *Player) error {
 		if g.Round == FinalRound {
+			// TODO: HANDLE THIS AND EMPTY ANSWERS ON THE UI NICER
 			return g.processFinalRoundAns(player, false, "answer-timeout")
 		}
 		return g.nextQuestion(player, false)

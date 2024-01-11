@@ -17,7 +17,7 @@
             *ngFor="let q of row; let topicIdx = index"
             (mouseover)="highlightQuestion($event, 'lightgreen')"
             (mouseout)="highlightQuestion($event, 'white')"
-            (click)="handleQuestionPick(topicIdx, valIdx)"
+            (click)="handlePick(topicIdx, valIdx)"
             [ngStyle]="{'background-color': q.canChoose ? 'white' : 'lightpink'}">
                 {{ q.value }}
             </td>
@@ -106,4 +106,9 @@
     <p>Final Jeopardy Answer: {{ gameState.getFinalAnswer() }}</p>
 
     {{ gameState.endGameMessage() }}
+
+    <div>
+        <button (click)="playAgain()">Play again</button>
+        <button (click)="leaveGame()">Home</button>
+    </div>
 </div>
