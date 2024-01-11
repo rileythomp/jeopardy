@@ -4,7 +4,7 @@ import { JwtService } from '../jwt.service';
 import { WebsocketService } from '../websocket.service';
 import { GameState as GameState } from '../model/model';
 import { environment } from 'src/environments/environment';
-import { generateFakeWordByLength } from 'fakelish';
+// import { generateFakeWordByLength } from 'fakelish';
 
 @Component({
 	selector: 'app-join',
