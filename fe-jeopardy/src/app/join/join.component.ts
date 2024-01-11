@@ -4,6 +4,7 @@ import { JwtService } from '../jwt.service';
 import { WebsocketService } from '../websocket.service';
 import { GameState as GameState } from '../model/model';
 import { environment } from 'src/environments/environment';
+import { generateFakeWordByLength } from 'fakelish';
 
 @Component({
 	selector: 'app-join',
@@ -30,9 +31,13 @@ export class JoinComponent implements OnInit {
 		this.websocketService.connect(`${environment.websocketProtocol}://${environment.apiServerUrl}/jeopardy/join`)
 		// TODO: REMOVE THIS
 		this.websocketService.onopen(() => {
-			this.playerName = this.generateRandomString(7);
-			this.gameName = 'testroom'
-			this.joinGame();
+			(async ()=>{
+				for(let i = 0; i < 20; i++) {
+					this.playerName = await generateFakeWordByLength(7);
+					this.gameName = 'testroom'
+					this.joinGame();
+				}
+			})();
 		})
 	}
 
