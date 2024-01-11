@@ -7,5 +7,3 @@ $ make run
 ```
 
 ### TODO
-
-* Handle players leaving gracefully

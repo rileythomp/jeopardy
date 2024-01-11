@@ -22,6 +22,7 @@ type (
 	JoinRequest struct {
 		PlayerName string `json:"playerName"`
 		GameName   string `json:"gameName"`
+		Private    bool   `json:"private"`
 	}
 
 	PlayRequest struct {
@@ -79,14 +80,14 @@ func JoinGame(c *gin.Context) {
 		return
 	}
 
-	var joinReq JoinRequest
-	if err := json.Unmarshal(msg, &joinReq); err != nil {
+	var req JoinRequest
+	if err := json.Unmarshal(msg, &req); err != nil {
 		log.Errorf("Error parsing join request: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error parsing join request", http.StatusInternalServerError)
 		return
 	}
 
-	game, playerId, err := jeopardy.JoinGame(joinReq.PlayerName, joinReq.GameName)
+	game, playerId, err := jeopardy.JoinGame(req.PlayerName, req.GameName, req.Private)
 	if err != nil {
 		closeConnWithMsg(conn, "Error joining game", http.StatusInternalServerError)
 		return
@@ -131,14 +132,14 @@ func PlayGame(c *gin.Context) {
 		return
 	}
 
-	var playReq PlayRequest
-	if err := json.Unmarshal(msg, &playReq); err != nil {
+	var req PlayRequest
+	if err := json.Unmarshal(msg, &req); err != nil {
 		log.Errorf("Error unmarshalling play request: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error parsing join request", http.StatusBadRequest)
 		return
 	}
 
-	playerId, err := auth.GetJWTSubject(playReq.Token)
+	playerId, err := auth.GetJWTSubject(req.Token)
 	if err != nil {
 		log.Errorf("Error getting playerId from token: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error getting playerId from token", http.StatusForbidden)
@@ -156,7 +157,7 @@ func PlayGame(c *gin.Context) {
 
 func GetGames(c *gin.Context) {
 	log.Infof("Received request to get games")
-	games := jeopardy.GetGames()
+	games := jeopardy.GetPrivateGames()
 	c.JSON(http.StatusOK, games)
 }
 

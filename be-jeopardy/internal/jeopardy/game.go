@@ -107,8 +107,9 @@ const (
 const numPlayers = 3
 
 var (
-	games       = map[string]*Game{}
-	playerGames = map[string]*Game{}
+	privateGames = map[string]*Game{}
+	publicGames  = []*Game{}
+	playerGames  = map[string]*Game{}
 )
 
 func NewGame(name string) (*Game, error) {
@@ -142,24 +143,59 @@ func NewGame(name string) (*Game, error) {
 	return game, nil
 }
 
-func GetGames() map[string]*Game {
-	return games
+func GetPublicGames() []*Game {
+	return publicGames
+}
+
+func GetPrivateGames() map[string]*Game {
+	return privateGames
 }
 
 func GetGame(playerId string) *Game {
 	return playerGames[playerId]
 }
 
-func JoinGame(playerName string, gameName string) (*Game, string, error) {
-	game, ok := games[gameName]
-	if !ok {
-		var err error
-		game, err = NewGame(gameName)
-		if err != nil {
-			log.Errorf("Error creating game: %s", err.Error())
-			return &Game{}, "", fmt.Errorf("error creating game")
+func JoinGame(playerName, gameName string, private bool) (*Game, string, error) {
+	var game *Game
+	if private {
+		var ok bool
+		game, ok = privateGames[gameName]
+		if !ok {
+			var err error
+			game, err = NewGame(gameName)
+			if err != nil {
+				log.Errorf("Error creating game: %s", err.Error())
+				return &Game{}, "", fmt.Errorf("error creating game")
+			}
+			privateGames[gameName] = game
 		}
-		games[gameName] = game
+	} else {
+		for _, g := range publicGames {
+			if len(g.Players) < numPlayers {
+				game = g
+				break
+			}
+			broke := false
+			for _, p := range g.Players {
+				if p.Conn == nil {
+					game = g
+					broke = true
+					break
+				}
+			}
+			if broke {
+				break
+			}
+		}
+		if game == nil {
+			var err error
+			game, err = NewGame(gameName)
+			if err != nil {
+				log.Errorf("Error creating game: %s", err.Error())
+				return &Game{}, "", fmt.Errorf("error creating game")
+			}
+			publicGames = append(publicGames, game)
+		}
 	}
 
 	playerId, err := game.addPlayer(playerName)

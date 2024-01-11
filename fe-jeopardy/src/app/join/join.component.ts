@@ -29,22 +29,22 @@ export class JoinComponent implements OnInit {
 			this.jwt = jwt;
 		});
 		this.websocketService.connect(`${environment.websocketProtocol}://${environment.apiServerUrl}/jeopardy/join`)
-		// TODO: REMOVE THIS
-		this.websocketService.onopen(() => {
-			(async ()=>{
-				for(let i = 0; i < 20; i++) {
-					this.playerName = await generateFakeWordByLength(7);
-					this.gameName = 'testroom'
-					this.joinGame();
-				}
-			})();
-		})
+		// this.websocketService.onopen(() => {
+		// 	(async ()=>{
+		// 		for(let i = 0; i < 20; i++) {
+		// 			this.playerName = await generateFakeWordByLength(7);
+		// 			this.gameName = 'testroom'
+		// 			this.joinGame();
+		// 		}
+		// 	})();
+		// })
 	}
 
-	joinGame() {
+	joinGame(privateGame: boolean) {
 		let joinReq = {
 			playerName: this.playerName,
 			gameName: this.gameName,
+			private: privateGame,
 		}
 		this.websocketService.send(joinReq);
 
