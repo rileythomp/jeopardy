@@ -113,8 +113,8 @@ export class GameStateService {
 		return this.game.state == GameState.RecvAns;
 	}
 
-	recvingAnsConfirmation(): boolean {
-		return this.game.state == GameState.RecvAnsConfirmation;
+	recvingVote(): boolean {
+		return this.game.state == GameState.RecvVote;
 	}
 
 	recvingWager(): boolean {

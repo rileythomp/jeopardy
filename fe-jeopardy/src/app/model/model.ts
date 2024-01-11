@@ -25,7 +25,7 @@ export type Player = {
     canBuzz: boolean;
     canAnswer: boolean;
     canWager: boolean;
-    canConfirmAns: boolean;
+    canVote: boolean;
     buzzBlocked: boolean;
 };
 
@@ -48,7 +48,7 @@ export enum GameState {
     RecvBuzz,
     RecvWager,
     RecvAns,
-    RecvAnsConfirmation,
+    RecvVote,
     PostGame,
     Error,
 }

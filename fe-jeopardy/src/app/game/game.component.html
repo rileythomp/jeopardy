@@ -50,17 +50,17 @@
         {{ gameState.getAnsweringPlayer() }} is answering the question
     </div>
 
-    <div *ngIf="gameState.recvingAnsConfirmation() && player.canConfirmAns()">
+    <div *ngIf="gameState.recvingVote() && player.canVote()">
         {{ gameState.getLastToAnswer() }} answered <br>
         {{ gameState.curQuestion() }} <br>
         <b>{{ gameState.getAnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{ gameState.getLastAnswer() }}</b>. <br>
-        <button (click)="handleAnsConfirmation(true)">Accept</button>
-        <button (click)="handleAnsConfirmation(false)">Challenge</button>
+        <button (click)="handleVote(true)">Accept</button>
+        <button (click)="handleVote(false)">Challenge</button>
 
-        <p *ngIf="player.canConfirmAns()">seconds to confirm: {{ countdownSeconds }}</p>
+        <p *ngIf="player.canVote()">seconds to vote: {{ countdownSeconds }}</p>
     </div>
 
-    <div *ngIf="gameState.recvingAnsConfirmation() && !player.canConfirmAns()">
+    <div *ngIf="gameState.recvingVote() && !player.canVote()">
         Waiting for other players to accept or challenge the answer
     </div>
     

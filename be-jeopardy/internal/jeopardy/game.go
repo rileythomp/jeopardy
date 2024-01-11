@@ -32,9 +32,9 @@ type (
 		FinalAnswers   []string   `json:"finalAnswers"`
 		Paused         bool       `json:"paused"`
 
-		cancelPickTimeout         context.CancelFunc
-		cancelBuzzTimeout         context.CancelFunc
-		cancelConfirmationTimeout context.CancelFunc
+		cancelPickTimeout context.CancelFunc
+		cancelBuzzTimeout context.CancelFunc
+		cancelVoteTimeout context.CancelFunc
 
 		msgChan  chan Message
 		stopChan chan *Player
@@ -45,7 +45,7 @@ type (
 		PickMessage
 		BuzzMessage
 		AnswerMessage
-		ConfirmAnsMessage
+		VoteMessage
 		WagerMessage
 		ProtestMessage
 	}
@@ -63,7 +63,7 @@ type (
 		Answer string `json:"answer"`
 	}
 
-	ConfirmAnsMessage struct {
+	VoteMessage struct {
 		Confirm bool `json:"confirm"`
 	}
 
@@ -92,7 +92,7 @@ const (
 	RecvBuzz
 	RecvWager
 	RecvAns
-	RecvAnsConfirmation
+	RecvVote
 	PostGame
 )
 
@@ -113,15 +113,15 @@ var (
 
 func NewGame(name string) (*Game, error) {
 	game := &Game{
-		State:                     PreGame,
-		Players:                   []*Player{},
-		Round:                     FirstRound,
-		Name:                      name,
-		cancelPickTimeout:         func() {},
-		cancelBuzzTimeout:         func() {},
-		cancelConfirmationTimeout: func() {},
-		msgChan:                   make(chan Message),
-		stopChan:                  make(chan *Player),
+		State:             PreGame,
+		Players:           []*Player{},
+		Round:             FirstRound,
+		Name:              name,
+		cancelPickTimeout: func() {},
+		cancelBuzzTimeout: func() {},
+		cancelVoteTimeout: func() {},
+		msgChan:           make(chan Message),
+		stopChan:          make(chan *Player),
 	}
 	if err := game.setQuestions(); err != nil {
 		return nil, err
@@ -206,7 +206,7 @@ func (g *Game) stopGame(player *Player) {
 	g.Paused = true
 	g.cancelPickTimeout()
 	g.cancelBuzzTimeout()
-	g.cancelConfirmationTimeout()
+	g.cancelVoteTimeout()
 	player.stopSendingPings <- true
 	player.Conn = nil
 	for _, p := range g.Players {
@@ -232,9 +232,9 @@ func (g *Game) processMsg(msg Message) error {
 	case RecvAns:
 		log.Infof("Player %s answered\n", player.Name)
 		err = g.processAnswer(player, msg.Answer)
-	case RecvAnsConfirmation:
-		log.Infof("Player %s confirmed\n", player.Name)
-		err = g.processConfirmation(player, msg.Confirm)
+	case RecvVote:
+		log.Infof("Player %s voted\n", player.Name)
+		err = g.processVote(player, msg.Confirm)
 	case RecvWager:
 		log.Infof("Player %s wagered\n", player.Name)
 		err = g.processWager(player, msg.Wager)
@@ -312,15 +312,15 @@ func (g *Game) processAnswer(player *Player, answer string) error {
 	g.AnsCorrectness = isCorrect
 	g.LastAnswer = answer
 	g.LastToAnswer = player
-	g.setState(RecvAnsConfirmation, &Player{})
+	g.setState(RecvVote, &Player{})
 	return g.messageAllPlayers("Player answered")
 }
 
-func (g *Game) processConfirmation(player *Player, confirm bool) error {
-	if !player.CanConfirmAns {
-		return fmt.Errorf("player cannot confirm")
+func (g *Game) processVote(player *Player, confirm bool) error {
+	if !player.CanVote {
+		return fmt.Errorf("player cannot vote")
 	}
-	player.CanConfirmAns = false
+	player.CanVote = false
 	if confirm {
 		g.Confirmers = append(g.Confirmers, player.Id)
 	} else {
@@ -329,12 +329,12 @@ func (g *Game) processConfirmation(player *Player, confirm bool) error {
 	if len(g.Confirmers) != 2 && len(g.Challengers) != 2 {
 		return player.sendMessage(Response{
 			Code:      http.StatusOK,
-			Message:   "You confirmed",
+			Message:   "You voted",
 			Game:      g,
 			CurPlayer: player,
 		})
 	}
-	g.cancelConfirmationTimeout()
+	g.cancelVoteTimeout()
 	isCorrect := (g.AnsCorrectness && len(g.Confirmers) == 2) || (!g.AnsCorrectness && len(g.Challengers) == 2)
 	return g.nextQuestion(g.LastToAnswer, isCorrect)
 }
@@ -447,11 +447,11 @@ func (g *Game) setState(state GameState, player *Player) {
 			}
 			g.startAnswerTimeout(p)
 		}
-	case RecvAnsConfirmation:
+	case RecvVote:
 		for _, p := range g.Players {
-			p.updateActions(false, false, false, false, p.canConfirm(g.Confirmers, g.Challengers))
+			p.updateActions(false, false, false, false, p.canVote(g.Confirmers, g.Challengers))
 		}
-		g.startConfirmationTimeout(player)
+		g.startVoteTimeout(player)
 	case RecvWager:
 		for _, p := range g.Players {
 			canWager := p.Id == player.Id

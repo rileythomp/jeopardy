@@ -27,7 +27,7 @@ type Player struct {
 	CanBuzz         bool            `json:"canBuzz"`
 	CanAnswer       bool            `json:"canAnswer"`
 	CanWager        bool            `json:"canWager"`
-	CanConfirmAns   bool            `json:"canConfirmAns"`
+	CanVote         bool            `json:"canVote"`
 	FinalWager      int             `json:"finalWager"`
 	FinalAnswer     string          `json:"finalAnswer"`
 	FinalCorrect    bool            `json:"finalCorrect"`
@@ -56,7 +56,7 @@ func NewPlayer(name string) *Player {
 		CanBuzz:             false,
 		CanAnswer:           false,
 		CanWager:            false,
-		CanConfirmAns:       false,
+		CanVote:             false,
 		FinalProtestors:     map[string]bool{},
 		cancelAnswerTimeout: func() {},
 		cancelWagerTimeout:  func() {},
@@ -112,12 +112,12 @@ func (p *Player) stopPlayer() {
 	p.cancelWagerTimeout()
 }
 
-func (p *Player) updateActions(pick, buzz, answer, wager, confirm bool) {
+func (p *Player) updateActions(pick, buzz, answer, wager, vote bool) {
 	p.CanPick = pick
 	p.CanBuzz = buzz
 	p.CanAnswer = answer
 	p.CanWager = wager
-	p.CanConfirmAns = confirm
+	p.CanVote = vote
 }
 
 func (p *Player) updateScore(val int, isCorrect bool, round RoundState) {
@@ -134,7 +134,7 @@ func (p *Player) canBuzz(guessedWrong, passed []string) bool {
 	return !p.inLists(guessedWrong, passed)
 }
 
-func (p *Player) canConfirm(confirmers, challengers []string) bool {
+func (p *Player) canVote(confirmers, challengers []string) bool {
 	return !p.inLists(confirmers, challengers)
 }
 
