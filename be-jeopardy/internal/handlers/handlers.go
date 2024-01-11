@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -68,21 +69,21 @@ func JoinGame(c *gin.Context) {
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Errorf("Error upgrading connection to WebSocket: %s\n", err.Error())
+		log.Errorf("Error upgrading connection to WebSocket: %s", err.Error())
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	_, msg, err := conn.ReadMessage()
 	if err != nil {
-		log.Errorf("Error reading message from WebSocket: %s\n", err.Error())
+		log.Errorf("Error reading message from WebSocket: %s", err.Error())
 		closeConnWithMsg(conn, "Error reading message from WebSocket", http.StatusInternalServerError)
 		return
 	}
 
 	var req JoinRequest
 	if err := json.Unmarshal(msg, &req); err != nil {
-		log.Errorf("Error parsing join request: %s\n", err.Error())
+		log.Errorf("Error parsing join request: %s", err.Error())
 		closeConnWithMsg(conn, "Error parsing join request", http.StatusInternalServerError)
 		return
 	}
@@ -95,7 +96,7 @@ func JoinGame(c *gin.Context) {
 
 	jwt, err := auth.GenerateJWT(playerId)
 	if err != nil {
-		log.Errorf("Error generating JWT: %s\n", err.Error())
+		log.Errorf("Error generating JWT: %s", err.Error())
 		closeConnWithMsg(conn, "Error generating JWT", http.StatusInternalServerError)
 		return
 	}
@@ -106,11 +107,11 @@ func JoinGame(c *gin.Context) {
 		Message: "Authorized to join game",
 		Game:    game,
 	}); err != nil {
-		log.Errorf("Error writing message to WebSocket: %s\n", err.Error())
+		log.Errorf("Error writing message to WebSocket: %s", err.Error())
 		return
 	}
 	if err = conn.Close(); err != nil {
-		log.Errorf("Error closing WebSocket: %s\n", err.Error())
+		log.Errorf("Error closing WebSocket: %s", err.Error())
 		return
 	}
 }
@@ -120,28 +121,28 @@ func PlayGame(c *gin.Context) {
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Errorf("Error upgrading connection to WebSocket: %s\n", err.Error())
+		log.Errorf("Error upgrading connection to WebSocket: %s", err.Error())
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	_, msg, err := conn.ReadMessage()
 	if err != nil {
-		log.Errorf("Error reading message from WebSocket: %s\n", err.Error())
+		log.Errorf("Error reading message from WebSocket: %s", err.Error())
 		closeConnWithMsg(conn, "Error reading message WebSocket", http.StatusInternalServerError)
 		return
 	}
 
 	var req PlayRequest
 	if err := json.Unmarshal(msg, &req); err != nil {
-		log.Errorf("Error unmarshalling play request: %s\n", err.Error())
+		log.Errorf("Error unmarshalling play request: %s", err.Error())
 		closeConnWithMsg(conn, "Error parsing join request", http.StatusBadRequest)
 		return
 	}
 
 	playerId, err := auth.GetJWTSubject(req.Token)
 	if err != nil {
-		log.Errorf("Error getting playerId from token: %s\n", err.Error())
+		log.Errorf("Error getting playerId from token: %s", err.Error())
 		closeConnWithMsg(conn, "Error getting playerId from token", http.StatusForbidden)
 		return
 	}
@@ -149,8 +150,8 @@ func PlayGame(c *gin.Context) {
 	safeConn := socket.NewSafeConn(conn)
 	err = jeopardy.PlayGame(playerId, safeConn)
 	if err != nil {
-		log.Errorf("Error during game: %s\n", err.Error())
-		closeConnWithMsg(conn, "Error during game", http.StatusInternalServerError)
+		log.Errorf("Error during game: %s", err.Error())
+		closeConnWithMsg(conn, fmt.Sprintf("Error playing game: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 }

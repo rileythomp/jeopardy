@@ -28,7 +28,7 @@ export class JoinComponent implements OnInit {
 		this.jwtService.jwt$.subscribe(jwt => {
 			this.jwt = jwt;
 		});
-		this.websocketService.connect(`${environment.websocketProtocol}://${environment.apiServerUrl}/jeopardy/join`)
+		// this.websocketService.connect(`${environment.websocketProtocol}://${environment.apiServerUrl}/jeopardy/join`)
 		// this.websocketService.onopen(() => {
 		// 	(async ()=>{
 		// 		for(let i = 0; i < 20; i++) {
@@ -41,12 +41,16 @@ export class JoinComponent implements OnInit {
 	}
 
 	joinGame(privateGame: boolean) {
-		let joinReq = {
-			playerName: this.playerName,
-			gameName: this.gameName,
-			private: privateGame,
-		}
-		this.websocketService.send(joinReq);
+		this.websocketService.connect(`${environment.websocketProtocol}://${environment.apiServerUrl}/jeopardy/join`)
+
+		this.websocketService.onopen(() => {
+			let joinReq = {
+				playerName: this.playerName,
+				gameName: this.gameName,
+				private: privateGame,
+			}
+			this.websocketService.send(joinReq);
+		})
 
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
@@ -59,14 +63,7 @@ export class JoinComponent implements OnInit {
 		})
 	}
 
-	generateRandomString(length: number): string {
-		const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-		let result = '';
-		for (let i = 0; i < length; i++) {
-		  const randomIndex = Math.floor(Math.random() * characters.length);
-		  result += characters.charAt(randomIndex);
-		}
-		return result;
-	  }
-
+	rejoin() {
+		this.router.navigate(['/lobby']);
+	}
 }

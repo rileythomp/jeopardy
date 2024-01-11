@@ -6,6 +6,7 @@ import { LobbyComponent } from './lobby/lobby.component';
 
 const routes: Routes = [
 	{ path: '', component: JoinComponent },
+	{ path: 'join', component: JoinComponent },
 	{ path: 'lobby', component: LobbyComponent },
 	{ path: 'game', component: GameComponent },
 

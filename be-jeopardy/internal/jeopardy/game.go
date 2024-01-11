@@ -218,23 +218,21 @@ func PlayGame(playerId string, conn SafeConn) error {
 	if player == nil {
 		return fmt.Errorf("no player found for player id")
 	}
+	if player.Conn != nil {
+		return fmt.Errorf("player already playing")
+	}
 	player.Conn = conn
 
 	msg := "Waiting for more players"
 	if game.allPlayersReady() {
-		if err := game.startGame(); err != nil {
-			return err
-		}
+		game.startGame()
 		msg = "We are ready to play"
 	}
 
 	player.sendPings()
 	player.processMessages(game.msgChan, game.stopChan)
 
-	if err := game.messageAllPlayers(msg); err != nil {
-		return err
-	}
-
+	_ = game.messageAllPlayers(msg)
 	return nil
 }
 
@@ -526,7 +524,7 @@ func (g *Game) addPlayer(name string) (string, error) {
 	return player.Id, nil
 }
 
-func (g *Game) startGame() error {
+func (g *Game) startGame() {
 	g.Paused = false
 	state, player := g.State, &Player{}
 	if state == PreGame {
@@ -547,7 +545,6 @@ func (g *Game) startGame() error {
 		}
 	}
 	g.setState(state, player)
-	return nil
 }
 
 func (g *Game) startSecondRound() {

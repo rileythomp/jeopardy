@@ -44,6 +44,12 @@ export class LobbyComponent implements OnInit {
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
 
+			if (resp.code != 200) {
+				alert(resp.message);
+				this.router.navigate(['/join']);
+				return
+			}
+
 			if (resp.message == Ping) {
 				return
 			}
