@@ -2,28 +2,29 @@ package jeopardy
 
 import (
 	"context"
-	"log"
 	"time"
+
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 )
 
 const (
-	// pickQuestionTimeout       = 10 * time.Second
-	// buzzInTimeout             = 10 * time.Second
-	// defaultAnsTimeout         = 10 * time.Second
-	// dailyDoubleAnsTimeout     = 10 * time.Second
-	// finalJeopardyAnsTimeout   = 10 * time.Second
-	// confirmAnsTimeout         = 10 * time.Second
-	// dailyDoubleWagerTimeout   = 10 * time.Second
-	// finalJeopardyWagerTimeout = 10 * time.Second
-
-	pickQuestionTimeout       = 2 * time.Second
-	buzzInTimeout             = 2 * time.Second
+	pickQuestionTimeout       = 10 * time.Second
+	buzzInTimeout             = 10 * time.Second
 	defaultAnsTimeout         = 10 * time.Second
 	dailyDoubleAnsTimeout     = 10 * time.Second
 	finalJeopardyAnsTimeout   = 10 * time.Second
-	confirmAnsTimeout         = 2 * time.Second
+	confirmAnsTimeout         = 10 * time.Second
 	dailyDoubleWagerTimeout   = 10 * time.Second
 	finalJeopardyWagerTimeout = 10 * time.Second
+
+// pickQuestionTimeout       = 2 * time.Second
+// buzzInTimeout             = 2 * time.Second
+// defaultAnsTimeout         = 10 * time.Second
+// dailyDoubleAnsTimeout     = 10 * time.Second
+// finalJeopardyAnsTimeout   = 10 * time.Second
+// confirmAnsTimeout         = 2 * time.Second
+// dailyDoubleWagerTimeout   = 10 * time.Second
+// finalJeopardyWagerTimeout = 10 * time.Second
 )
 
 func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *Player, processTimeout func(player *Player) error) {
@@ -35,7 +36,7 @@ func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *
 			return
 		case <-timeoutCtx.Done():
 			if err := processTimeout(player); err != nil {
-				log.Printf("Unexpected error after timeout for player %s: %s\n", player.Name, err)
+				log.Errorf("Unexpected error after timeout for player %s: %s\n", player.Name, err)
 				panic("error processing a timeout")
 			}
 			return
@@ -67,7 +68,12 @@ func (g *Game) startAnswerTimeout(player *Player) {
 	} else if g.Round == FinalRound {
 		answerTimeout = finalJeopardyAnsTimeout
 	}
-	go g.startTimeout(ctx, answerTimeout, player, g.processAnswerTimeout)
+	go g.startTimeout(ctx, answerTimeout, player, func(player *Player) error {
+		if g.Round == FinalRound {
+			return g.processFinalRoundAns(player, false, "answer-timeout")
+		}
+		return g.nextQuestion(player, false)
+	})
 }
 
 func (g *Game) startConfirmationTimeout(player *Player) {

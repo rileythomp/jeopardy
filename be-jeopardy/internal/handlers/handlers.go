@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/auth"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/jeopardy"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 )
 
@@ -56,31 +56,32 @@ var (
 	upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			return true
+			// TODO: SET THIS PROPERLY
 			// return r.Header.Get("Origin") == "http://localhost:4200"
 		},
 	}
 )
 
 func JoinGame(c *gin.Context) {
-	log.Println("Received join request")
+	log.Infof("Received join request")
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Printf("Error upgrading connection to WebSocket: %s\n", err.Error())
+		log.Errorf("Error upgrading connection to WebSocket: %s\n", err.Error())
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	_, msg, err := conn.ReadMessage()
 	if err != nil {
-		log.Printf("Error reading message from WebSocket: %s\n", err.Error())
+		log.Errorf("Error reading message from WebSocket: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error reading message from WebSocket", http.StatusInternalServerError)
 		return
 	}
 
 	var joinReq JoinRequest
 	if err := json.Unmarshal(msg, &joinReq); err != nil {
-		log.Printf("Error parsing join request: %s\n", err.Error())
+		log.Errorf("Error parsing join request: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error parsing join request", http.StatusInternalServerError)
 		return
 	}
@@ -93,7 +94,7 @@ func JoinGame(c *gin.Context) {
 
 	jwt, err := auth.GenerateJWT(playerId)
 	if err != nil {
-		log.Printf("Error generating JWT: %s\n", err.Error())
+		log.Errorf("Error generating JWT: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error generating JWT", http.StatusInternalServerError)
 		return
 	}
@@ -104,42 +105,42 @@ func JoinGame(c *gin.Context) {
 		Message: "Authorized to join game",
 		Game:    game,
 	}); err != nil {
-		log.Printf("Error writing message to WebSocket: %s\n", err.Error())
+		log.Errorf("Error writing message to WebSocket: %s\n", err.Error())
 		return
 	}
 	if err = conn.Close(); err != nil {
-		log.Printf("Error closing WebSocket: %s\n", err.Error())
+		log.Errorf("Error closing WebSocket: %s\n", err.Error())
 		return
 	}
 }
 
 func PlayGame(c *gin.Context) {
-	log.Println("Received play request")
+	log.Infof("Received play request")
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Printf("Error upgrading connection to WebSocket: %s\n", err.Error())
+		log.Errorf("Error upgrading connection to WebSocket: %s\n", err.Error())
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	_, msg, err := conn.ReadMessage()
 	if err != nil {
-		log.Printf("Error reading message from WebSocket: %s\n", err.Error())
+		log.Errorf("Error reading message from WebSocket: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error reading message WebSocket", http.StatusInternalServerError)
 		return
 	}
 
 	var playReq PlayRequest
 	if err := json.Unmarshal(msg, &playReq); err != nil {
-		log.Printf("Error unmarshalling play request: %s\n", err.Error())
+		log.Errorf("Error unmarshalling play request: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error parsing join request", http.StatusBadRequest)
 		return
 	}
 
 	playerId, err := auth.GetJWTSubject(playReq.Token)
 	if err != nil {
-		log.Printf("Error getting playerId from token: %s\n", err.Error())
+		log.Errorf("Error getting playerId from token: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error getting playerId from token", http.StatusForbidden)
 		return
 	}
@@ -147,20 +148,20 @@ func PlayGame(c *gin.Context) {
 	safeConn := socket.NewSafeConn(conn)
 	err = jeopardy.PlayGame(playerId, safeConn)
 	if err != nil {
-		log.Printf("Error during game: %s\n", err.Error())
+		log.Errorf("Error during game: %s\n", err.Error())
 		closeConnWithMsg(conn, "Error during game", http.StatusInternalServerError)
 		return
 	}
 }
 
 func GetGames(c *gin.Context) {
-	log.Println("Received request to get games")
+	log.Infof("Received request to get games")
 	games := jeopardy.GetGames()
 	c.JSON(http.StatusOK, games)
 }
 
 func CheckHealth(c *gin.Context) {
-	log.Println("Received health check")
+	log.Infof("Received health check")
 	c.String(http.StatusOK, "OK")
 }
 

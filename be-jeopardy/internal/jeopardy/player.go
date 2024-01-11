@@ -2,10 +2,12 @@ package jeopardy
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -36,8 +38,8 @@ type Player struct {
 	cancelAnswerTimeout context.CancelFunc
 	cancelWagerTimeout  context.CancelFunc
 
-	stopSendingPings chan bool
 	sendPingTicker   *time.Ticker
+	stopSendingPings chan bool
 }
 
 const (
@@ -56,42 +58,39 @@ func NewPlayer(name string) *Player {
 		CanWager:            false,
 		CanConfirmAns:       false,
 		FinalProtestors:     map[string]bool{},
-		sendPingTicker:      time.NewTicker(pingFrequency),
-		stopSendingPings:    make(chan bool),
 		cancelAnswerTimeout: func() {},
 		cancelWagerTimeout:  func() {},
+		stopSendingPings:    make(chan bool),
+		sendPingTicker:      time.NewTicker(pingFrequency),
 	}
 }
 
-func (p *Player) processMessages(game *Game) {
+func (p *Player) processMessages(msgGame chan Message, stopGame chan *Player) {
 	go func() {
-		// TODO: USE A CHANNEL TO WAIT ON A MESSAGE OR TO END THE GAME
+		log.Infof("Starting to process messages for player %s", p.Name)
 		for {
-			msg, err := p.readMessage()
+			message, err := p.readMessage()
 			if err != nil {
-				log.Printf("Error reading message from player %s: %s\n", p.Name, err.Error())
+				log.Errorf("Error reading message from player %s: %s", p.Name, err.Error())
 				if websocket.IsCloseError(err, 1001) {
-					log.Printf("Player %s closed connection\n", p.Name)
+					log.Infof("Player %s closed connection", p.Name)
 				}
 				break
 			}
-			if err := game.processMsg(p, msg); err != nil {
-				log.Printf("Error processing message: %s\n", err.Error())
-				panic("error processing message")
+			var msg Message
+			if err := json.Unmarshal(message, &msg); err != nil {
+				log.Errorf("Error parsing message: %s", err.Error())
 			}
+			msg.Player = p
+			msgGame <- msg
 		}
-
-		game.stopGame(p)
+		stopGame <- p
 	}()
-}
-
-func (p *Player) stopPlayer() {
-	p.cancelAnswerTimeout()
-	p.cancelWagerTimeout()
 }
 
 func (p *Player) sendPings() {
 	go func() {
+		log.Infof("Starting to send pings to player %s", p.Name)
 		for {
 			select {
 			case <-p.stopSendingPings:
@@ -101,11 +100,16 @@ func (p *Player) sendPings() {
 					Code:    http.StatusOK,
 					Message: ping,
 				}); err != nil {
-					log.Printf("Error sending ping: %s\n", err.Error())
+					log.Errorf("Error sending ping: %s", err.Error())
 				}
 			}
 		}
 	}()
+}
+
+func (p *Player) stopPlayer() {
+	p.cancelAnswerTimeout()
+	p.cancelWagerTimeout()
 }
 
 func (p *Player) updateActions(pick, buzz, answer, wager, confirm bool) {
@@ -153,18 +157,16 @@ func (p *Player) readMessage() ([]byte, error) {
 	return msg, nil
 }
 
-func (p *Player) sendMessage(message any) error {
-	if msg, ok := message.(Response); ok {
-		if msg.Message != ping {
-			log.Printf("Sending message to player %s: %s\n", p.Name, msg.Message)
-		}
+func (p *Player) sendMessage(msg Response) error {
+	if msg.Message != ping {
+		log.Infof("Sending message to player %s: %s", p.Name, msg.Message)
 	}
 	if p.Conn == nil {
-		log.Printf("Skipping sending message to player %s because connection is nil\n", p.Name)
+		log.Infof("Skipping sending message to player %s because connection is nil", p.Name)
 		return nil
 	}
-	if err := p.Conn.WriteJSON(message); err != nil {
-		log.Printf("Error sending message to player %s: %s\n", p.Name, err.Error())
+	if err := p.Conn.WriteJSON(msg); err != nil {
+		log.Errorf("Error sending message to player %s: %s", p.Name, err.Error())
 		return fmt.Errorf("error sending message to player")
 	}
 	return nil
@@ -172,7 +174,7 @@ func (p *Player) sendMessage(message any) error {
 
 func (p *Player) closeConnection() error {
 	if err := p.Conn.Close(); err != nil {
-		log.Printf("Error closing connection: %s\n", err.Error())
+		log.Errorf("Error closing connection: %s", err.Error())
 		return fmt.Errorf("error closing connection")
 	}
 	return nil

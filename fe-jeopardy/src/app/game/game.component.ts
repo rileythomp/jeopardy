@@ -5,35 +5,25 @@ import { PlayerService } from '../player.service';
 import { JwtService } from '../jwt.service';
 import { Player, Question, GameState, Ping } from '../model/model';
 
-// const  pickQuestionTimeout = 10/2
-// const  buzzInTimeout = 10/2
-// const  defaultAnsTimeout = 10/2
-// const  dailyDoubleAnsTimeout = 10/2
-// const  finalJeopardyAnsTimeout = 10/2
-// const  confirmAnsTimeout = 10/2
-// const  dailyDoubleWagerTimeout = 10/2
-// const  finalJeopardyWagerTimeout = 10/2
-// const  buzzInDelay = 2000/2
-
-// const  pickQuestionTimeout = 10
-// const  buzzInTimeout = 10
-// const  defaultAnsTimeout = 10
-// const  dailyDoubleAnsTimeout = 10
-// const  finalJeopardyAnsTimeout = 10
-// const  confirmAnsTimeout = 10
-// const  dailyDoubleWagerTimeout = 10
-// const  finalJeopardyWagerTimeout = 10
-// const  buzzInDelay = 2000/2
-
-const pickQuestionTimeout       = 2
-const buzzInTimeout             = 2
-const defaultAnsTimeout         = 10
-const dailyDoubleAnsTimeout     = 10
-const finalJeopardyAnsTimeout   = 10
-const confirmAnsTimeout         = 2
-const dailyDoubleWagerTimeout   = 10
-const finalJeopardyWagerTimeout = 10
+const  pickQuestionTimeout = 10
+const  buzzInTimeout = 10
+const  defaultAnsTimeout = 10
+const  dailyDoubleAnsTimeout = 10
+const  finalJeopardyAnsTimeout = 10
+const  confirmAnsTimeout = 10
+const  dailyDoubleWagerTimeout = 10
+const  finalJeopardyWagerTimeout = 10
 const  buzzInDelay = 2000/2
+
+// const pickQuestionTimeout       = 2
+// const buzzInTimeout             = 2
+// const defaultAnsTimeout         = 10
+// const dailyDoubleAnsTimeout     = 10
+// const finalJeopardyAnsTimeout   = 10
+// const confirmAnsTimeout         = 2
+// const dailyDoubleWagerTimeout   = 10
+// const finalJeopardyWagerTimeout = 10
+// const  buzzInDelay = 2000/2
 
 @Component({
 	selector: 'app-game',
