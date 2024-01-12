@@ -40,6 +40,7 @@ export class JoinComponent implements OnInit {
 				this.router.navigate(['/game']);
 			},
 			error: (resp: any) => {
+				// TODO: REPLACE WITH MODAL
 				alert(resp.error.message);
 			},
 		});

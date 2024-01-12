@@ -22,3 +22,7 @@ $ ng serve
 * Handle end game 
 
 * Hanle blank answers, timeouts and closed connections on the UI more gracefully 
+
+* Improve UI 
+
+* Fetch questions from DB

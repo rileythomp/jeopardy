@@ -5,5 +5,3 @@ $ go mod tidy
 $ source .env 
 $ make run
 ```
-
-### TODO

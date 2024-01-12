@@ -49,9 +49,9 @@ export class GameComponent implements OnInit {
 		private router: Router,
 		private websocketService: WebsocketService,
 		private jwtService: JwtService,
+		private apiService: ApiService,
 		protected gameState: GameStateService,
 		protected player: PlayerService,
-		private apiService: ApiService,
 	) { }
 
 	ngOnInit(): void {
@@ -72,6 +72,7 @@ export class GameComponent implements OnInit {
 			let resp = JSON.parse(event.data);
 
 			if (resp.code != 200) {
+				// TODO: REPLACE WITH MODAL
 				alert(resp.message);
 				if (resp.code == 500) {
 					this.router.navigate(['/join']);
@@ -86,6 +87,7 @@ export class GameComponent implements OnInit {
 			if (resp.game.paused) {
 				this.countdownSeconds = 0;
 				clearInterval(this.countdownInterval);
+				// TODO: REPLACE WITH MODAL
 				alert(`${resp.message}, will resume when 3 players are ready`);
 				return
 			}
@@ -147,7 +149,9 @@ export class GameComponent implements OnInit {
 					this.players = this.gameState.getPlayers();
 					break;
 				default:
-					alert('Unable to update game');
+					// TODO: REPLACE WITH MODAL
+					alert('Unable to update game, redirecting to home page');
+					this.router.navigate(['/join']);
 					break;
 			}
 		})
