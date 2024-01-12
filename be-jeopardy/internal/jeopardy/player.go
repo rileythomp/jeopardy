@@ -91,17 +91,26 @@ func (p *Player) processMessages(msgGame chan Message, stopGame chan *Player) {
 func (p *Player) sendPings() {
 	go func() {
 		log.Infof("Starting to send pings to player %s", p.Name)
+		pingErrors := 0
 		for {
 			select {
 			case <-p.stopSendingPings:
+				log.Infof("Stopping sending pings to player %s", p.Name)
 				return
 			case <-p.sendPingTicker.C:
 				if err := p.sendMessage(Response{
 					Code:    http.StatusOK,
 					Message: ping,
 				}); err != nil {
-					log.Errorf("Error sending ping: %s", err.Error())
+					log.Errorf("Error sending ping to player %s: %s", p.Name, err.Error())
+					pingErrors++
+					if pingErrors >= 3 {
+						log.Errorf("Too many ping errors, closing connection to player %s", p.Name)
+						_ = p.closeConnection()
+						return
+					}
 				}
+				pingErrors = 0
 			}
 		}
 	}()

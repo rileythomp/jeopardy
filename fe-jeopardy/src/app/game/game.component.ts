@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { GameStateService } from '../game-state.service';
 import { WebsocketService } from '../websocket.service';
 import { PlayerService } from '../player.service';
@@ -39,8 +40,13 @@ export class GameComponent implements OnInit {
 	wagerAmt: string;
 	countdownSeconds: number;
 	countdownInterval: any;
+	lobbyMessage: string;
+	playerName: string; 
+	gameName: string;
+	jwt: string;
 
 	constructor(
+		private router: Router,
 		private websocketService: WebsocketService,
 		private jwtService: JwtService,
 		protected gameState: GameStateService,
@@ -49,23 +55,27 @@ export class GameComponent implements OnInit {
 	) { }
 
 	ngOnInit(): void {
-		this.players = this.gameState.getPlayers();
-		this.titles = this.gameState.getTitles();
-		this.questionRows = this.gameState.getQuestionRows();
+		this.jwtService.jwt$.subscribe(jwt => {
+			this.jwt = jwt;
+		});
 
-		if (this.gameState.isPaused()) {
-			alert('Game is paused, will resume when 3 players are ready');
-		} else {
-			this.initCountdownTimer(this.gameState.getGameState());
-		}
+		this.websocketService.connect('play');
+
+		this.websocketService.onopen(() => {
+			let playReq = {
+				token: this.jwt,
+			}
+			this.websocketService.send(playReq);
+		})
 
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
+
 			if (resp.code != 200) {
-				// TODO: REPLACE ALERTS WITH MODALS
-				// alert(resp.message)
-				console.log('restarting wager timeout')
-				this.startCountdownTimer(dailyDoubleWagerTimeout)
+				alert(resp.message);
+				if (resp.code == 500) {
+					this.router.navigate(['/join']);
+				}
 				return
 			}
 
@@ -82,16 +92,15 @@ export class GameComponent implements OnInit {
 
 			console.log(resp);
 
-			if (!(resp.game.state in GameState)) {
-				alert('Unable to update game');
-				return
-			}
-
 			this.gameState.updateGameState(resp.game);
 			this.player.updatePlayer(resp.curPlayer);
 
 			switch (resp.game.state) {
 				case GameState.PreGame: 
+					this.lobbyMessage = resp.message;
+					this.players = this.gameState.getPlayers();
+					this.playerName = this.player.getName();
+					this.gameName = this.gameState.getName();
 					break
 				case GameState.RecvBuzz:
 					this.players = this.gameState.getPlayers();

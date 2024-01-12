@@ -101,23 +101,27 @@ export class GameStateService {
 		return this.game.paused;
 	}
 
-	recvingPick(): boolean {
+	preGame(): boolean {
+		return this.game.state == GameState.PreGame;
+	}
+
+	recvPick(): boolean {
 		return this.game.state == GameState.RecvPick;
 	}
 
-	recvingBuzz(): boolean {
+	recvBuzz(): boolean {
 		return this.game.state == GameState.RecvBuzz;
 	}
 
-	recvingAns(): boolean {
+	recvAns(): boolean {
 		return this.game.state == GameState.RecvAns;
 	}
 
-	recvingVote(): boolean {
+	recvVote(): boolean {
 		return this.game.state == GameState.RecvVote;
 	}
 
-	recvingWager(): boolean {
+	recvWager(): boolean {
 		return this.game.state == GameState.RecvWager;
 	}
 
