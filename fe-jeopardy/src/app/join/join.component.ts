@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { JwtService } from '../jwt.service';
 import { ApiService } from '../api.service';
-import { GameState as GameState } from '../model/model';
 // import { generateFakeWordByLength } from 'fakelish';
 
 @Component({
@@ -38,14 +37,10 @@ export class JoinComponent implements OnInit {
 		this.apiService.joinGame(this.playerName, this.gameName, privateGame).subscribe({
 			next: (resp: any) => {
 				this.jwtService.setJwt(resp.token); 
-				if (resp.game.state in GameState) {
-					this.router.navigate(['/lobby']);
-				} else {
-					alert('Unable to join the game');
-				}
+				this.router.navigate(['/lobby']);
 			},
-			error: (err: any) => {
-				alert('Unable to join the game');
+			error: (resp: any) => {
+				alert(resp.error.message);
 			},
 		});
 	}

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -85,20 +86,20 @@ func JoinGame(c *gin.Context) {
 	var req JoinRequest
 	if err := parseBody(c.Request.Body, &req); err != nil {
 		log.Errorf("Error parsing join request: %s", err.Error())
-		respondWithError(c, "Error parsing join request", http.StatusBadRequest)
+		respondWithError(c, http.StatusBadRequest, "Error parsing join request")
 		return
 	}
 
 	game, playerId, err := jeopardy.JoinGame(req.PlayerName, req.GameName, req.Private)
 	if err != nil {
-		respondWithError(c, "Error joining game", http.StatusInternalServerError)
+		respondWithError(c, http.StatusInternalServerError, "Error joining game: %s", err.Error())
 		return
 	}
 
 	jwt, err := auth.GenerateJWT(playerId)
 	if err != nil {
 		log.Errorf("Error generating JWT: %s", err.Error())
-		respondWithError(c, "Error generating JWT", http.StatusInternalServerError)
+		respondWithError(c, http.StatusInternalServerError, "Error generating JWT")
 		return
 	}
 
@@ -116,28 +117,28 @@ func PlayGame(c *gin.Context) {
 	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Errorf("Error upgrading connection to WebSocket: %s", err.Error())
-		respondWithError(c, "Error playing game", http.StatusInternalServerError)
+		respondWithError(c, http.StatusInternalServerError, "Error playing game")
 		return
 	}
 
 	_, msg, err := ws.ReadMessage()
 	if err != nil {
 		log.Errorf("Error reading message from WebSocket: %s", err.Error())
-		closeConnWithMsg(ws, "Error reading message WebSocket", http.StatusInternalServerError)
+		closeConnWithMsg(ws, http.StatusInternalServerError, "Error reading message WebSocket")
 		return
 	}
 
 	var req PlayRequest
 	if err := json.Unmarshal(msg, &req); err != nil {
 		log.Errorf("Error parsing play request: %s", err.Error())
-		closeConnWithMsg(ws, "Error parsing play request", http.StatusBadRequest)
+		closeConnWithMsg(ws, http.StatusBadRequest, "Error parsing play request")
 		return
 	}
 
 	playerId, err := auth.GetJWTSubject(req.Token)
 	if err != nil {
 		log.Errorf("Error getting playerId from token: %s", err.Error())
-		closeConnWithMsg(ws, "Error getting playerId from token", http.StatusForbidden)
+		closeConnWithMsg(ws, http.StatusForbidden, "Error getting playerId from token")
 		return
 	}
 
@@ -145,7 +146,7 @@ func PlayGame(c *gin.Context) {
 	err = jeopardy.PlayGame(playerId, conn)
 	if err != nil {
 		log.Errorf("Error during game: %s", err.Error())
-		closeConnWithMsg(ws, "Error during game", http.StatusInternalServerError)
+		closeConnWithMsg(ws, http.StatusInternalServerError, "Error during game: %s", err.Error())
 		return
 	}
 }
@@ -187,11 +188,11 @@ func parseBody(body io.ReadCloser, v any) error {
 	return json.Unmarshal(msg, v)
 }
 
-func closeConnWithMsg(conn *websocket.Conn, msg string, code int) {
-	_ = conn.WriteJSON(jeopardy.Response{Code: code, Message: msg})
+func closeConnWithMsg(conn *websocket.Conn, code int, msg string, args ...any) {
+	_ = conn.WriteJSON(jeopardy.Response{Code: code, Message: fmt.Sprintf(msg, args...)})
 	conn.Close()
 }
 
-func respondWithError(c *gin.Context, msg string, code int) {
-	c.JSON(code, jeopardy.Response{Code: code, Message: msg})
+func respondWithError(c *gin.Context, code int, msg string, args ...any) {
+	c.JSON(code, jeopardy.Response{Code: code, Message: fmt.Sprintf(msg, args...)})
 }
