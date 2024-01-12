@@ -632,6 +632,7 @@ func (g *Game) messageAllPlayers(msg string) error {
 			Game:      g,
 			CurPlayer: player,
 		}); err != nil {
+			log.Errorf("Error sending message to player %s while messaging all players: %s, stopping game", player.Name, err.Error())
 			g.stopGame(player)
 		}
 	}
