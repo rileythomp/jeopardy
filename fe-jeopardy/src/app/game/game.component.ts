@@ -35,9 +35,9 @@ export class GameComponent implements OnInit {
 	private jwt: string;
 	private countdownInterval: any;
 	protected countdownSeconds: number;
+	protected gameMessage: string;
 	protected questionAnswer: string;
 	protected wagerAmt: string;
-	protected gameMessage: string;
 
 	constructor(
 		private router: Router,
