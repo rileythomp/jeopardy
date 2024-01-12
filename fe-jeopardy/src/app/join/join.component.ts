@@ -37,7 +37,7 @@ export class JoinComponent implements OnInit {
 		this.apiService.joinGame(this.playerName, this.gameName, privateGame).subscribe({
 			next: (resp: any) => {
 				this.jwtService.setJwt(resp.token); 
-				this.router.navigate(['/lobby']);
+				this.router.navigate(['/game']);
 			},
 			error: (resp: any) => {
 				alert(resp.error.message);
@@ -46,6 +46,6 @@ export class JoinComponent implements OnInit {
 	}
 
 	rejoin() {
-		this.router.navigate(['/lobby']);
+		this.router.navigate(['/game']);
 	}
 }

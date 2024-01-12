@@ -1,1 +1,1 @@
-curl localhost:8080/jeopardy/games | jq '.testroom | del(.firstRound, .secondRound, .lastToPick, .lastToAnswer, .lastToBuzz, .finalQuestion)'
+curl localhost:8080/jeopardy/private | jq '.testroom | del(.firstRound, .secondRound, .lastToPick, .lastToAnswer, .lastToBuzz, .finalQuestion)'
