@@ -65,9 +65,8 @@ export class GameComponent implements OnInit {
 			let resp = JSON.parse(event.data);
 
 			if (resp.code != 200) {
-				if (resp.code == 400) {
-					alert(resp.message)
-				} else {
+				alert(resp.message);
+				if (resp.code == 500) {
 					this.router.navigate(['/join']);
 				}
 				return
