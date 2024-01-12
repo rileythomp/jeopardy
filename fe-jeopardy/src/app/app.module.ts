@@ -8,6 +8,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { GameComponent } from './game/game.component';
 import { JoinComponent } from './join/join.component';
 import { LobbyComponent } from './game/lobby/lobby.component';
+import { BoardComponent } from './game/board/board.component';
 
 @NgModule({
   declarations: [
@@ -15,6 +16,7 @@ import { LobbyComponent } from './game/lobby/lobby.component';
     GameComponent,
     JoinComponent,
     LobbyComponent,
+    BoardComponent,
   ],
   imports: [
     BrowserModule,

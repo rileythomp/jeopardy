@@ -17,7 +17,7 @@ import { Player, Question, GameState, Ping } from '../model/model';
 // const  finalJeopardyWagerTimeout = 10
 // const  buzzDelay = 2000/2
 
-const pickTimeout = 2
+const pickTimeout = 10
 const buzzTimeout = 2
 const defaultAnsTimeout = 10
 const dailyDoubleAnsTimeout = 10
@@ -154,24 +154,6 @@ export class GameComponent implements OnInit {
 				clearInterval(this.countdownInterval);
 			}
 		}, 1000);
-	}
-
-	highlightQuestion(event: any, color: string) {
-		if (event.target.style.backgroundColor == 'lightpink') {
-			return
-		}
-		if (this.player.CanPick()) {
-			event.target.style.backgroundColor = color;
-		}
-	}
-
-	handlePick(topicIdx: number, valIdx: number) {
-		if (this.player.CanPick() && this.game.QuestionCanBePicked(topicIdx, valIdx)) {
-			this.websocketService.Send({
-				topicIdx: topicIdx,
-				valIdx: valIdx,
-			})
-		}
 	}
 
 	handleBuzz(pass: boolean) {

@@ -1,0 +1,22 @@
+<div>
+    <p>It is {{ game.PickingPlayer() }}'s turn to pick a question</p>
+    <table>
+        <tr>
+            <td *ngFor="let title of topics">
+                {{ title }}
+            </td>
+        </tr>
+        <tr *ngFor="let row of questionRows; let valIdx = index">
+            <td
+            *ngFor="let q of row; let topicIdx = index"
+            (mouseover)="highlightQuestion($event, 'lightgreen')"
+            (mouseout)="highlightQuestion($event, 'white')"
+            (click)="handlePick(topicIdx, valIdx)"
+            [ngStyle]="{'background-color': q.canChoose ? 'white' : 'lightpink'}">
+                {{ q.value }}
+            </td>
+        </tr>
+    </table>
+
+    <p  *ngIf="player.CanPick()">seconds to pick: {{ countdownSeconds }}</p>
+</div>
