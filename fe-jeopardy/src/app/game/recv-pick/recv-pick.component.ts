@@ -1,8 +1,8 @@
 import { Component, Input } from '@angular/core';
 import { GameState, Question } from 'src/app/model/model';
-import { PlayerService } from 'src/app/player.service';
-import { WebsocketService } from 'src/app/websocket.service';
-import { GameStateService } from 'src/app/game-state.service';
+import { PlayerService } from 'src/app/services/player.service';
+import { WebsocketService } from 'src/app/services/websocket.service';
+import { GameStateService } from 'src/app/services/game-state.service';
 
 @Component({
     selector: 'app-recv-pick',

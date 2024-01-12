@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { JwtService } from '../jwt.service';
-import { ApiService } from '../api.service';
+import { JwtService } from '../services/jwt.service';
+import { ApiService } from '../services/api.service';
 // import { generateFakeWordByLength } from 'fakelish';
 
 @Component({
@@ -29,7 +29,7 @@ export class JoinComponent implements OnInit {
 		// (async ()=>{
 		// 	this.playerName = await generateFakeWordByLength(7);
 		// 	this.gameName = 'autojoined'
-		// 	this.joinGame(false);
+		// 	this.joinGame(true);
 		// })();
 	}
 

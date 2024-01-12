@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
-import { GameStateService } from '../../game-state.service';
-import { PlayerService } from '../../player.service';
-import { WebsocketService } from '../../websocket.service';
+import { GameStateService } from '../../services/game-state.service';
+import { PlayerService } from '../../services/player.service';
+import { WebsocketService } from '../../services/websocket.service';
 
 @Component({
     selector: 'app-recv-vote',

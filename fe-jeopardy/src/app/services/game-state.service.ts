@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
-import { Game, Player, Question, GameState, RoundState } from './model/model';
+import { Game, Player, Question, GameState, RoundState } from '../model/model';
 
 @Injectable({
 	providedIn: 'root'

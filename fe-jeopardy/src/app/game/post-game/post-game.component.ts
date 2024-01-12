@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { GameStateService } from '../../game-state.service';
+import { GameStateService } from '../../services/game-state.service';
 import { Player } from '../../model/model';
-import { PlayerService } from '../../player.service';
-import { WebsocketService } from '../../websocket.service';
-import { ApiService } from '../../api.service';
+import { PlayerService } from '../../services/player.service';
+import { WebsocketService } from '../../services/websocket.service';
+import { ApiService } from '../../services/api.service';
 
 @Component({
     selector: 'app-post-game',

@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { GameStateService } from '../game-state.service';
-import { WebsocketService } from '../websocket.service';
-import { PlayerService } from '../player.service';
-import { JwtService } from '../jwt.service';
+import { GameStateService } from '../services/game-state.service';
+import { WebsocketService } from '../services/websocket.service';
+import { PlayerService } from '../services/player.service';
+import { JwtService } from '../services/jwt.service';
 import { Question, GameState, Ping } from '../model/model';
 
 // const  pickTimeout = 10
