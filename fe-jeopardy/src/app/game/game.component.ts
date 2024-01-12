@@ -63,9 +63,7 @@ export class GameComponent implements OnInit {
 			let resp = JSON.parse(event.data);
 			if (resp.code != 200) {
 				// TODO: REPLACE ALERTS WITH MODALS
-				// alert(resp.message)
-				console.log('restarting wager timeout')
-				this.startCountdownTimer(dailyDoubleWagerTimeout)
+				alert(resp.message)
 				return
 			}
 

@@ -102,7 +102,7 @@ func (p *Player) sendPings() {
 					Code:    http.StatusOK,
 					Message: ping,
 				}); err != nil {
-					log.Errorf("Error sending ping: %s", err.Error())
+					log.Errorf("Error sending ping to player %s: %s", p.Name, err.Error())
 					pingErrors++
 					if pingErrors >= 3 {
 						log.Errorf("Too many ping errors, closing connection to player %s", p.Name)
