@@ -3,8 +3,9 @@
     <br>
     Value: {{ game.CurValue() }}
     <br>
-    <button *ngIf="player.CanBuzz()" (click)="handleBuzz(false)">Buzz</button>
-    <button *ngIf="player.CanBuzz()" (click)="handleBuzz(true)">Pass</button>
-
-    <p *ngIf="player.CanBuzz()">seconds to buzz: {{ countdownSeconds }}</p>
+    <div *ngIf="player.CanBuzz()">
+        <button (click)="handleBuzz(false)">Buzz</button>
+        <button (click)="handleBuzz(true)">Pass</button>
+        <p>seconds to buzz: {{ countdownSeconds }}</p>
+    </div>
 </div>

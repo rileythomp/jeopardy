@@ -2,7 +2,7 @@
     <div *ngIf="player.CanWager()">
         <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
         <button (click)="handleWager()">Wager</button>
-        <p *ngIf="player.CanWager()">seconds to wager: {{ countdownSeconds }}</p>
+        <p>seconds to wager: {{ countdownSeconds }}</p>
     </div>
     
     <div *ngIf="!player.CanWager()">
@@ -15,6 +15,6 @@
     <div *ngIf="player.CanWager()">
         <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
         <button (click)="handleWager()">Wager</button>
-        <p *ngIf="player.CanWager()">seconds to final wager: {{ countdownSeconds }}</p>
+        <p>seconds to final wager: {{ countdownSeconds }}</p>
     </div>
 </div>

@@ -37,7 +37,7 @@ export class GameComponent implements OnInit {
 	protected countdownSeconds: number;
 	protected questionAnswer: string;
 	protected wagerAmt: string;
-	protected lobbyMessage: string;
+	protected preGameMessage: string;
 	protected questionRows: Question[][];
 	protected topics: string[];
 
@@ -83,7 +83,7 @@ export class GameComponent implements OnInit {
 
 			this.game.updateGameState(resp.game);
 			this.player.updatePlayer(resp.curPlayer);
-			this.lobbyMessage = resp.message;
+			this.preGameMessage = resp.message;
 			this.topics = this.game.Topics();
 			this.questionRows = this.game.QuestionRows();
 
