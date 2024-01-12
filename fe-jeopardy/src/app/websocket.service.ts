@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
 	providedIn: 'root'
@@ -8,8 +9,8 @@ export class WebsocketService {
 
 	constructor() { }
 
-	connect(url: string): void {
-		this.ws = new WebSocket(url);
+	connect(path: string): void {
+		this.ws = new WebSocket(`${environment.websocketProtocol}://${environment.apiServerUrl}/jeopardy/${path}`);
 	}
 
 	onopen(callback: () => void): void {

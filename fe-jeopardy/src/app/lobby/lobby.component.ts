@@ -5,7 +5,6 @@ import { JwtService } from '../jwt.service';
 import { GameStateService } from '../game-state.service';
 import { PlayerService } from '../player.service';
 import { Player, GameState, Ping } from '../model/model';
-import { environment } from 'src/environments/environment';
 
 @Component({
 	selector: 'app-lobby',
@@ -32,7 +31,7 @@ export class LobbyComponent implements OnInit {
 			this.jwt = jwt;
 		});
 
-		this.websocketService.connect(`${environment.websocketProtocol}://${environment.apiServerUrl}/jeopardy/play`);
+		this.websocketService.connect('play');
 
 		this.websocketService.onopen(() => {
 			let playReq = {
