@@ -21,6 +21,8 @@ $ ng serve
 
 * Handle end game 
 
+* Use correct timeouts on FE
+
 * Hanle blank answers, timeouts and closed connections on the UI more gracefully 
 
 * Improve UI 

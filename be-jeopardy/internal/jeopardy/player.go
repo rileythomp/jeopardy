@@ -43,7 +43,7 @@ type Player struct {
 }
 
 const (
-	pingFrequency = 1 * time.Second
+	pingFrequency = 50 * time.Second
 	ping          = "ping"
 )
 
@@ -109,6 +109,7 @@ func (p *Player) sendPings() {
 						_ = p.closeConnection()
 						return
 					}
+					continue
 				}
 				pingErrors = 0
 			}

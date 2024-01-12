@@ -20,7 +20,7 @@ export class ApiService {
 
     constructor(private http: HttpClient) { }
 
-    joinGame(playerName: string, gameName: string, privateGame: boolean): Observable<any> {
+    JoinGame(playerName: string, gameName: string, privateGame: boolean): Observable<any> {
         return this.post('join', {
             playerName: playerName,
             gameName: gameName,
@@ -28,11 +28,11 @@ export class ApiService {
         })
     }
 
-    leaveGame(user: any): Observable<any> {
+    LeaveGame(user: any): Observable<any> {
         return this.post('leave', user)
     }
 
-    playAgain(user: any): Observable<any> {
+    PlayAgain(user: any): Observable<any> {
         return this.post('play-again', user)
     }
 

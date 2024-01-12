@@ -9,19 +9,19 @@ export class WebsocketService {
 
 	constructor() { }
 
-	connect(path: string): void {
+	Connect(path: string): void {
 		this.ws = new WebSocket(`${environment.websocketProtocol}://${environment.apiServerUrl}/jeopardy/${path}`);
 	}
 
-	onopen(callback: () => void): void {
+	OnOpen(callback: () => void): void {
 		this.ws.onopen = callback;
 	}
 
-	send(data: any): void {
+	Send(data: any): void {
 		this.ws.send(JSON.stringify(data));
 	}
 
-	onmessage(callback: (event: { data: string }) => void): void {
+	OnMessage(callback: (event: { data: string }) => void): void {
 		this.ws.onmessage = callback;
 	}
 }

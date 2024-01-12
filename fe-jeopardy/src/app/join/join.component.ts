@@ -34,9 +34,9 @@ export class JoinComponent implements OnInit {
 	}
 
 	joinGame(privateGame: boolean) {
-		this.apiService.joinGame(this.playerName, this.gameName, privateGame).subscribe({
+		this.apiService.JoinGame(this.playerName, this.gameName, privateGame).subscribe({
 			next: (resp: any) => {
-				this.jwtService.setJwt(resp.token); 
+				this.jwtService.SetJWT(resp.token); 
 				this.router.navigate(['/game']);
 			},
 			error: (resp: any) => {

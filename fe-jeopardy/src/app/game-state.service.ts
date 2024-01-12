@@ -9,7 +9,9 @@ export class GameStateService {
 	private game: Game;
 	private gameStateSubject = new Subject<any>();
 
-	constructor() { }
+	constructor() {
+		this.game = <Game>{};
+	}
 
 	onGameStateChange() {
 		return this.gameStateSubject.asObservable();
@@ -20,15 +22,11 @@ export class GameStateService {
 		this.gameStateSubject.next(this.game);
 	}
 
-	getGame() {
-		return this.game;
-	}
-
-	getName(): string {
+	Name(): string {
 		return this.game.name;
 	}
 
-	getGameState(): GameState {
+	State(): GameState {
 		return this.game.state;
 	}
 
@@ -36,11 +34,7 @@ export class GameStateService {
 		return this.game.players;
 	}
 
-	readyToPlay(): boolean {
-		return this.game.players.length == 3;
-	}
-
-	getQuestionRows(): Question[][] {
+	QuestionRows(): Question[][] {
 		let firstRow = [];
 		let secondRow = [];
 		let thirdRow = [];
@@ -61,7 +55,7 @@ export class GameStateService {
 		// return [firstRow, secondRow, thirdRow, fourthRow, fifthRow];
 	}
 
-	getTitles(): string[] {
+	Topics(): string[] {
 		let round = this.game.firstRound;
 		if (this.game.round == RoundState.SecondRound) {
 			round = this.game.secondRound;
@@ -69,76 +63,80 @@ export class GameStateService {
 		return round.map((topic: {title: string}) => topic.title);
 	}
 
-	getPickingPlayer(): string {
+	PickingPlayer(): string {
 		return this.game.players.find((player: Player) => player.canPick)?.name ?? '';
 	}
 
-	getAnsweringPlayer(): string {
+	AnsweringPlayer(): string {
 		return this.game.players.find((player: Player) => player.canAnswer)?.name ?? '';
 	}
 
-	getLastToAnswer(): string {
+	LastToAnswer(): string {
 		return this.game.lastToAnswer.name;
 	}
 
-	getWageringPlayer(): string {
+	WageringPlayer(): string {
 		return this.game.players.find((player: Player) => player.canWager)?.name ?? '';
 	}
 
-	getLastAnswer(): string {
+	LastAnswer(): string {
 		return this.game.lastAnswer;
 	}
 
-	getFinalAnswer(): string {
+	FinalAnswer(): string {
 		return this.game.finalQuestion.answer;
 	}
 
-	getAnsCorrectness(): boolean {
+	AnsCorrectness(): boolean {
 		return this.game.ansCorrectness;
 	}
 
-	isPaused(): boolean {
+	IsPaused(): boolean {
 		return this.game.paused;
 	}
 
-	preGame(): boolean {
+	PreGame(): boolean {
 		return this.game.state == GameState.PreGame;
 	}
 
-	recvPick(): boolean {
+	RecvPick(): boolean {
 		return this.game.state == GameState.RecvPick;
 	}
 
-	recvBuzz(): boolean {
+	RecvBuzz(): boolean {
 		return this.game.state == GameState.RecvBuzz;
 	}
 
-	recvAns(): boolean {
+	RecvAns(): boolean {
 		return this.game.state == GameState.RecvAns;
 	}
 
-	recvVote(): boolean {
+	RecvVote(): boolean {
 		return this.game.state == GameState.RecvVote;
 	}
 
-	recvWager(): boolean {
+	RecvWager(): boolean {
 		return this.game.state == GameState.RecvWager;
 	}
 
-	finalRound(): boolean {
+	FinalRound(): boolean {
 		return this.game.round == RoundState.FinalRound;
 	}
 
-	getHighestScorers(): string[] {
+	PostGame(): boolean {
+		return this.game.state == GameState.PostGame;
+	}
+
+	HighestScorers(): string[] {
 		const maxScore = Math.max(...this.game.players.map(player => player.score));
 		return this.game.players.filter(player => player.score == maxScore).map(player => player.name);
 	}
 
-	endGameMessage(): string {
+	EndGameMessage(): string {
 		if (this.game.state != GameState.PostGame) {
 			return '';
 		}
-		let winners = this.getHighestScorers();
+		let winners = this.HighestScorers();
 		if (winners.length == 1) {
 			return `The winner is ${winners[0]}`;
 		} else if (winners.length == 2) {
@@ -147,19 +145,15 @@ export class GameStateService {
 		return `All players have tied`
 	}
 
-	gameOver(): boolean {
-		return this.game.state == GameState.PostGame;
-	}
-
-	curQuestion(): string {
+	CurQuestion(): string {
 		return this.game.curQuestion.question;
 	}
 
-	curValue(): number {
+	CurValue(): number {
 		return this.game.curQuestion.value;
 	}
 
-	questionCanBePicked(topicIdx: number, valIdx: number): boolean {
+	QuestionCanBePicked(topicIdx: number, valIdx: number): boolean {
 		let round = this.game.firstRound;
 		if (this.game.round == RoundState.SecondRound) {
 			round = this.game.secondRound;
@@ -167,7 +161,7 @@ export class GameStateService {
 		return round[topicIdx].questions[valIdx].canChoose;
 	}
 
-	curQuestionFirstBuzz(): boolean {
+	CurQuestionFirstBuzz(): boolean {
 		return !this.game.guessedWrong || this.game.guessedWrong.length == 0;
 	}
 }

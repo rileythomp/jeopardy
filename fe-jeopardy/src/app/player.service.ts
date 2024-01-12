@@ -9,7 +9,9 @@ export class PlayerService {
 	private player: Player;
 	private playerSubject = new Subject<any>();
 
-	constructor() { }
+	constructor() {
+		this.player = <Player>{};
+	}
 
 	onPlayerChange() {
 		return this.playerSubject.asObservable();
@@ -20,35 +22,35 @@ export class PlayerService {
 		this.playerSubject.next(this.player);
 	}
 
-	getPlayer(): Player {
-		return this.player;
+	Id(): string {
+		return this.player.id;
 	}
 
-	getName(): string {
+	Name(): string {
 		return this.player.name;
 	}
 
-	blockBuzz(block: boolean): void {
+	BlockBuzz(block: boolean): void {
 		this.player.buzzBlocked = block;
 	}
 
-	canPick(): boolean {
+	CanPick(): boolean {
 		return this.player.canPick;
 	}
 
-	canBuzz(): boolean {
+	CanBuzz(): boolean {
 		return this.player.canBuzz && !this.player.buzzBlocked;
 	}
 
-	canAnswer(): boolean {
+	CanAnswer(): boolean {
 		return this.player.canAnswer;
 	}
 
-	canWager(): boolean {
+	CanWager(): boolean {
 		return this.player.canWager;
 	}
 
-	canVote(): boolean {
+	CanVote(): boolean {
 		return this.player.canVote;
 	}
 }

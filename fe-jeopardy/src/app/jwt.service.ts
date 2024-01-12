@@ -14,21 +14,8 @@ export class JwtService {
     this.jwt$ = this.jwtSubject.asObservable();
   }
 
-  public setJwt(jwt: string): void {
+  SetJWT(jwt: string): void {
     localStorage.setItem('jwt', jwt);
     this.jwtSubject.next(jwt);
-  }
-
-  public clearJwt(): void {
-    localStorage.removeItem('jwt');
-    this.jwtSubject.next('');
-  }
-
-  public getJwt(): string {
-    return this.jwtSubject.value;
-  }
-
-  public hasJwt(): boolean {
-    return !!this.jwtSubject.value;
   }
 }

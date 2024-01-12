@@ -33,16 +33,14 @@ const buzzDelay = 2000 / 2
 	styleUrls: ['./game.component.less'],
 })
 export class GameComponent implements OnInit {
-	titles: string[];
-	questionRows: Question[][];
-	questionAnswer: string;
-	wagerAmt: string;
-	countdownSeconds: number;
-	countdownInterval: any;
-	lobbyMessage: string;
-	playerName: string;
-	gameName: string;
-	jwt: string;
+	private jwt: string;
+	private countdownInterval: any;
+	protected countdownSeconds: number;
+	protected questionAnswer: string;
+	protected wagerAmt: string;
+	protected lobbyMessage: string;
+	protected questionRows: Question[][];
+	protected topics: string[];
 
 	constructor(
 		private router: Router,
@@ -58,16 +56,16 @@ export class GameComponent implements OnInit {
 			this.jwt = jwt;
 		});
 
-		this.websocketService.connect('play');
+		this.websocketService.Connect('play');
 
-		this.websocketService.onopen(() => {
+		this.websocketService.OnOpen(() => {
 			let playReq = {
 				token: this.jwt,
 			}
-			this.websocketService.send(playReq);
+			this.websocketService.Send(playReq);
 		})
 
-		this.websocketService.onmessage((event: { data: string; }) => {
+		this.websocketService.OnMessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
 
 			if (resp.code != 200) {
@@ -88,8 +86,10 @@ export class GameComponent implements OnInit {
 			this.game.updateGameState(resp.game);
 			this.player.updatePlayer(resp.curPlayer);
 			this.lobbyMessage = resp.message;
+			this.topics = this.game.Topics();
+			this.questionRows = this.game.QuestionRows();
 
-			if (this.game.isPaused()) {
+			if (this.game.IsPaused()) {
 				this.countdownSeconds = 0;
 				clearInterval(this.countdownInterval);
 				// TODO: REPLACE WITH MODAL
@@ -97,50 +97,44 @@ export class GameComponent implements OnInit {
 				return
 			}
 
-			switch (resp.game.state) {
+			switch (this.game.State()) {
 				case GameState.PreGame:
-					this.playerName = this.player.getName();
-					this.gameName = this.game.getName();
+				case GameState.PostGame:
 					break
 				case GameState.RecvBuzz:
-					this.questionRows = this.game.getQuestionRows();
-					if (this.game.curQuestionFirstBuzz()) {
-						this.player.blockBuzz(true)
+					if (this.game.CurQuestionFirstBuzz()) {
+						this.player.BlockBuzz(true)
 						setTimeout(() => {
-							this.player.blockBuzz(false)
-							if (this.player.canBuzz()) {
+							this.player.BlockBuzz(false)
+							if (this.player.CanBuzz()) {
 								this.startCountdownTimer(buzzTimeout - buzzDelay / 1000);
 							}
 						}, buzzDelay);
 					} else {
-						if (this.player.canBuzz()) {
+						if (this.player.CanBuzz()) {
 							this.startCountdownTimer(buzzTimeout);
 						}
 					}
 					break;
 				case GameState.RecvAns:
-					if (this.player.canAnswer()) {
+					if (this.player.CanAnswer()) {
 						this.startCountdownTimer(defaultAnsTimeout);
 					}
 					break;
 				case GameState.RecvPick:
-					this.titles = this.game.getTitles();
-					this.questionRows = this.game.getQuestionRows();
-					if (this.player.canPick()) {
+					if (this.player.CanPick()) {
 						this.startCountdownTimer(pickTimeout);
 					}
 					break;
 				case GameState.RecvVote:
-					if (this.player.canVote()) {
+					if (this.player.CanVote()) {
 						this.startCountdownTimer(voteTimeout);
 					}
 					break
 				case GameState.RecvWager:
-					if (this.player.canWager()) {
+					if (this.player.CanWager()) {
 						this.startCountdownTimer(dailyDoubleWagerTimeout);
 					}
-					break;
-				case GameState.PostGame:
 					break;
 				default:
 					// TODO: REPLACE WITH MODAL
@@ -162,94 +156,70 @@ export class GameComponent implements OnInit {
 		}, 1000);
 	}
 
-	initCountdownTimer(gameState: GameState) {
-		if (gameState == GameState.RecvPick && this.player.canPick()) {
-			this.startCountdownTimer(pickTimeout);
-		}
-		else if (gameState == GameState.RecvBuzz && this.player.canBuzz()) {
-			this.startCountdownTimer(buzzTimeout);
-		}
-		else if (gameState == GameState.RecvAns && this.player.canAnswer()) {
-			this.startCountdownTimer(defaultAnsTimeout);
-		}
-		else if (gameState == GameState.RecvVote && this.player.canVote()) {
-			this.startCountdownTimer(voteTimeout);
-		}
-		else if (gameState == GameState.RecvWager && this.player.canWager()) {
-			this.startCountdownTimer(dailyDoubleWagerTimeout);
-		}
-	}
-
 	highlightQuestion(event: any, color: string) {
 		if (event.target.style.backgroundColor == 'lightpink') {
 			return
 		}
-		if (this.player.canPick()) {
+		if (this.player.CanPick()) {
 			event.target.style.backgroundColor = color;
 		}
 	}
 
 	handlePick(topicIdx: number, valIdx: number) {
-		if (this.player.canPick() && this.game.questionCanBePicked(topicIdx, valIdx)) {
-			this.websocketService.send({
-				"token": this.jwtService.getJwt(),
-				"topicIdx": topicIdx,
-				"valIdx": valIdx,
+		if (this.player.CanPick() && this.game.QuestionCanBePicked(topicIdx, valIdx)) {
+			this.websocketService.Send({
+				topicIdx: topicIdx,
+				valIdx: valIdx,
 			})
 		}
 	}
 
 	handleBuzz(pass: boolean) {
-		if (this.player.canBuzz()) {
-			this.websocketService.send({
-				"token": this.jwtService.getJwt(),
-				"isPass": pass,
+		if (this.player.CanBuzz()) {
+			this.websocketService.Send({
+				isPass: pass,
 			})
 		}
 	}
 
 	handleAnswer() {
-		if (this.player.canAnswer()) {
-			this.websocketService.send({
-				"token": this.jwtService.getJwt(),
-				"answer": this.questionAnswer,
+		if (this.player.CanAnswer()) {
+			this.websocketService.Send({
+				answer: this.questionAnswer,
 			})
 		}
 		this.questionAnswer = '';
 	}
 
 	handleVote(confirm: boolean) {
-		if (this.player.canVote()) {
-			this.websocketService.send({
-				"token": this.jwtService.getJwt(),
-				"confirm": confirm,
+		if (this.player.CanVote()) {
+			this.websocketService.Send({
+				confirm: confirm,
 			})
 		}
 	}
 
 	handleWager() {
-		if (this.player.canWager()) {
-			this.websocketService.send({
-				"token": this.jwtService.getJwt(),
-				"wager": this.wagerAmt,
+		if (this.player.CanWager()) {
+			this.websocketService.Send({
+				wager: this.wagerAmt,
 			})
 		}
 		this.wagerAmt = '';
 	}
 
 	protestFinalCorrectness(playerId: string) {
-		this.websocketService.send({
-			"token": this.jwtService.getJwt(),
-			"protestFor": playerId,
+		this.websocketService.Send({
+			protestFor: playerId,
 		})
 	}
 
 	canProtestForPlayer(player: Player): boolean {
-		return !Object.keys(player.finalProtestors).includes(this.player.getPlayer().id);
+		return !Object.keys(player.finalProtestors).includes(this.player.Id());
 	}
 
 	playAgain() {
-		return this.apiService.playAgain({ "hello": "world" }).subscribe({
+		return this.apiService.PlayAgain({ "hello": "world" }).subscribe({
 			next: (resp: any) => {
 				console.log('playing again', resp)
 			},
@@ -261,7 +231,7 @@ export class GameComponent implements OnInit {
 	}
 
 	leaveGame() {
-		return this.apiService.leaveGame({ "hello": "world" }).subscribe({
+		return this.apiService.LeaveGame({ "hello": "world" }).subscribe({
 			next: (resp: any) => {
 				console.log('left game', resp)
 			},
