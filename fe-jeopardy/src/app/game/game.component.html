@@ -4,9 +4,9 @@
 
 <p> You are playing as {{ player.Name() }}</p>
 
-<app-pre-game *ngIf="game.PreGame()" [preGameMessage]="preGameMessage" [gameName]="game.Name()"></app-pre-game>
+<app-pre-game *ngIf="game.PreGame()" [gameMessage]="gameMessage" [gameName]="game.Name()"></app-pre-game>
 
-<app-recv-pick *ngIf="game.RecvPick()" [topics]="topics" [questionRows]="questionRows" [countdownSeconds]="countdownSeconds"></app-recv-pick>
+<app-recv-pick *ngIf="game.RecvPick()" [countdownSeconds]="countdownSeconds"></app-recv-pick>
 
 <app-recv-buzz *ngIf="game.RecvBuzz()" [countdownSeconds]="countdownSeconds"></app-recv-buzz>
 

@@ -10,15 +10,18 @@ import { GameStateService } from 'src/app/services/game-state.service';
     styleUrls: ['./recv-pick.component.less']
 })
 export class RecvPickComponent {
-    @Input() topics: string[];
-    @Input() questionRows: Question[][];
     @Input() countdownSeconds: number;
+    topics: string[];
+    questionRows: Question[][];
 
     constructor(
         private websocketService: WebsocketService,
         protected game: GameStateService,
         protected player: PlayerService,
-    ) { }
+    ) {
+		this.topics = this.game.Topics();
+		this.questionRows = this.game.QuestionRows();
+	}
 
     highlightQuestion(event: any, color: string) {
 		if (event.target.style.backgroundColor == 'lightpink') {

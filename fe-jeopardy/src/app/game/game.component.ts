@@ -4,7 +4,7 @@ import { GameStateService } from '../services/game-state.service';
 import { WebsocketService } from '../services/websocket.service';
 import { PlayerService } from '../services/player.service';
 import { JwtService } from '../services/jwt.service';
-import { Question, GameState, Ping } from '../model/model';
+import { GameState, Ping } from '../model/model';
 
 // const  pickTimeout = 10
 // const  buzzTimeout = 10
@@ -37,9 +37,7 @@ export class GameComponent implements OnInit {
 	protected countdownSeconds: number;
 	protected questionAnswer: string;
 	protected wagerAmt: string;
-	protected preGameMessage: string;
-	protected questionRows: Question[][];
-	protected topics: string[];
+	protected gameMessage: string;
 
 	constructor(
 		private router: Router,
@@ -83,9 +81,7 @@ export class GameComponent implements OnInit {
 
 			this.game.updateGameState(resp.game);
 			this.player.updatePlayer(resp.curPlayer);
-			this.preGameMessage = resp.message;
-			this.topics = this.game.Topics();
-			this.questionRows = this.game.QuestionRows();
+			this.gameMessage = resp.message;
 
 			if (this.game.IsPaused()) {
 				this.countdownSeconds = 0;

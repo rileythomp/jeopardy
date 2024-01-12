@@ -6,7 +6,7 @@ import { Component, Input } from '@angular/core';
     styleUrls: ['./pre-game.component.less']
 })
 export class PreGameComponent {
-    @Input() preGameMessage: string;
+    @Input() gameMessage: string;
     @Input() gameName: string;
 
     constructor() { }
