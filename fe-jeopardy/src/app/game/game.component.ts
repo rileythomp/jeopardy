@@ -17,15 +17,15 @@ import { Player, Question, GameState, Ping } from '../model/model';
 // const  finalJeopardyWagerTimeout = 10
 // const  buzzDelay = 2000/2
 
-const pickTimeout               = 2
-const buzzTimeout               = 2
-const defaultAnsTimeout         = 10
-const dailyDoubleAnsTimeout     = 10
-const finalJeopardyAnsTimeout   = 10
-const voteTimeout               = 2
-const dailyDoubleWagerTimeout   = 10
+const pickTimeout = 2
+const buzzTimeout = 2
+const defaultAnsTimeout = 10
+const dailyDoubleAnsTimeout = 10
+const finalJeopardyAnsTimeout = 10
+const voteTimeout = 2
+const dailyDoubleWagerTimeout = 10
 const finalJeopardyWagerTimeout = 10
-const  buzzDelay = 2000/2
+const buzzDelay = 2000 / 2
 
 @Component({
 	selector: 'app-game',
@@ -33,7 +33,6 @@ const  buzzDelay = 2000/2
 	styleUrls: ['./game.component.less'],
 })
 export class GameComponent implements OnInit {
-	players: Player[];
 	titles: string[];
 	questionRows: Question[][];
 	questionAnswer: string;
@@ -41,7 +40,7 @@ export class GameComponent implements OnInit {
 	countdownSeconds: number;
 	countdownInterval: any;
 	lobbyMessage: string;
-	playerName: string; 
+	playerName: string;
 	gameName: string;
 	jwt: string;
 
@@ -50,7 +49,7 @@ export class GameComponent implements OnInit {
 		private websocketService: WebsocketService,
 		private jwtService: JwtService,
 		private apiService: ApiService,
-		protected gameState: GameStateService,
+		protected game: GameStateService,
 		protected player: PlayerService,
 	) { }
 
@@ -84,7 +83,13 @@ export class GameComponent implements OnInit {
 				return
 			}
 
-			if (resp.game.paused) {
+			console.log(resp);
+
+			this.game.updateGameState(resp.game);
+			this.player.updatePlayer(resp.curPlayer);
+			this.lobbyMessage = resp.message;
+
+			if (this.game.isPaused()) {
 				this.countdownSeconds = 0;
 				clearInterval(this.countdownInterval);
 				// TODO: REPLACE WITH MODAL
@@ -92,27 +97,19 @@ export class GameComponent implements OnInit {
 				return
 			}
 
-			console.log(resp);
-
-			this.gameState.updateGameState(resp.game);
-			this.player.updatePlayer(resp.curPlayer);
-
 			switch (resp.game.state) {
-				case GameState.PreGame: 
-					this.lobbyMessage = resp.message;
-					this.players = this.gameState.getPlayers();
+				case GameState.PreGame:
 					this.playerName = this.player.getName();
-					this.gameName = this.gameState.getName();
+					this.gameName = this.game.getName();
 					break
 				case GameState.RecvBuzz:
-					this.players = this.gameState.getPlayers();
-					this.questionRows = this.gameState.getQuestionRows();
-					if (this.gameState.curQuestionFirstBuzz()) {
+					this.questionRows = this.game.getQuestionRows();
+					if (this.game.curQuestionFirstBuzz()) {
 						this.player.blockBuzz(true)
 						setTimeout(() => {
 							this.player.blockBuzz(false)
 							if (this.player.canBuzz()) {
-								this.startCountdownTimer(buzzTimeout - buzzDelay/1000);
+								this.startCountdownTimer(buzzTimeout - buzzDelay / 1000);
 							}
 						}, buzzDelay);
 					} else {
@@ -127,9 +124,8 @@ export class GameComponent implements OnInit {
 					}
 					break;
 				case GameState.RecvPick:
-					this.players = this.gameState.getPlayers();
-					this.titles = this.gameState.getTitles();
-					this.questionRows = this.gameState.getQuestionRows();
+					this.titles = this.game.getTitles();
+					this.questionRows = this.game.getQuestionRows();
 					if (this.player.canPick()) {
 						this.startCountdownTimer(pickTimeout);
 					}
@@ -140,13 +136,11 @@ export class GameComponent implements OnInit {
 					}
 					break
 				case GameState.RecvWager:
-					this.players = this.gameState.getPlayers();
 					if (this.player.canWager()) {
 						this.startCountdownTimer(dailyDoubleWagerTimeout);
 					}
 					break;
 				case GameState.PostGame:
-					this.players = this.gameState.getPlayers();
 					break;
 				default:
 					// TODO: REPLACE WITH MODAL
@@ -196,7 +190,7 @@ export class GameComponent implements OnInit {
 	}
 
 	handlePick(topicIdx: number, valIdx: number) {
-		if (this.player.canPick() && this.gameState.questionCanBePicked(topicIdx, valIdx)) {
+		if (this.player.canPick() && this.game.questionCanBePicked(topicIdx, valIdx)) {
 			this.websocketService.send({
 				"token": this.jwtService.getJwt(),
 				"topicIdx": topicIdx,
@@ -255,7 +249,7 @@ export class GameComponent implements OnInit {
 	}
 
 	playAgain() {
-		return this.apiService.playAgain({"hello": "world"}).subscribe({
+		return this.apiService.playAgain({ "hello": "world" }).subscribe({
 			next: (resp: any) => {
 				console.log('playing again', resp)
 			},
@@ -267,7 +261,7 @@ export class GameComponent implements OnInit {
 	}
 
 	leaveGame() {
-		return this.apiService.leaveGame({"hello": "world"}).subscribe({
+		return this.apiService.leaveGame({ "hello": "world" }).subscribe({
 			next: (resp: any) => {
 				console.log('left game', resp)
 			},

@@ -1,19 +1,13 @@
 <ol>
-    <li *ngFor="let player of players">{{ player.name }}: {{ player.score }}</li>
+    <li *ngFor="let player of game.Players()">{{ player.name }}: {{ player.score }}</li>
 </ol>
 
 <p> You are playing as {{ player.getName() }}</p>
 
-<div *ngIf="gameState.preGame()">
-    <p>
-        {{lobbyMessage}}
-    </p>
-    
-    <p>Code to join: {{ gameName }} </p>
-</div>
+<app-lobby *ngIf="game.preGame()" [lobbyMessage]="lobbyMessage" [gameName]="gameName"></app-lobby>
 
-<div *ngIf="gameState.recvPick()">
-    <p>It is {{ gameState.getPickingPlayer() }}'s turn to pick a question</p>
+<div *ngIf="game.recvPick()">
+    <p>It is {{ game.getPickingPlayer() }}'s turn to pick a question</p>
     <table>
         <tr>
             <td *ngFor="let title of titles">
@@ -35,11 +29,11 @@
     <p  *ngIf="player.canPick()">seconds to pick: {{ countdownSeconds }}</p>
 </div>
 
-<div *ngIf="!gameState.finalRound()">
-    <div *ngIf="gameState.recvBuzz() || gameState.recvAns()">
-        Question: {{ gameState.curQuestion() }}
+<div *ngIf="!game.finalRound()">
+    <div *ngIf="game.recvBuzz() || game.recvAns()">
+        Question: {{ game.curQuestion() }}
         <br>
-        Value: {{ gameState.curValue() }}
+        Value: {{ game.curValue() }}
         <br>
         <button *ngIf="player.canBuzz()" (click)="handleBuzz(false)">Buzz</button>
         <button *ngIf="player.canBuzz()" (click)="handleBuzz(true)">Pass</button>
@@ -47,43 +41,43 @@
         <p *ngIf="player.canBuzz()">seconds to buzz: {{ countdownSeconds }}</p>
     </div>
     
-    <div *ngIf="gameState.recvAns() && player.canAnswer()">
+    <div *ngIf="game.recvAns() && player.canAnswer()">
         <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
         <button (click)="handleAnswer()">Answer</button>
 
         <p *ngIf="player.canAnswer()">seconds to answer: {{ countdownSeconds }}</p>
     </div>
     
-    <div *ngIf="gameState.recvAns() && !player.canAnswer()">
-        {{ gameState.getAnsweringPlayer() }} is answering the question
+    <div *ngIf="game.recvAns() && !player.canAnswer()">
+        {{ game.getAnsweringPlayer() }} is answering the question
     </div>
 
-    <div *ngIf="gameState.recvVote() && player.canVote()">
-        {{ gameState.getLastToAnswer() }} answered <br>
-        {{ gameState.curQuestion() }} <br>
-        <b>{{ gameState.getAnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{ gameState.getLastAnswer() }}</b>. <br>
+    <div *ngIf="game.recvVote() && player.canVote()">
+        {{ game.getLastToAnswer() }} answered <br>
+        {{ game.curQuestion() }} <br>
+        <b>{{ game.getAnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{ game.getLastAnswer() }}</b>. <br>
         <button (click)="handleVote(true)">Accept</button>
         <button (click)="handleVote(false)">Challenge</button>
 
         <p *ngIf="player.canVote()">seconds to vote: {{ countdownSeconds }}</p>
     </div>
 
-    <div *ngIf="gameState.recvVote() && !player.canVote()">
+    <div *ngIf="game.recvVote() && !player.canVote()">
         Waiting for other players to accept or challenge the answer
     </div>
     
-    <div *ngIf="gameState.recvWager() && player.canWager()">
+    <div *ngIf="game.recvWager() && player.canWager()">
         <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
         <button (click)="handleWager()">Wager</button>
         <p *ngIf="player.canWager()">seconds to wager: {{ countdownSeconds }}</p>
     </div>
     
-    <div *ngIf="gameState.recvWager() && !player.canWager()">
-        {{ gameState.getWageringPlayer() }} is choosing a wager
+    <div *ngIf="game.recvWager() && !player.canWager()">
+        {{ game.getWageringPlayer() }} is choosing a wager
     </div>    
 </div>
 
-<div *ngIf="gameState.finalRound() && gameState.recvWager()">
+<div *ngIf="game.finalRound() && game.recvWager()">
     Final Jeopardy
     <div *ngIf="player.canWager()">
         <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
@@ -92,9 +86,9 @@
     </div>
 </div>
 
-<div *ngIf="gameState.finalRound() && gameState.recvAns()">
+<div *ngIf="game.finalRound() && game.recvAns()">
     Final Jeopardy
-    <p>Question: {{ gameState.curQuestion() }}</p>
+    <p>Question: {{ game.curQuestion() }}</p>
     <div *ngIf="player.canAnswer()">
         <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
         <button (click)="handleAnswer()">Answer</button>
@@ -102,18 +96,18 @@
     </div>
 </div>
 
-<div *ngIf="gameState.gameOver()">
+<div *ngIf="game.gameOver()">
 
     <ol>
-        <li *ngFor="let player of players">
+        <li *ngFor="let player of game.Players()">
             {{ player.name }} answered <b>{{ player.finalCorrect ? 'correctly': 'incorrectly' }}</b> with <b>{{ player.finalAnswer }}</b>
             <button *ngIf="canProtestForPlayer(player)" (click)="protestFinalCorrectness(player.id)">Protest</button>
         </li>
     </ol>
 
-    <p>Final Jeopardy Answer: {{ gameState.getFinalAnswer() }}</p>
+    <p>Final Jeopardy Answer: {{ game.getFinalAnswer() }}</p>
 
-    {{ gameState.endGameMessage() }}
+    {{ game.endGameMessage() }}
 
     <div>
         <button (click)="playAgain()">Play again</button>

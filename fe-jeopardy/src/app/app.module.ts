@@ -7,12 +7,14 @@ import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { GameComponent } from './game/game.component';
 import { JoinComponent } from './join/join.component';
+import { LobbyComponent } from './game/lobby/lobby.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     GameComponent,
     JoinComponent,
+    LobbyComponent,
   ],
   imports: [
     BrowserModule,

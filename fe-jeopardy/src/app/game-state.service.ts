@@ -32,7 +32,7 @@ export class GameStateService {
 		return this.game.state;
 	}
 
-	getPlayers(): Player[] {
+	Players(): Player[] {
 		return this.game.players;
 	}
 
