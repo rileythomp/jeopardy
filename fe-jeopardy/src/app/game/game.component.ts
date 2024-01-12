@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { GameStateService } from '../game-state.service';
 import { WebsocketService } from '../websocket.service';
 import { PlayerService } from '../player.service';
@@ -41,6 +42,7 @@ export class GameComponent implements OnInit {
 	countdownInterval: any;
 
 	constructor(
+		private router: Router,
 		private websocketService: WebsocketService,
 		private jwtService: JwtService,
 		protected gameState: GameStateService,
@@ -61,9 +63,13 @@ export class GameComponent implements OnInit {
 
 		this.websocketService.onmessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
+
 			if (resp.code != 200) {
-				// TODO: REPLACE ALERTS WITH MODALS
-				alert(resp.message)
+				if (resp.code == 400) {
+					alert(resp.message)
+				} else {
+					this.router.navigate(['/join']);
+				}
 				return
 			}
 
