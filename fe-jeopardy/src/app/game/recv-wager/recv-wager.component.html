@@ -1,0 +1,20 @@
+<div *ngIf="!game.FinalRound()">
+    <div *ngIf="player.CanWager()">
+        <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
+        <button (click)="handleWager()">Wager</button>
+        <p *ngIf="player.CanWager()">seconds to wager: {{ countdownSeconds }}</p>
+    </div>
+    
+    <div *ngIf="!player.CanWager()">
+        {{ game.WageringPlayer() }} is choosing a wager
+    </div> 
+</div>
+
+<div *ngIf="game.FinalRound()">
+    Final Jeopardy
+    <div *ngIf="player.CanWager()">
+        <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
+        <button (click)="handleWager()">Wager</button>
+        <p *ngIf="player.CanWager()">seconds to final wager: {{ countdownSeconds }}</p>
+    </div>
+</div>

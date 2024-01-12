@@ -7,16 +7,26 @@ import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { GameComponent } from './game/game.component';
 import { JoinComponent } from './join/join.component';
-import { LobbyComponent } from './game/lobby/lobby.component';
-import { BoardComponent } from './game/board/board.component';
+import { PreGameComponent } from './game/pre-game/pre-game.component';
+import { RecvPickComponent } from './game/recv-pick/recv-pick.component';
+import { RecvBuzzComponent } from './game/recv-buzz/recv-buzz.component';
+import { RecvAnsComponent } from './game/recv-ans/recv-ans.component';
+import { RecvVoteComponent } from './game/recv-vote/recv-vote.component';
+import { RecvWagerComponent } from './game/recv-wager/recv-wager.component';
+import { PostGameComponent } from './game/post-game/post-game.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     GameComponent,
     JoinComponent,
-    LobbyComponent,
-    BoardComponent,
+    PreGameComponent,
+    RecvPickComponent,
+    RecvBuzzComponent,
+    RecvAnsComponent,
+    RecvVoteComponent,
+    RecvWagerComponent,
+    PostGameComponent,
   ],
   imports: [
     BrowserModule,

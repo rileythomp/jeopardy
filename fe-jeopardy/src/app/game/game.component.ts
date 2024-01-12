@@ -4,8 +4,7 @@ import { GameStateService } from '../game-state.service';
 import { WebsocketService } from '../websocket.service';
 import { PlayerService } from '../player.service';
 import { JwtService } from '../jwt.service';
-import { ApiService } from '../api.service';
-import { Player, Question, GameState, Ping } from '../model/model';
+import { Question, GameState, Ping } from '../model/model';
 
 // const  pickTimeout = 10
 // const  buzzTimeout = 10
@@ -46,7 +45,6 @@ export class GameComponent implements OnInit {
 		private router: Router,
 		private websocketService: WebsocketService,
 		private jwtService: JwtService,
-		private apiService: ApiService,
 		protected game: GameStateService,
 		protected player: PlayerService,
 	) { }
@@ -154,73 +152,5 @@ export class GameComponent implements OnInit {
 				clearInterval(this.countdownInterval);
 			}
 		}, 1000);
-	}
-
-	handleBuzz(pass: boolean) {
-		if (this.player.CanBuzz()) {
-			this.websocketService.Send({
-				isPass: pass,
-			})
-		}
-	}
-
-	handleAnswer() {
-		if (this.player.CanAnswer()) {
-			this.websocketService.Send({
-				answer: this.questionAnswer,
-			})
-		}
-		this.questionAnswer = '';
-	}
-
-	handleVote(confirm: boolean) {
-		if (this.player.CanVote()) {
-			this.websocketService.Send({
-				confirm: confirm,
-			})
-		}
-	}
-
-	handleWager() {
-		if (this.player.CanWager()) {
-			this.websocketService.Send({
-				wager: this.wagerAmt,
-			})
-		}
-		this.wagerAmt = '';
-	}
-
-	protestFinalCorrectness(playerId: string) {
-		this.websocketService.Send({
-			protestFor: playerId,
-		})
-	}
-
-	canProtestForPlayer(player: Player): boolean {
-		return !Object.keys(player.finalProtestors).includes(this.player.Id());
-	}
-
-	playAgain() {
-		return this.apiService.PlayAgain({ "hello": "world" }).subscribe({
-			next: (resp: any) => {
-				console.log('playing again', resp)
-			},
-			error: (err: any) => {
-				console.log('Error playing again', err)
-				alert('Error playing again')
-			},
-		})
-	}
-
-	leaveGame() {
-		return this.apiService.LeaveGame({ "hello": "world" }).subscribe({
-			next: (resp: any) => {
-				console.log('left game', resp)
-			},
-			error: (err: any) => {
-				console.log('Error leaving game', err)
-				alert('Error leaving game')
-			},
-		})
 	}
 }

@@ -1,0 +1,29 @@
+<div *ngIf="!game.FinalRound()">
+    <div>
+        Question: {{ game.CurQuestion() }}
+        <br>
+        Value: {{ game.CurValue() }}
+        <br>
+    </div>
+    
+    <div *ngIf="player.CanAnswer()">
+        <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
+        <button (click)="handleAnswer()">Answer</button>
+
+        <p *ngIf="player.CanAnswer()">seconds to answer: {{ countdownSeconds }}</p>
+    </div>
+    
+    <div *ngIf="!player.CanAnswer()">
+        {{ game.AnsweringPlayer() }} is answering the question
+    </div>
+</div>
+
+<div *ngIf="game.FinalRound()">
+    Final Jeopardy
+    <p>Question: {{ game.CurQuestion() }}</p>
+    <div *ngIf="player.CanAnswer()">
+        <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
+        <button (click)="handleAnswer()">Answer</button>
+        <p *ngIf="player.CanAnswer()">seconds to final answer: {{ countdownSeconds }}</p>
+    </div>
+</div>

@@ -4,92 +4,16 @@
 
 <p> You are playing as {{ player.Name() }}</p>
 
-<app-lobby *ngIf="game.PreGame()" [lobbyMessage]="lobbyMessage" [gameName]="game.Name()"></app-lobby>
+<app-pre-game *ngIf="game.PreGame()" [lobbyMessage]="lobbyMessage" [gameName]="game.Name()"></app-pre-game>
 
-<app-board *ngIf="game.RecvPick()" [topics]="topics" [questionRows]="questionRows" [countdownSeconds]="countdownSeconds"></app-board>
+<app-recv-pick *ngIf="game.RecvPick()" [topics]="topics" [questionRows]="questionRows" [countdownSeconds]="countdownSeconds"></app-recv-pick>
 
-<div *ngIf="!game.FinalRound()">
-    <div *ngIf="game.RecvBuzz() || game.RecvAns()">
-        Question: {{ game.CurQuestion() }}
-        <br>
-        Value: {{ game.CurValue() }}
-        <br>
-        <button *ngIf="player.CanBuzz()" (click)="handleBuzz(false)">Buzz</button>
-        <button *ngIf="player.CanBuzz()" (click)="handleBuzz(true)">Pass</button>
+<app-recv-buzz *ngIf="game.RecvBuzz()" [countdownSeconds]="countdownSeconds"></app-recv-buzz>
 
-        <p *ngIf="player.CanBuzz()">seconds to buzz: {{ countdownSeconds }}</p>
-    </div>
-    
-    <div *ngIf="game.RecvAns() && player.CanAnswer()">
-        <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
-        <button (click)="handleAnswer()">Answer</button>
+<app-recv-ans *ngIf="game.RecvAns()" [countdownSeconds]="countdownSeconds"></app-recv-ans>
 
-        <p *ngIf="player.CanAnswer()">seconds to answer: {{ countdownSeconds }}</p>
-    </div>
-    
-    <div *ngIf="game.RecvAns() && !player.CanAnswer()">
-        {{ game.AnsweringPlayer() }} is answering the question
-    </div>
+<app-recv-vote *ngIf="game.RecvVote()" [countdownSeconds]="countdownSeconds"></app-recv-vote>
 
-    <div *ngIf="game.RecvVote() && player.CanVote()">
-        {{ game.LastToAnswer() }} answered <br>
-        {{ game.CurQuestion() }} <br>
-        <b>{{ game.AnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{ game.LastAnswer() }}</b>. <br>
-        <button (click)="handleVote(true)">Accept</button>
-        <button (click)="handleVote(false)">Challenge</button>
+<app-recv-wager *ngIf="game.RecvWager()" [countdownSeconds]="countdownSeconds"></app-recv-wager>
 
-        <p *ngIf="player.CanVote()">seconds to vote: {{ countdownSeconds }}</p>
-    </div>
-
-    <div *ngIf="game.RecvVote() && !player.CanVote()">
-        Waiting for other players to accept or challenge the answer
-    </div>
-    
-    <div *ngIf="game.RecvWager() && player.CanWager()">
-        <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
-        <button (click)="handleWager()">Wager</button>
-        <p *ngIf="player.CanWager()">seconds to wager: {{ countdownSeconds }}</p>
-    </div>
-    
-    <div *ngIf="game.RecvWager() && !player.CanWager()">
-        {{ game.WageringPlayer() }} is choosing a wager
-    </div>    
-</div>
-
-<div *ngIf="game.FinalRound() && game.RecvWager()">
-    Final Jeopardy
-    <div *ngIf="player.CanWager()">
-        <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
-        <button (click)="handleWager()">Wager</button>
-        <p *ngIf="player.CanWager()">seconds to final wager: {{ countdownSeconds }}</p>
-    </div>
-</div>
-
-<div *ngIf="game.FinalRound() && game.RecvAns()">
-    Final Jeopardy
-    <p>Question: {{ game.CurQuestion() }}</p>
-    <div *ngIf="player.CanAnswer()">
-        <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
-        <button (click)="handleAnswer()">Answer</button>
-        <p *ngIf="player.CanAnswer()">seconds to final answer: {{ countdownSeconds }}</p>
-    </div>
-</div>
-
-<div *ngIf="game.PostGame()">
-
-    <ol>
-        <li *ngFor="let player of game.Players()">
-            {{ player.name }} answered <b>{{ player.finalCorrect ? 'correctly': 'incorrectly' }}</b> with <b>{{ player.finalAnswer }}</b>
-            <button *ngIf="canProtestForPlayer(player)" (click)="protestFinalCorrectness(player.id)">Protest</button>
-        </li>
-    </ol>
-
-    <p>Final Jeopardy Answer: {{ game.FinalAnswer() }}</p>
-
-    {{ game.EndGameMessage() }}
-
-    <div>
-        <button (click)="playAgain()">Play again</button>
-        <button (click)="leaveGame()">Home</button>
-    </div>
-</div>
+<app-post-game *ngIf="game.PostGame()"></app-post-game>

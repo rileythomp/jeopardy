@@ -1,11 +1,11 @@
 import { Component, Input } from '@angular/core';
 
 @Component({
-    selector: 'app-lobby',
-    templateUrl: './lobby.component.html',
-    styleUrls: ['./lobby.component.less']
+    selector: 'app-pre-game',
+    templateUrl: './pre-game.component.html',
+    styleUrls: ['./pre-game.component.less']
 })
-export class LobbyComponent {
+export class PreGameComponent {
     @Input() lobbyMessage: string;
     @Input() gameName: string;
 

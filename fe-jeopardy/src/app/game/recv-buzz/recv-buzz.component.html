@@ -1,0 +1,10 @@
+<div>
+    Question: {{ game.CurQuestion() }}
+    <br>
+    Value: {{ game.CurValue() }}
+    <br>
+    <button *ngIf="player.CanBuzz()" (click)="handleBuzz(false)">Buzz</button>
+    <button *ngIf="player.CanBuzz()" (click)="handleBuzz(true)">Pass</button>
+
+    <p *ngIf="player.CanBuzz()">seconds to buzz: {{ countdownSeconds }}</p>
+</div>

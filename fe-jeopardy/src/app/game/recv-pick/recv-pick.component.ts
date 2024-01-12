@@ -5,11 +5,11 @@ import { WebsocketService } from 'src/app/websocket.service';
 import { GameStateService } from 'src/app/game-state.service';
 
 @Component({
-    selector: 'app-board',
-    templateUrl: './board.component.html',
-    styleUrls: ['./board.component.less']
+    selector: 'app-recv-pick',
+    templateUrl: './recv-pick.component.html',
+    styleUrls: ['./recv-pick.component.less']
 })
-export class BoardComponent {
+export class RecvPickComponent {
     @Input() topics: string[];
     @Input() questionRows: Question[][];
     @Input() countdownSeconds: number;

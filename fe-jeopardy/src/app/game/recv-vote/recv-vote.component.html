@@ -1,0 +1,13 @@
+<div *ngIf="player.CanVote()">
+    {{ game.LastToAnswer() }} answered <br>
+    {{ game.CurQuestion() }} <br>
+    <b>{{ game.AnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{ game.LastAnswer() }}</b>. <br>
+    <button (click)="handleVote(true)">Accept</button>
+    <button (click)="handleVote(false)">Challenge</button>
+
+    <p *ngIf="player.CanVote()">seconds to vote: {{ countdownSeconds }}</p>
+</div>
+
+<div *ngIf="!player.CanVote()">
+    Waiting for other players to accept or challenge the answer
+</div>
