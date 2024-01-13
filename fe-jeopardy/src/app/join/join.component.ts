@@ -11,10 +11,8 @@ import { Observer } from 'rxjs';
 	styleUrls: ['./join.component.less'],
 })
 export class JoinComponent implements OnInit {
-	title: string = 'Jeopardy';
 	playerName: string = '';
 	gameCode: string = '';
-	jwt: string;
 
 	constructor(
 		private router: Router,
@@ -23,10 +21,6 @@ export class JoinComponent implements OnInit {
 	) { }
 
 	ngOnInit(): void {
-		this.jwtService.jwt$.subscribe(jwt => {
-			this.jwt = jwt;
-		});
-
 		// (async ()=>{
 		// 	this.playerName = await generateFakeWordByLength(7);
 		// 	this.gameName = 'autojoined'

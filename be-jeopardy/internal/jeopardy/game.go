@@ -418,7 +418,6 @@ func (g *Game) startGame() {
 	state, player := g.State, &Player{}
 	if state == PreGame {
 		state, player = RecvPick, g.Players[0]
-		// state, player = PostGame, &Player{}
 	} else if state == RecvWager && g.Round != FinalRound {
 		player = g.LastToPick
 	} else if state == RecvPick {

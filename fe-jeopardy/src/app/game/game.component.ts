@@ -67,7 +67,7 @@ export class GameComponent implements OnInit {
 			if (resp.code != 200) {
 				// TODO: REPLACE WITH MODAL
 				alert(resp.message);
-				if (resp.code == 500) {
+				if (resp.code == 500 || resp.code == 403) {
 					this.router.navigate(['/join']);
 				}
 				return
