@@ -19,6 +19,8 @@ $ ng serve
 
 ### TODO 
 
+* Make public games a map, provide links for games
+
 * Handle end game 
 
 * Use correct timeouts on FE

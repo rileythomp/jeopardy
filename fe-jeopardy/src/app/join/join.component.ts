@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { JwtService } from '../services/jwt.service';
 import { ApiService } from '../services/api.service';
+import { Observer } from 'rxjs';
 // import { generateFakeWordByLength } from 'fakelish';
 
 @Component({
@@ -12,13 +13,13 @@ import { ApiService } from '../services/api.service';
 export class JoinComponent implements OnInit {
 	title: string = 'Jeopardy';
 	playerName: string = '';
-	gameName: string = '';
+	gameCode: string = '';
 	jwt: string;
 
 	constructor(
 		private router: Router,
 		private jwtService: JwtService,
-		private apiService: ApiService, 
+		private apiService: ApiService,
 	) { }
 
 	ngOnInit(): void {
@@ -33,17 +34,30 @@ export class JoinComponent implements OnInit {
 		// })();
 	}
 
-	joinGame(privateGame: boolean) {
-		this.apiService.JoinGame(this.playerName, this.gameName, privateGame).subscribe({
+	private joinResp(): Partial<Observer<any>> {
+		return {
 			next: (resp: any) => {
-				this.jwtService.SetJWT(resp.token); 
+				this.jwtService.SetJWT(resp.token);
 				this.router.navigate(['/game']);
 			},
 			error: (resp: any) => {
 				// TODO: REPLACE WITH MODAL
 				alert(resp.error.message);
-			},
-		});
+			}
+
+		}
+	}
+
+	createPrivateGame(playerName: string) {
+		this.apiService.CreatePrivateGame(playerName).subscribe(this.joinResp());
+	}
+
+	joinGameByCode(playerName: string, gameCode: string) {
+		this.apiService.JoinGameByCode(playerName, gameCode).subscribe(this.joinResp());
+	}
+
+	joinPublicGame(playerName: string) {
+		this.apiService.JoinPublicGame(playerName).subscribe(this.joinResp());
 	}
 
 	rejoin() {

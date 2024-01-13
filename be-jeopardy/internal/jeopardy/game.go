@@ -106,12 +106,6 @@ const (
 
 const numPlayers = 3
 
-var (
-	privateGames = map[string]*Game{}
-	publicGames  = []*Game{}
-	playerGames  = map[string]*Game{}
-)
-
 func NewGame(name string) (*Game, error) {
 	game := &Game{
 		State:             PreGame,
@@ -143,98 +137,8 @@ func NewGame(name string) (*Game, error) {
 	return game, nil
 }
 
-func GetPublicGames() []*Game {
-	return publicGames
-}
-
-func GetPrivateGames() map[string]*Game {
-	return privateGames
-}
-
 func getPlayerGame(playerId string) *Game {
 	return playerGames[playerId]
-}
-
-func getPublicGame(name string) (*Game, error) {
-	for _, game := range publicGames {
-		if len(game.Players) < numPlayers {
-			return game, nil
-		}
-		for _, p := range game.Players {
-			if p.Conn == nil {
-				return game, nil
-			}
-		}
-	}
-	game, err := NewGame(name)
-	if err != nil {
-		return &Game{}, err
-	}
-	publicGames = append(publicGames, game)
-	return game, nil
-}
-
-func getPrivateGame(name string) (*Game, error) {
-	if game, ok := privateGames[name]; ok {
-		return game, nil
-	}
-	game, err := NewGame(name)
-	if err != nil {
-		return &Game{}, err
-	}
-	privateGames[name] = game
-	return game, nil
-}
-
-func JoinGame(playerName, gameName string, private bool) (*Game, string, error) {
-	var game *Game
-	var err error
-	if private {
-		game, err = getPrivateGame(gameName)
-	} else {
-		game, err = getPublicGame(gameName)
-	}
-	if err != nil {
-		log.Errorf("Error joining game: %s", err.Error())
-		return &Game{}, "", err
-	}
-
-	playerId, err := game.addPlayer(playerName)
-	if err != nil {
-		log.Errorf("Error adding player to game: %s", err.Error())
-		return &Game{}, "", err
-	}
-	playerGames[playerId] = game
-
-	return game, playerId, nil
-}
-
-func PlayGame(playerId string, conn SafeConn) error {
-	game := getPlayerGame(playerId)
-	if game == nil {
-		return fmt.Errorf("no game found for player id: %s", playerId)
-	}
-
-	player := game.getPlayerById(playerId)
-	if player == nil {
-		return fmt.Errorf("no player found for player id")
-	}
-	if player.Conn != nil {
-		return fmt.Errorf("player already playing")
-	}
-	player.Conn = conn
-
-	msg := "Waiting for more players"
-	if game.allPlayersReady() {
-		game.startGame()
-		msg = "We are ready to play"
-	}
-
-	player.sendPings()
-	player.processMessages(game.msgChan, game.stopChan)
-
-	_ = game.messageAllPlayers(msg)
-	return nil
 }
 
 func (g *Game) stopGame(player *Player) {

@@ -1,13 +1,16 @@
-
 <div class="card highlight-card card-small">
     <span>{{ title }} app is running!</span>
 </div>
 
 <div class="container">
     <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
-    <button (click)="joinGame(false)">Join public game</button>
-    <input type="text" [(ngModel)]="gameName" placeholder="Game code">
-    <button (click)="joinGame(true)">Join private game</button>
+
+    <button (click)="joinPublicGame(playerName)">Join any game</button>
+
+    <input type="text" [(ngModel)]="gameCode" placeholder="Game code">
+    <button (click)="joinGameByCode(playerName, gameCode)">Join game by code</button>
+
+    <button (click)="createPrivateGame(playerName)">Create a private game</button>
 </div>
 
 <button (click)="rejoin()">Disconnected? Click to rejoin</button>

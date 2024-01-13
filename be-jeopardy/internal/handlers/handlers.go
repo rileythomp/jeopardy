@@ -21,10 +21,9 @@ type (
 		Handler gin.HandlerFunc
 	}
 
-	JoinRequest struct {
+	GameRequest struct {
 		PlayerName string `json:"playerName"`
-		GameName   string `json:"gameName"`
-		Private    bool   `json:"private"`
+		GameCode   string `json:"gameCode"`
 	}
 
 	PlayRequest struct {
@@ -41,8 +40,18 @@ var (
 		},
 		{
 			Method:  http.MethodPost,
-			Path:    "/jeopardy/join",
-			Handler: JoinGame,
+			Path:    "/jeopardy/games",
+			Handler: CreatePrivateGame,
+		},
+		{
+			Method:  http.MethodPut,
+			Path:    "/jeopardy/games",
+			Handler: JoinPublicGame,
+		},
+		{
+			Method:  http.MethodPut,
+			Path:    "/jeopardy/games/:gameCode",
+			Handler: JoinGameByCode,
 		},
 		{
 			Method:  http.MethodGet,
@@ -80,17 +89,79 @@ var (
 	}
 )
 
-func JoinGame(c *gin.Context) {
-	log.Infof("Received join request")
+func CreatePrivateGame(c *gin.Context) {
+	log.Infof("Received create game request")
 
-	var req JoinRequest
+	var req GameRequest
+	if err := parseBody(c.Request.Body, &req); err != nil {
+		log.Errorf("Error parsing create request: %s", err.Error())
+		respondWithError(c, http.StatusBadRequest, "Error parsing create request")
+		return
+	}
+
+	game, playerId, err := jeopardy.CreatePrivateGame(req.PlayerName)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Error creating game: %s", err.Error())
+		return
+	}
+
+	jwt, err := auth.GenerateJWT(playerId)
+	if err != nil {
+		log.Errorf("Error generating JWT: %s", err.Error())
+		respondWithError(c, http.StatusInternalServerError, "Error generating JWT")
+		return
+	}
+
+	c.JSON(http.StatusOK, jeopardy.Response{
+		Code:    http.StatusOK,
+		Token:   jwt,
+		Message: "Authorized to create game",
+		Game:    game,
+	})
+}
+
+func JoinGameByCode(c *gin.Context) {
+	log.Infof("Received private join game request")
+
+	var req GameRequest
 	if err := parseBody(c.Request.Body, &req); err != nil {
 		log.Errorf("Error parsing join request: %s", err.Error())
 		respondWithError(c, http.StatusBadRequest, "Error parsing join request")
 		return
 	}
 
-	game, playerId, err := jeopardy.JoinGame(req.PlayerName, req.GameName, req.Private)
+	game, playerId, err := jeopardy.JoinGameByCode(req.PlayerName, req.GameCode)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Error joining game: %s", err.Error())
+		return
+	}
+
+	jwt, err := auth.GenerateJWT(playerId)
+	if err != nil {
+		log.Errorf("Error generating JWT: %s", err.Error())
+		respondWithError(c, http.StatusInternalServerError, "Error generating JWT")
+		return
+	}
+
+	c.JSON(http.StatusOK, jeopardy.Response{
+		Code:    http.StatusOK,
+		Token:   jwt,
+		Message: "Authorized to join game by code",
+		Game:    game,
+	})
+}
+
+func JoinPublicGame(c *gin.Context) {
+	log.Infof("Received public join game request")
+
+	var req GameRequest
+	if err := parseBody(c.Request.Body, &req); err != nil {
+		log.Errorf("Error parsing join request: %s", err.Error())
+		respondWithError(c, http.StatusBadRequest, "Error parsing join request")
+		return
+	}
+
+	game, playerId, err := jeopardy.JoinPublicGame(req.PlayerName)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Error joining game: %s", err.Error())
 		return

@@ -7,10 +7,10 @@ const apiAddr = environment.apiServerUrl;
 const httpProtocol = environment.httpProtocol;
 
 const JsonOpts = {
-	headers: new HttpHeaders({
-		'Content-Type': 'application/json',
-		'Accept': 'application/json'
-	})
+    headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    })
 }
 
 @Injectable({
@@ -20,11 +20,22 @@ export class ApiService {
 
     constructor(private http: HttpClient) { }
 
-    JoinGame(playerName: string, gameName: string, privateGame: boolean): Observable<any> {
-        return this.post('join', {
+    CreatePrivateGame(playName: string): Observable<any> {
+        return this.post('games', {
+            playerName: playName,
+        })
+    }
+
+    JoinGameByCode(playerName: string, gameCode: string): Observable<any> {
+        return this.put(`games/${gameCode}`, {
             playerName: playerName,
-            gameName: gameName,
-            private: privateGame,
+            gameCode: gameCode,
+        })
+    }
+
+    JoinPublicGame(playerName: string): Observable<any> {
+        return this.put('games', {
+            playerName: playerName,
         })
     }
 
@@ -38,8 +49,16 @@ export class ApiService {
 
     private post(path: string, req: any): Observable<any> {
         return this.http.post<any>(
-            `${httpProtocol}://${apiAddr}/jeopardy/${path}`, 
-            req, 
+            `${httpProtocol}://${apiAddr}/jeopardy/${path}`,
+            req,
+            JsonOpts
+        )
+    }
+
+    private put(path: string, req: any): Observable<any> {
+        return this.http.put<any>(
+            `${httpProtocol}://${apiAddr}/jeopardy/${path}`,
+            req,
             JsonOpts
         )
     }
