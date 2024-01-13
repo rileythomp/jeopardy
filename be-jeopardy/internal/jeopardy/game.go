@@ -413,21 +413,6 @@ func (g *Game) setState(state GameState, player *Player) {
 	g.State = state
 }
 
-func (g *Game) addPlayer(name string) (string, error) {
-	for _, player := range g.Players {
-		if player.Conn == nil {
-			player.Name = name
-			return player.Id, nil
-		}
-	}
-	if len(g.Players) >= numPlayers {
-		return "", fmt.Errorf("game is full")
-	}
-	player := NewPlayer(name)
-	g.Players = append(g.Players, player)
-	return player.Id, nil
-}
-
 func (g *Game) startGame() {
 	g.Paused = false
 	state, player := g.State, &Player{}

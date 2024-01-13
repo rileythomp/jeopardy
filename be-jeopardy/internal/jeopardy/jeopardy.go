@@ -33,33 +33,11 @@ func CreatePrivateGame(playerName string) (*Game, string, error) {
 	}
 	privateGames[game.Name] = game
 
-	playerId, err := game.addPlayer(playerName)
-	if err != nil {
-		log.Errorf("Error adding player to game: %s", err.Error())
-		return &Game{}, "", err
-	}
-	playerGames[playerId] = game
+	player := NewPlayer(playerName)
+	game.Players = append(game.Players, player)
+	playerGames[player.Id] = game
 
-	return game, playerId, nil
-}
-
-func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
-	game, ok := publicGames[gameCode]
-	if ok {
-	} else if game, ok = privateGames[gameCode]; ok {
-	} else {
-		log.Errorf("Game %s not found", gameCode)
-		return &Game{}, "", fmt.Errorf("Game %s not found", gameCode)
-	}
-
-	playerId, err := game.addPlayer(playerName)
-	if err != nil {
-		log.Errorf("Error adding player to game: %s", err.Error())
-		return &Game{}, "", err
-	}
-	playerGames[playerId] = game
-
-	return game, playerId, nil
+	return game, player.Id, nil
 }
 
 func JoinPublicGame(playerName string) (*Game, string, error) {
@@ -80,14 +58,37 @@ func JoinPublicGame(playerName string) (*Game, string, error) {
 		publicGames[game.Name] = game
 	}
 
-	playerId, err := game.addPlayer(playerName)
-	if err != nil {
-		log.Errorf("Error adding player to game: %s", err.Error())
-		return &Game{}, "", err
-	}
-	playerGames[playerId] = game
+	player := NewPlayer(playerName)
+	game.Players = append(game.Players, player)
+	playerGames[player.Id] = game
 
-	return game, playerId, nil
+	return game, player.Id, nil
+}
+
+func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
+	game, ok := publicGames[gameCode]
+	if !ok {
+		game, ok = privateGames[gameCode]
+		if !ok {
+			log.Errorf("Game %s not found", gameCode)
+			return &Game{}, "", fmt.Errorf("Game %s not found", gameCode)
+		}
+	}
+
+	var player *Player
+	for _, p := range game.Players {
+		if p.Conn == nil {
+			player = p
+			player.Name = playerName
+		}
+	}
+	if player == nil {
+		player = NewPlayer(playerName)
+		game.Players = append(game.Players, player)
+	}
+	playerGames[player.Id] = game
+
+	return game, player.Id, nil
 }
 
 func PlayGame(playerId string, conn SafeConn) error {
