@@ -26,6 +26,10 @@ func genGameCode() string {
 }
 
 func CreatePrivateGame(playerName string) (*Game, string, error) {
+	if len(playerName) < 1 || len(playerName) > 20 {
+		return &Game{}, "", fmt.Errorf("player name must be between 1 and 20 characters")
+	}
+
 	game, err := NewGame(genGameCode())
 	if err != nil {
 		log.Errorf("Error creating game: %s", err.Error())
@@ -41,6 +45,10 @@ func CreatePrivateGame(playerName string) (*Game, string, error) {
 }
 
 func JoinPublicGame(playerName string) (*Game, string, error) {
+	if len(playerName) < 1 || len(playerName) > 20 {
+		return &Game{}, "", fmt.Errorf("player name must be between 1 and 20 characters")
+	}
+
 	var game *Game
 	for _, g := range publicGames {
 		if len(g.Players) < numPlayers {
@@ -66,6 +74,10 @@ func JoinPublicGame(playerName string) (*Game, string, error) {
 }
 
 func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
+	if len(playerName) < 1 || len(playerName) > 20 {
+		return &Game{}, "", fmt.Errorf("player name must be between 1 and 20 characters")
+	}
+
 	game, ok := publicGames[gameCode]
 	if !ok {
 		game, ok = privateGames[gameCode]
@@ -80,6 +92,7 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 		if p.Conn == nil {
 			player = p
 			player.Name = playerName
+			break
 		}
 	}
 	if player == nil {

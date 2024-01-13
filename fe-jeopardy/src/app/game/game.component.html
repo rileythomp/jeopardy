@@ -4,6 +4,8 @@
 
 <p> You are playing as {{ player.Name() }}</p>
 
+<p>Code to join: {{ game.Name() }} </p>
+
 <app-pre-game *ngIf="game.PreGame()" [gameMessage]="gameMessage" [gameName]="game.Name()"></app-pre-game>
 
 <app-recv-pick *ngIf="game.RecvPick()" [countdownSeconds]="countdownSeconds"></app-recv-pick>
