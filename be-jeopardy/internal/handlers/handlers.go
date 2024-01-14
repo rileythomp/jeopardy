@@ -69,6 +69,11 @@ var (
 			Handler: GetPublicGames,
 		},
 		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/players/game",
+			Handler: GetPlayerGame,
+		},
+		{
 			Method:  http.MethodPost,
 			Path:    "/jeopardy/leave",
 			Handler: LeaveGame,
@@ -88,6 +93,30 @@ var (
 		},
 	}
 )
+
+func GetPlayerGame(c *gin.Context) {
+	log.Infof("Received get player game request")
+
+	token := c.Request.Header.Get("Access-Token")
+	playerId, err := auth.GetJWTSubject(token)
+	if err != nil {
+		log.Errorf("Error getting playerId from token: %s", err.Error())
+		respondWithError(c, http.StatusForbidden, "Error getting playerId from token")
+		return
+	}
+
+	game, err := jeopardy.GetPlayerGame(playerId)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Error getting player game: %s", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, jeopardy.Response{
+		Code:    http.StatusOK,
+		Message: "Authorized to get player game",
+		Game:    game,
+	})
+}
 
 func CreatePrivateGame(c *gin.Context) {
 	log.Infof("Received create game request")

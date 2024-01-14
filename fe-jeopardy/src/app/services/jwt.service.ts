@@ -9,7 +9,7 @@ export class JwtService {
   public jwt$: Observable<string>;
 
   constructor() {
-    const storedJwt:string = localStorage.getItem('jwt') ?? '';
+    const storedJwt: string = localStorage.getItem('jwt') ?? '';
     this.jwtSubject = new BehaviorSubject<string>(storedJwt);
     this.jwt$ = this.jwtSubject.asObservable();
   }
@@ -17,5 +17,9 @@ export class JwtService {
   SetJWT(jwt: string): void {
     localStorage.setItem('jwt', jwt);
     this.jwtSubject.next(jwt);
+  }
+
+  GetJWT(): string {
+    return localStorage.getItem('jwt') ?? '';
   }
 }

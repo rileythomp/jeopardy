@@ -19,17 +19,19 @@ func main() {
 		log.Fatalf("Failed to set JWT keys: %s", err)
 	}
 
-	r := gin.Default()
-	if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
+	router := gin.Default()
+	if err := router.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
 		log.Fatalf("Failed to set trusted proxies: %s", err)
 	}
-	r.Use(cors.Default())
-
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "Access-Token")
+	router.Use(cors.New(corsConfig))
 	for _, route := range handlers.Routes {
-		r.Handle(route.Method, route.Path, route.Handler)
+		router.Handle(route.Method, route.Path, route.Handler)
 	}
 
 	port := os.Getenv("PORT")
 	addr := flag.String("addr", ":"+port, "http service address")
-	log.Fatal(r.Run(*addr))
+	log.Fatal(router.Run(*addr))
 }

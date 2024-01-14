@@ -32,7 +32,7 @@ export class JoinComponent implements OnInit {
 		return {
 			next: (resp: any) => {
 				this.jwtService.SetJWT(resp.token);
-				this.router.navigate(['/game']);
+				this.router.navigate([`/game/${resp.game.name}`]);
 			},
 			error: (resp: any) => {
 				// TODO: REPLACE WITH MODAL
@@ -55,6 +55,14 @@ export class JoinComponent implements OnInit {
 	}
 
 	rejoin() {
-		this.router.navigate(['/game']);
+		this.apiService.GetPlayerGame().subscribe({
+			next: (resp: any) => {
+				this.router.navigate([`/game/${resp.game.name}`]);
+			},
+			error: (resp: any) => {
+				// TODO: REPLACE WITH MODAL 
+				alert(resp.error.message);
+			},
+		});
 	}
 }

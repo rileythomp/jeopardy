@@ -5,6 +5,7 @@ import { WebsocketService } from '../services/websocket.service';
 import { PlayerService } from '../services/player.service';
 import { JwtService } from '../services/jwt.service';
 import { GameState, Ping } from '../model/model';
+import { environment } from '../../environments/environment';
 
 // const  pickTimeout = 10
 // const  buzzTimeout = 10
@@ -33,7 +34,8 @@ const buzzDelay = 2000 / 2
 })
 export class GameComponent implements OnInit {
 	private jwt: string;
-	private countdownInterval: any;
+	private countdownInterval: NodeJS.Timeout;
+	protected gameLink: string;
 	protected countdownSeconds: number;
 	protected gameMessage: string;
 	protected questionAnswer: string;
@@ -45,7 +47,9 @@ export class GameComponent implements OnInit {
 		private jwtService: JwtService,
 		protected game: GameStateService,
 		protected player: PlayerService,
-	) { }
+	) {
+		this.gameLink = environment.gameLink;
+	}
 
 	ngOnInit(): void {
 		this.jwtService.jwt$.subscribe(jwt => {
@@ -148,5 +152,9 @@ export class GameComponent implements OnInit {
 				clearInterval(this.countdownInterval);
 			}
 		}, 1000);
+	}
+
+	openJoinLink() {
+		window.open('join/' + this.game.Name(), '_blank');
 	}
 }

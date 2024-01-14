@@ -25,13 +25,13 @@ export class LinkJoinComponent {
         this.apiService.JoinGameByCode(playerName, gameCode).subscribe({
             next: (resp: any) => {
                 this.jwtService.SetJWT(resp.token);
-                this.router.navigate(['/game']);
+                this.router.navigate([`/game/${resp.game.name}`]);
             },
             error: (resp: any) => {
                 // TODO: REPLACE WITH MODAL
                 alert(resp.error.message);
+                this.router.navigate(['/join'])
             }
         });
     }
-
 }

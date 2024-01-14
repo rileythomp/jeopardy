@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
+import { JwtService } from './jwt.service';
 
 const apiAddr = environment.apiServerUrl;
 const httpProtocol = environment.httpProtocol;
@@ -18,7 +19,10 @@ const JsonOpts = {
 })
 export class ApiService {
 
-    constructor(private http: HttpClient) { }
+    constructor(
+        private http: HttpClient,
+        private jwtService: JwtService,
+    ) { }
 
     CreatePrivateGame(playName: string): Observable<any> {
         return this.post('games', {
@@ -37,6 +41,10 @@ export class ApiService {
         return this.put('games', {
             playerName: playerName,
         })
+    }
+
+    GetPlayerGame(): Observable<any> {
+        return this.get('players/game')
     }
 
     LeaveGame(user: any): Observable<any> {
@@ -61,5 +69,23 @@ export class ApiService {
             req,
             JsonOpts
         )
+    }
+
+    private get(path: string): Observable<any> {
+        return this.http.get<any>(
+            `${httpProtocol}://${apiAddr}/jeopardy/${path}`,
+            this.getOpts(),
+        )
+    }
+
+    private getOpts() {
+        return {
+            headers: new HttpHeaders({
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Access-Token': this.jwtService.GetJWT(),
+            })
+        }
+
     }
 }

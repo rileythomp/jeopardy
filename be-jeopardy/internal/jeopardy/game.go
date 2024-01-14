@@ -137,10 +137,6 @@ func NewGame(name string) (*Game, error) {
 	return game, nil
 }
 
-func getPlayerGame(playerId string) *Game {
-	return playerGames[playerId]
-}
-
 func (g *Game) stopGame(player *Player) {
 	g.Paused = true
 	g.cancelPickTimeout()

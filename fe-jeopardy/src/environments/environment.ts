@@ -7,6 +7,7 @@ export const environment = {
   apiServerUrl: 'localhost:8080',
   websocketProtocol: 'ws',
   httpProtocol: 'http',
+  gameLink: 'localhost:4200',
 };
 
 /*

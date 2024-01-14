@@ -3,6 +3,7 @@ package jeopardy
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/nwtgck/go-fakelish"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 )
@@ -22,7 +23,7 @@ func GetPrivateGames() map[string]*Game {
 }
 
 func genGameCode() string {
-	return fakelish.GenerateFakeWord(7, 7)
+	return fakelish.GenerateFakeWord(10, 10)
 }
 
 func CreatePrivateGame(playerName string) (*Game, string, error) {
@@ -88,26 +89,40 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 	}
 
 	var player *Player
-	for _, p := range game.Players {
-		if p.Conn == nil {
-			player = p
-			player.Name = playerName
-			break
+	if len(game.Players) < numPlayers {
+		player = NewPlayer(playerName)
+		game.Players = append(game.Players, player)
+	} else {
+		for _, p := range game.Players {
+			if p.Conn == nil {
+				player = p
+				player.Id = uuid.New().String()
+				player.Name = playerName
+				delete(playerGames, p.Id)
+				break
+			}
 		}
 	}
 	if player == nil {
-		player = NewPlayer(playerName)
-		game.Players = append(game.Players, player)
+		return &Game{}, "", fmt.Errorf("game %s is full", gameCode)
 	}
 	playerGames[player.Id] = game
 
 	return game, player.Id, nil
 }
 
+func GetPlayerGame(playerId string) (*Game, error) {
+	game, ok := playerGames[playerId]
+	if !ok {
+		return nil, fmt.Errorf("no game found for player with id %s", playerId)
+	}
+	return game, nil
+}
+
 func PlayGame(playerId string, conn SafeConn) error {
-	game := getPlayerGame(playerId)
-	if game == nil {
-		return fmt.Errorf("no game found for player id: %s", playerId)
+	game, err := GetPlayerGame(playerId)
+	if err != nil {
+		return err
 	}
 
 	player := game.getPlayerById(playerId)

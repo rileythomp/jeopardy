@@ -4,7 +4,7 @@
 
 <p> You are playing as {{ player.Name() }}</p>
 
-<p>Code to join: {{ game.Name() }} </p>
+<p>Link to join: <span id='joinLink' (click)="openJoinLink()">{{gameLink}}/join/{{game.Name()}}</span></p>
 
 <app-pre-game *ngIf="game.PreGame()" [gameMessage]="gameMessage" [gameName]="game.Name()"></app-pre-game>
 
