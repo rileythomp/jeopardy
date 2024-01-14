@@ -1,5 +1,5 @@
 <ol>
-    <li *ngFor="let player of game.Players()">{{ player.name }}: {{ player.score }}</li>
+    <li *ngFor="let player of game.Players()">{{ player.conn ? player.name : '' }}: {{ player.score }}</li>
 </ol>
 
 <p> You are playing as {{ player.Name() }}</p>

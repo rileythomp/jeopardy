@@ -27,6 +27,7 @@ export type Player = {
     canWager: boolean;
     canVote: boolean;
     buzzBlocked: boolean;
+    conn: any;
 };
 
 type Topic = {
@@ -54,9 +55,9 @@ export enum GameState {
 }
 
 export enum RoundState {
-	FirstRound,
-	SecondRound,
-	FinalRound,
+    FirstRound,
+    SecondRound,
+    FinalRound,
 }
 
 export const Ping = 'ping';
