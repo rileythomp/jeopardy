@@ -19,8 +19,6 @@ $ ng serve
 
 ### TODO 
 
-* Make public games a map, provide links for games
-
 * Handle players disconnecting when in the start state
 
 * Only show players on the UI if their connection is not nil

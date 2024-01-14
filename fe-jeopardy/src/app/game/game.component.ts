@@ -157,4 +157,9 @@ export class GameComponent implements OnInit {
 	openJoinLink() {
 		window.open('join/' + this.game.Name(), '_blank');
 	}
+
+	copyJoinLink() {
+		let joinLink = `${this.gameLink}/join/${this.game.Name()}`;
+		navigator.clipboard.writeText(joinLink).then(function () { }, function (err) { });
+	}
 }
