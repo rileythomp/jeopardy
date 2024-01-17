@@ -47,19 +47,19 @@ export class ApiService {
         return this.get('players/game')
     }
 
-    LeaveGame(user: any): Observable<any> {
-        return this.post('leave', user)
+    LeaveGame(): Observable<any> {
+        return this.post('leave', {})
     }
 
-    PlayAgain(user: any): Observable<any> {
-        return this.post('play-again', user)
+    PlayAgain(): Observable<any> {
+        return this.put('play-again', {})
     }
 
     private post(path: string, req: any): Observable<any> {
         return this.http.post<any>(
             `${httpProtocol}://${apiAddr}/jeopardy/${path}`,
             req,
-            JsonOpts
+            this.headers()
         )
     }
 
@@ -67,18 +67,18 @@ export class ApiService {
         return this.http.put<any>(
             `${httpProtocol}://${apiAddr}/jeopardy/${path}`,
             req,
-            JsonOpts
+            this.headers()
         )
     }
 
     private get(path: string): Observable<any> {
         return this.http.get<any>(
             `${httpProtocol}://${apiAddr}/jeopardy/${path}`,
-            this.getOpts(),
+            this.headers(),
         )
     }
 
-    private getOpts() {
+    private headers() {
         return {
             headers: new HttpHeaders({
                 'Content-Type': 'application/json',

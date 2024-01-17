@@ -17,7 +17,7 @@ import { environment } from '../../environments/environment';
 // const  finalJeopardyWagerTimeout = 10
 // const  buzzDelay = 2000/2
 
-const pickTimeout = 10
+const pickTimeout = 2
 const buzzTimeout = 2
 const defaultAnsTimeout = 10
 const dailyDoubleAnsTimeout = 10

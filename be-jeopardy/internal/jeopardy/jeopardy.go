@@ -125,9 +125,9 @@ func PlayGame(playerId string, conn SafeConn) error {
 		return err
 	}
 
-	player := game.getPlayerById(playerId)
-	if player == nil {
-		return fmt.Errorf("no player found for player id")
+	player, err := game.getPlayerById(playerId)
+	if err != nil {
+		return err
 	}
 	if player.Conn != nil {
 		return fmt.Errorf("player already playing")
@@ -145,5 +145,41 @@ func PlayGame(playerId string, conn SafeConn) error {
 
 	// TODO: HANDLE THIS ERROR
 	_ = game.messageAllPlayers(msg)
+	return nil
+}
+
+func LeaveGame(playerId string) error {
+	game, err := GetPlayerGame(playerId)
+	if err != nil {
+		return err
+	}
+
+	player, err := game.getPlayerById(playerId)
+	if err != nil {
+		return err
+	}
+
+	player.Conn = nil
+	player.Id = ""
+	player.Name = ""
+
+	return nil
+}
+
+func PlayAgain(playerId string) error {
+	game, err := GetPlayerGame(playerId)
+	if err != nil {
+		return err
+	}
+
+	player, err := game.getPlayerById(playerId)
+	if err != nil {
+		return err
+	}
+
+	player.Conn = nil
+	player.Id = ""
+	player.Name = ""
+
 	return nil
 }

@@ -254,13 +254,42 @@ func PlayGame(c *gin.Context) {
 func PlayAgain(c *gin.Context) {
 	log.Infof("Received play again request")
 
+	token := c.Request.Header.Get("Access-Token")
+	playerId, err := auth.GetJWTSubject(token)
+	if err != nil {
+		log.Errorf("Error getting playerId from token: %s", err.Error())
+		respondWithError(c, http.StatusForbidden, "Error getting playerId from token")
+		return
+	}
+
+	if err = jeopardy.PlayAgain(playerId); err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Error playing again: %s", err.Error())
+		return
+	}
+
 	c.JSON(http.StatusOK, jeopardy.Response{Message: "PLAYING AGAIN"})
 }
 
 func LeaveGame(c *gin.Context) {
 	log.Infof("Received leave request")
 
-	c.JSON(http.StatusOK, jeopardy.Response{Message: "LEAVING GAME"})
+	token := c.Request.Header.Get("Access-Token")
+	playerId, err := auth.GetJWTSubject(token)
+	if err != nil {
+		log.Errorf("Error getting playerId from token: %s", err.Error())
+		respondWithError(c, http.StatusForbidden, "Error getting playerId from token")
+		return
+	}
+
+	if err = jeopardy.LeaveGame(playerId); err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Error leaving game: %s", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, jeopardy.Response{
+		Code:    http.StatusOK,
+		Message: "Player left the game",
+	})
 }
 
 func GetPrivateGames(c *gin.Context) {

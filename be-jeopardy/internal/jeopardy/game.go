@@ -313,9 +313,9 @@ func (g *Game) processWager(player *Player, wager int) error {
 }
 
 func (g *Game) processProtest(protestByPlayer *Player, protestFor string) error {
-	protestForPlayer := g.getPlayerById(protestFor)
-	if protestForPlayer == nil {
-		return fmt.Errorf("player not found")
+	protestForPlayer, err := g.getPlayerById(protestFor)
+	if err != nil {
+		return err
 	}
 	if _, ok := protestForPlayer.FinalProtestors[protestByPlayer.Id]; ok {
 		return nil
@@ -461,7 +461,8 @@ func (g *Game) nextQuestion(player *Player, isCorrect bool) error {
 	var msg string
 	roundOver := g.roundEnded()
 	if roundOver && g.Round == FirstRound {
-		g.startSecondRound()
+		// g.startSecondRound()
+		g.startFinalRound()
 		msg = "First round ended"
 	} else if roundOver && g.Round == SecondRound {
 		g.startFinalRound()
@@ -488,7 +489,8 @@ func (g *Game) skipQuestion() error {
 	g.disableQuestion()
 	roundOver := g.roundEnded()
 	if roundOver && g.Round == FirstRound {
-		g.startSecondRound()
+		// g.startSecondRound()
+		g.startFinalRound()
 		msg = "First round ended"
 	} else if roundOver && g.Round == SecondRound {
 		g.startFinalRound()
@@ -523,13 +525,13 @@ func (g *Game) messageAllPlayers(msg string) error {
 	return nil
 }
 
-func (g *Game) getPlayerById(id string) *Player {
+func (g *Game) getPlayerById(id string) (*Player, error) {
 	for _, player := range g.Players {
 		if player.Id == id {
-			return player
+			return player, nil
 		}
 	}
-	return nil
+	return &Player{}, fmt.Errorf("player not found in game %s", g.Name)
 }
 
 func (g *Game) allPlayersReady() bool {

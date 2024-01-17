@@ -17,7 +17,7 @@ const (
 	// dailyDoubleWagerTimeout   = 10 * time.Second
 	// finalJeopardyWagerTimeout = 10 * time.Second
 
-	pickTimeout               = 10 * time.Second
+	pickTimeout               = 2 * time.Second
 	buzzTimeout               = 2 * time.Second
 	defaultAnsTimeout         = 10 * time.Second
 	dailyDoubleAnsTimeout     = 10 * time.Second

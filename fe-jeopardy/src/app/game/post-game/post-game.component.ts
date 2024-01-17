@@ -4,49 +4,49 @@ import { Player } from '../../model/model';
 import { PlayerService } from '../../services/player.service';
 import { WebsocketService } from '../../services/websocket.service';
 import { ApiService } from '../../services/api.service';
+import { Router } from '@angular/router';
 
 @Component({
-    selector: 'app-post-game',
-    templateUrl: './post-game.component.html',
-    styleUrls: ['./post-game.component.less']
+	selector: 'app-post-game',
+	templateUrl: './post-game.component.html',
+	styleUrls: ['./post-game.component.less']
 })
 export class PostGameComponent {
 
-    constructor(
-        private apiService: ApiService,
-        private websocketService: WebsocketService,
-        protected game: GameStateService,
-        protected player: PlayerService,
-    ) { }
+	constructor(
+		private router: Router,
+		private apiService: ApiService,
+		private websocketService: WebsocketService,
+		protected game: GameStateService,
+		protected player: PlayerService,
+	) { }
 
-    canProtestForPlayer(player: Player): boolean {
-        return !Object.keys(player.finalProtestors).includes(this.player.Id());
-    }
-
-    protestFinalCorrectness(playerId: string) {
-		this.websocketService.Send({protestFor: playerId});
+	canProtestForPlayer(player: Player): boolean {
+		return !Object.keys(player.finalProtestors).includes(this.player.Id());
 	}
 
-    playAgain() {
-		return this.apiService.PlayAgain({ "hello": "world" }).subscribe({
+	protestFinalCorrectness(playerId: string) {
+		this.websocketService.Send({ protestFor: playerId });
+	}
+
+	playAgain() {
+		return this.apiService.PlayAgain().subscribe({
 			next: (resp: any) => {
 				console.log('playing again', resp)
 			},
-			error: (err: any) => {
-				console.log('Error playing again', err)
-				alert('Error playing again')
+			error: (resp: any) => {
+				alert(resp.error.message)
 			},
 		})
 	}
 
 	leaveGame() {
-		return this.apiService.LeaveGame({ "hello": "world" }).subscribe({
+		return this.apiService.LeaveGame().subscribe({
 			next: (resp: any) => {
-				console.log('left game', resp)
+				this.router.navigate(['/'])
 			},
-			error: (err: any) => {
-				console.log('Error leaving game', err)
-				alert('Error leaving game')
+			error: (resp: any) => {
+				alert(resp.error.message)
 			},
 		})
 	}
