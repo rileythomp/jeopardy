@@ -142,7 +142,6 @@ func (g *Game) pauseGame(player *Player) {
 	g.cancelPickTimeout()
 	g.cancelBuzzTimeout()
 	g.cancelVoteTimeout()
-	player.stopSendingPings <- true
 	player.Conn = nil
 	for _, p := range g.Players {
 		p.stopPlayer()

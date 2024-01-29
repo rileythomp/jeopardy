@@ -38,8 +38,7 @@ type Player struct {
 	cancelAnswerTimeout context.CancelFunc
 	cancelWagerTimeout  context.CancelFunc
 
-	sendPingTicker   *time.Ticker
-	stopSendingPings chan bool
+	sendPingTicker *time.Ticker
 }
 
 const (
@@ -60,7 +59,6 @@ func NewPlayer(name string) *Player {
 		FinalProtestors:     map[string]bool{},
 		cancelAnswerTimeout: func() {},
 		cancelWagerTimeout:  func() {},
-		stopSendingPings:    make(chan bool),
 		sendPingTicker:      time.NewTicker(pingFrequency),
 	}
 }
@@ -94,9 +92,6 @@ func (p *Player) sendPings() {
 		pingErrors := 0
 		for {
 			select {
-			case <-p.stopSendingPings:
-				log.Infof("Stopping sending pings to player %s", p.Name)
-				return
 			case <-p.sendPingTicker.C:
 				if err := p.sendMessage(Response{
 					Code:    http.StatusOK,
@@ -160,6 +155,10 @@ func (p *Player) inLists(lists ...[]string) bool {
 }
 
 func (p *Player) readMessage() ([]byte, error) {
+	if p.Conn == nil {
+		log.Infof("Skipping reading message from player %s because connection is nil", p.Name)
+		return nil, fmt.Errorf("Player %s has no connection", p.Name)
+	}
 	_, msg, err := p.Conn.ReadMessage()
 	if err != nil {
 		return nil, err

@@ -71,7 +71,7 @@ func (g *Game) setQuestions() error {
 					Answer:      "Paris",
 					Value:       600,
 					CanChoose:   true,
-					DailyDouble: true,
+					DailyDouble: false,
 				},
 				// {
 				// 	Question:    "This city is the capital of Germany",
@@ -355,7 +355,7 @@ func (g *Game) setQuestions() error {
 					Answer:      "The skin",
 					Value:       1200,
 					CanChoose:   true,
-					DailyDouble: true,
+					DailyDouble: false,
 				},
 				// {
 				// 	Question:  "This is the largest bone in the human body",

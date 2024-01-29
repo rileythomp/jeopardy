@@ -23,7 +23,7 @@ func GetPrivateGames() map[string]*Game {
 }
 
 func genGameCode() string {
-	return fakelish.GenerateFakeWord(10, 10)
+	return fakelish.GenerateFakeWord(8, 8)
 }
 
 func CreatePrivateGame(playerName string) (*Game, string, error) {
