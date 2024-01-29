@@ -1,7 +1,8 @@
 <div>
     <ol>
         <li *ngFor="let player of game.Players()">
-            {{ player.name }} answered <b>{{ player.finalCorrect ? 'correctly': 'incorrectly' }}</b> with <b>{{ player.finalAnswer }}</b>
+            {{ player.name }} answered <b>{{ player.finalCorrect ? 'correctly': 'incorrectly' }}</b> with <b>{{
+                player.finalAnswer }}</b>
             <button *ngIf="canProtestForPlayer(player)" (click)="protestFinalCorrectness(player.id)">Protest</button>
         </li>
     </ol>
@@ -11,7 +12,7 @@
     {{ game.EndGameMessage() }}
 
     <div>
-        <button (click)="playAgain()">Play again</button>
+        <button *ngIf='!player.PlayAgain()' (click)="playAgain()">Play again</button>
         <button (click)="leaveGame()">Home</button>
     </div>
 </div>

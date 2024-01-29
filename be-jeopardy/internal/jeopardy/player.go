@@ -32,6 +32,7 @@ type Player struct {
 	FinalAnswer     string          `json:"finalAnswer"`
 	FinalCorrect    bool            `json:"finalCorrect"`
 	FinalProtestors map[string]bool `json:"finalProtestors"`
+	PlayAgain       bool            `json:"playAgain"`
 
 	Conn SafeConn `json:"conn"`
 
@@ -63,7 +64,7 @@ func NewPlayer(name string) *Player {
 	}
 }
 
-func (p *Player) processMessages(msgGame chan Message, stopGame chan *Player) {
+func (p *Player) processMessages(msgChan chan Message, pauseChan chan *Player) {
 	go func() {
 		log.Infof("Starting to process messages for player %s", p.Name)
 		for {
@@ -73,7 +74,7 @@ func (p *Player) processMessages(msgGame chan Message, stopGame chan *Player) {
 				if websocket.IsCloseError(err, 1001) {
 					log.Infof("Player %s closed connection", p.Name)
 				}
-				stopGame <- p
+				pauseChan <- p
 				return
 			}
 			var msg Message
@@ -81,7 +82,7 @@ func (p *Player) processMessages(msgGame chan Message, stopGame chan *Player) {
 				log.Errorf("Error parsing message: %s", err.Error())
 			}
 			msg.Player = p
-			msgGame <- msg
+			msgChan <- msg
 		}
 	}()
 }
@@ -115,6 +116,13 @@ func (p *Player) sendPings() {
 func (p *Player) stopPlayer() {
 	p.cancelAnswerTimeout()
 	p.cancelWagerTimeout()
+}
+
+func (p *Player) resetPlayer() {
+	p.Score = 0
+	p.updateActions(false, false, false, false, false)
+	p.FinalProtestors = map[string]bool{}
+	p.PlayAgain = false
 }
 
 func (p *Player) updateActions(pick, buzz, answer, wager, vote bool) {

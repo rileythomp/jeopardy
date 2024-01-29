@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func Debug(s string, args ...any) {
+func Debugf(s string, args ...any) {
 	log.Printf("[DEBUG] %s\n", fmt.Sprintf(s, args...))
 }
 

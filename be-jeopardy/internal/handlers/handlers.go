@@ -79,7 +79,7 @@ var (
 			Handler: LeaveGame,
 		},
 		{
-			Method:  http.MethodPost,
+			Method:  http.MethodPut,
 			Path:    "/jeopardy/play-again",
 			Handler: PlayAgain,
 		},

@@ -36,8 +36,9 @@ type (
 		cancelBuzzTimeout context.CancelFunc
 		cancelVoteTimeout context.CancelFunc
 
-		msgGame  chan Message
-		stopGame chan *Player
+		msgChan     chan Message
+		pauseChan   chan *Player
+		restartChan chan bool
 	}
 
 	Message struct {
@@ -115,8 +116,9 @@ func NewGame(name string) (*Game, error) {
 		cancelPickTimeout: func() {},
 		cancelBuzzTimeout: func() {},
 		cancelVoteTimeout: func() {},
-		msgGame:           make(chan Message),
-		stopGame:          make(chan *Player),
+		msgChan:           make(chan Message),
+		pauseChan:         make(chan *Player),
+		restartChan:       make(chan bool),
 	}
 	if err := game.setQuestions(); err != nil {
 		return nil, err
@@ -124,17 +126,42 @@ func NewGame(name string) (*Game, error) {
 	go func() {
 		for {
 			select {
-			case msg := <-game.msgGame:
+			case msg := <-game.msgChan:
 				if err := game.processMsg(msg); err != nil {
 					log.Errorf("Error processing message: %s\n", err.Error())
 				}
-			case player := <-game.stopGame:
+			case player := <-game.pauseChan:
 				log.Infof("Stopping game %s\n", game.Name)
 				game.pauseGame(player)
+			case <-game.restartChan:
+				log.Infof("Restarting game %s\n", game.Name)
+				game.restartGame()
 			}
 		}
 	}()
 	return game, nil
+}
+
+func (g *Game) restartGame() {
+	g.State = PreGame
+	g.Round = FirstRound
+	g.LastToPick = &Player{}
+	g.LastToBuzz = &Player{}
+	g.LastToAnswer = &Player{}
+	g.LastAnswer = ""
+	g.AnsCorrectness = false
+	g.GuessedWrong = []string{}
+	g.Passed = []string{}
+	g.Confirmers = []string{}
+	g.Challengers = []string{}
+	g.NumFinalWagers = 0
+	g.FinalWagers = []string{}
+	g.FinalAnswers = []string{}
+	g.setQuestions()
+	for _, player := range g.Players {
+		player.resetPlayer()
+	}
+	g.startGame()
 }
 
 func (g *Game) pauseGame(player *Player) {
@@ -143,6 +170,7 @@ func (g *Game) pauseGame(player *Player) {
 	g.cancelBuzzTimeout()
 	g.cancelVoteTimeout()
 	player.Conn = nil
+	player.PlayAgain = false
 	for _, p := range g.Players {
 		p.stopPlayer()
 	}

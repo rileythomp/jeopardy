@@ -53,4 +53,8 @@ export class PlayerService {
 	CanVote(): boolean {
 		return this.player.canVote;
 	}
+
+	PlayAgain(): boolean {
+		return this.player.playAgain;
+	}
 }

@@ -2,6 +2,7 @@ package jeopardy
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/nwtgck/go-fakelish"
@@ -141,7 +142,7 @@ func PlayGame(playerId string, conn SafeConn) error {
 	}
 
 	player.sendPings()
-	player.processMessages(game.msgGame, game.stopGame)
+	player.processMessages(game.msgChan, game.pauseChan)
 
 	// TODO: HANDLE THIS ERROR
 	_ = game.messageAllPlayers(msg)
@@ -159,7 +160,7 @@ func LeaveGame(playerId string) error {
 		return err
 	}
 
-	game.stopGame <- player
+	game.pauseChan <- player
 
 	return nil
 }
@@ -175,9 +176,24 @@ func PlayAgain(playerId string) error {
 		return err
 	}
 
-	player.Conn = nil
-	player.Id = ""
-	player.Name = ""
+	log.Infof("Player %s wants to play again", player.Name)
 
-	return nil
+	player.PlayAgain = true
+	restartGame := true
+	for _, p := range game.Players {
+		if !p.PlayAgain || p.Conn == nil {
+			restartGame = false
+		}
+	}
+	if restartGame {
+		game.restartChan <- true
+		return nil
+	}
+	log.Infof("Waiting for other players to play again")
+	return player.sendMessage(Response{
+		Code:      http.StatusOK,
+		Message:   "Waiting for other players to play again",
+		Game:      game,
+		CurPlayer: player,
+	})
 }

@@ -32,7 +32,7 @@ export class PostGameComponent {
 	playAgain() {
 		return this.apiService.PlayAgain().subscribe({
 			next: (resp: any) => {
-				console.log('playing again', resp)
+				this.player.updatePlayer(resp.player)
 			},
 			error: (resp: any) => {
 				alert(resp.error.message)

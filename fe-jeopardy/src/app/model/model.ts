@@ -27,6 +27,7 @@ export type Player = {
     canWager: boolean;
     canVote: boolean;
     buzzBlocked: boolean;
+    playAgain: boolean;
     conn: any;
 };
 
