@@ -141,7 +141,7 @@ func PlayGame(playerId string, conn SafeConn) error {
 	}
 
 	player.sendPings()
-	player.processMessages(game.msgChan, game.stopChan)
+	player.processMessages(game.msgGame, game.stopGame)
 
 	// TODO: HANDLE THIS ERROR
 	_ = game.messageAllPlayers(msg)
@@ -159,7 +159,7 @@ func LeaveGame(playerId string) error {
 		return err
 	}
 
-	game.stopChan <- player
+	game.stopGame <- player
 
 	return nil
 }

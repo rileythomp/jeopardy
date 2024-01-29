@@ -36,8 +36,8 @@ type (
 		cancelBuzzTimeout context.CancelFunc
 		cancelVoteTimeout context.CancelFunc
 
-		msgChan  chan Message
-		stopChan chan *Player
+		msgGame  chan Message
+		stopGame chan *Player
 	}
 
 	Message struct {
@@ -115,8 +115,8 @@ func NewGame(name string) (*Game, error) {
 		cancelPickTimeout: func() {},
 		cancelBuzzTimeout: func() {},
 		cancelVoteTimeout: func() {},
-		msgChan:           make(chan Message),
-		stopChan:          make(chan *Player),
+		msgGame:           make(chan Message),
+		stopGame:          make(chan *Player),
 	}
 	if err := game.setQuestions(); err != nil {
 		return nil, err
@@ -124,20 +124,20 @@ func NewGame(name string) (*Game, error) {
 	go func() {
 		for {
 			select {
-			case msg := <-game.msgChan:
+			case msg := <-game.msgGame:
 				if err := game.processMsg(msg); err != nil {
 					log.Errorf("Error processing message: %s\n", err.Error())
 				}
-			case player := <-game.stopChan:
+			case player := <-game.stopGame:
 				log.Infof("Stopping game %s\n", game.Name)
-				game.stopGame(player)
+				game.pauseGame(player)
 			}
 		}
 	}()
 	return game, nil
 }
 
-func (g *Game) stopGame(player *Player) {
+func (g *Game) pauseGame(player *Player) {
 	g.Paused = true
 	g.cancelPickTimeout()
 	g.cancelBuzzTimeout()
@@ -534,7 +534,7 @@ func (g *Game) messageAllPlayers(msg string) error {
 			CurPlayer: player,
 		}); err != nil {
 			log.Errorf("Error sending message to player %s while messaging all players: %s, stopping game", player.Name, err.Error())
-			g.stopGame(player)
+			g.pauseGame(player)
 		}
 	}
 	return nil
