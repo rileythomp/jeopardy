@@ -148,6 +148,21 @@ func (g *Game) stopGame(player *Player) {
 		p.stopPlayer()
 	}
 	g.messageAllPlayers(fmt.Sprintf("Player %s left the game", player.Name))
+	endGame := true
+	for _, p := range g.Players {
+		if p.Conn != nil {
+			endGame = false
+		}
+	}
+	if endGame {
+		log.Infof("All players disconnected, removing game %s\n", g.Name)
+		delete(publicGames, g.Name)
+		delete(privateGames, g.Name)
+		for player := range playerGames {
+			delete(playerGames, player)
+		}
+	}
+
 }
 
 func (g *Game) processMsg(msg Message) error {

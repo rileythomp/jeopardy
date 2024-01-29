@@ -95,10 +95,10 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 	} else {
 		for _, p := range game.Players {
 			if p.Conn == nil {
+				delete(playerGames, p.Id)
 				player = p
 				player.Id = uuid.New().String()
 				player.Name = playerName
-				delete(playerGames, p.Id)
 				break
 			}
 		}
@@ -159,9 +159,7 @@ func LeaveGame(playerId string) error {
 		return err
 	}
 
-	player.Conn = nil
-	player.Id = ""
-	player.Name = ""
+	game.stopChan <- player
 
 	return nil
 }

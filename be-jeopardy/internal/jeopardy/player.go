@@ -75,7 +75,8 @@ func (p *Player) processMessages(msgGame chan Message, stopGame chan *Player) {
 				if websocket.IsCloseError(err, 1001) {
 					log.Infof("Player %s closed connection", p.Name)
 				}
-				break
+				stopGame <- p
+				return
 			}
 			var msg Message
 			if err := json.Unmarshal(message, &msg); err != nil {
@@ -84,7 +85,6 @@ func (p *Player) processMessages(msgGame chan Message, stopGame chan *Player) {
 			msg.Player = p
 			msgGame <- msg
 		}
-		stopGame <- p
 	}()
 }
 
