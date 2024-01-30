@@ -60,16 +60,6 @@ var (
 		},
 		{
 			Method:  http.MethodGet,
-			Path:    "/jeopardy/private",
-			Handler: GetPrivateGames,
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/jeopardy/public",
-			Handler: GetPublicGames,
-		},
-		{
-			Method:  http.MethodGet,
 			Path:    "/jeopardy/players/game",
 			Handler: GetPlayerGame,
 		},
@@ -82,6 +72,21 @@ var (
 			Method:  http.MethodPut,
 			Path:    "/jeopardy/play-again",
 			Handler: PlayAgain,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/private",
+			Handler: GetPrivateGames,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/public",
+			Handler: GetPublicGames,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/player-games",
+			Handler: GetPlayerGames,
 		},
 	}
 
@@ -302,6 +307,12 @@ func GetPublicGames(c *gin.Context) {
 	log.Infof("Received request to get public games")
 	games := jeopardy.GetPublicGames()
 	c.JSON(http.StatusOK, games)
+}
+
+func GetPlayerGames(c *gin.Context) {
+	log.Infof("Received request to get player games")
+	playerGames := jeopardy.GetPlayerGames()
+	c.JSON(http.StatusOK, playerGames)
 }
 
 func CheckHealth(c *gin.Context) {

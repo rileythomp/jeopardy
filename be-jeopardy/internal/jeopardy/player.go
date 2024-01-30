@@ -176,7 +176,7 @@ func (p *Player) readMessage() ([]byte, error) {
 
 func (p *Player) sendMessage(msg Response) error {
 	if msg.Message != ping {
-		log.Infof("Sending message to player %s: %s", p.Name, msg.Message)
+		log.Debugf("Sending message to player %s: %s", p.Name, msg.Message)
 	}
 	if p.Conn == nil {
 		log.Infof("Skipping sending message to player %s because connection is nil", p.Name)

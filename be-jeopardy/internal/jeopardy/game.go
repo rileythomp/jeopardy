@@ -185,8 +185,8 @@ func (g *Game) pauseGame(player *Player) {
 		log.Infof("All players disconnected, removing game %s\n", g.Name)
 		delete(publicGames, g.Name)
 		delete(privateGames, g.Name)
-		for player := range playerGames {
-			delete(playerGames, player)
+		for _, player := range g.Players {
+			delete(playerGames, player.Id)
 		}
 	}
 

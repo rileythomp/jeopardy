@@ -23,6 +23,14 @@ func GetPrivateGames() map[string]*Game {
 	return privateGames
 }
 
+func GetPlayerGames() map[string]string {
+	playerGameNames := map[string]string{}
+	for playerId, game := range playerGames {
+		playerGameNames[playerId] = game.Name
+	}
+	return playerGameNames
+}
+
 func genGameCode() string {
 	return fakelish.GenerateFakeWord(8, 8)
 }
