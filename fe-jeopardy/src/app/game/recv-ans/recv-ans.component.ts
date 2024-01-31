@@ -19,11 +19,11 @@ export class RecvAnsComponent {
     ) { }
 
     handleAnswer() {
-		if (this.player.CanAnswer()) {
-			this.websocketService.Send({
-				answer: this.questionAnswer,
-			})
-		}
-		this.questionAnswer = '';
-	}
+        if (this.questionAnswer && this.player.CanAnswer()) {
+            this.websocketService.Send({
+                answer: this.questionAnswer,
+            })
+        }
+        this.questionAnswer = '';
+    }
 }

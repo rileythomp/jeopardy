@@ -1,10 +1,20 @@
 <div>
     <ol>
-        <li *ngFor="let player of game.Players()">
-            {{ player.name }} answered <b>{{ player.finalCorrect ? 'correctly': 'incorrectly' }}</b> with <b>{{
-                player.finalAnswer }}</b>
-            <button *ngIf="canProtestForPlayer(player)" (click)="protestFinalCorrectness(player.id)">Protest</button>
-        </li>
+        <div *ngFor="let player of game.Players()">
+            <li *ngIf="player.finalAnswer != '' && player.finalAnswer != 'answer-timeout'">
+                <span>
+                    {{ player.name }} answered <b>{{ player.finalCorrect ? 'correctly': 'incorrectly' }}</b> with <b>{{
+                        player.finalAnswer }}</b>
+                    <button *ngIf="canProtestForPlayer(player)"
+                        (click)="protestFinalCorrectness(player.id)">Protest</button>
+                </span>
+            </li>
+            <li *ngIf="player.finalAnswer == 'answer-timeout'">
+                <span>
+                    {{ player.name }} didn't answer in time.
+                </span>
+            </li>
+        </div>
     </ol>
 
     <p>Final Jeopardy Answer: {{ game.FinalAnswer() }}</p>

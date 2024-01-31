@@ -23,8 +23,8 @@ const defaultAnsTimeout = 10
 const dailyDoubleAnsTimeout = 10
 const finalJeopardyAnsTimeout = 10
 const voteTimeout = 2
-const dailyDoubleWagerTimeout = 10
-const finalJeopardyWagerTimeout = 10
+const dailyDoubleWagerTimeout = 30
+const finalJeopardyWagerTimeout = 30
 const buzzDelay = 2000 / 2
 
 @Component({

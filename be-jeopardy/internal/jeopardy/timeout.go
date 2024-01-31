@@ -23,8 +23,8 @@ const (
 	dailyDoubleAnsTimeout     = 10 * time.Second
 	finalJeopardyAnsTimeout   = 10 * time.Second
 	voteTimeout               = 2 * time.Second
-	dailyDoubleWagerTimeout   = 10 * time.Second
-	finalJeopardyWagerTimeout = 10 * time.Second
+	dailyDoubleWagerTimeout   = 30 * time.Second
+	finalJeopardyWagerTimeout = 30 * time.Second
 )
 
 func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *Player, processTimeout func(player *Player) error) {

@@ -19,11 +19,11 @@ export class RecvWagerComponent {
     ) { }
 
     handleWager() {
-		if (this.player.CanWager()) {
-			this.websocketService.Send({
-				wager: this.wagerAmt,
-			})
-		}
-		this.wagerAmt = '';
-	}
+        if (this.wagerAmt != null && this.wagerAmt !== '' && this.player.CanWager()) {
+            this.websocketService.Send({
+                wager: this.wagerAmt,
+            })
+        }
+        this.wagerAmt = '';
+    }
 }

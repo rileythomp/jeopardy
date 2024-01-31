@@ -19,10 +19,6 @@ $ ng serve
 
 ### TODO 
 
-* Handle first pick after playing again correctly
-
-* Handle blank answers and timeouts more gracefully on the UI 
-
 * Fetch questions from DB
 
 * Improve UI 

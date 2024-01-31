@@ -5,13 +5,13 @@
         Value: {{ game.CurValue() }}
         <br>
     </div>
-    
+
     <div *ngIf="player.CanAnswer()">
         <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
         <button (click)="handleAnswer()">Answer</button>
         <p>seconds to answer: {{ countdownSeconds }}</p>
     </div>
-    
+
     <div *ngIf="!player.CanAnswer()">
         {{ game.AnsweringPlayer() }} is answering the question
     </div>

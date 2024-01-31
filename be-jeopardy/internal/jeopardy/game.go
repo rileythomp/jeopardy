@@ -388,6 +388,7 @@ func (g *Game) processProtest(protestByPlayer *Player, protestFor string) error 
 	} else {
 		protestForPlayer.Score += 2 * protestForPlayer.FinalWager
 	}
+	protestForPlayer.FinalCorrect = !protestForPlayer.FinalCorrect
 	g.setState(PostGame, &Player{})
 	g.messageAllPlayers("Final Jeopardy result changed")
 	return nil

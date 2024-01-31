@@ -126,6 +126,9 @@ func (p *Player) pausePlayer() {
 func (p *Player) resetPlayer() {
 	p.Score = 0
 	p.updateActions(false, false, false, false, false)
+	p.FinalWager = 0
+	p.FinalAnswer = ""
+	p.FinalCorrect = false
 	p.FinalProtestors = map[string]bool{}
 	p.PlayAgain = false
 }
