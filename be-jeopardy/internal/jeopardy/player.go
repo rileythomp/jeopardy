@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -95,14 +95,16 @@ func (p *Player) sendPings() {
 			select {
 			case <-p.sendPingTicker.C:
 				if err := p.sendMessage(Response{
-					Code:    http.StatusOK,
+					Code:    socket.Info,
 					Message: ping,
 				}); err != nil {
 					log.Errorf("Error sending ping to player %s: %s", p.Name, err.Error())
 					pingErrors++
 					if pingErrors >= 3 {
 						log.Errorf("Too many ping errors, closing connection to player %s", p.Name)
-						_ = p.closeConnection()
+						if err := p.Conn.Close(); err != nil {
+							log.Errorf("Error closing connection: %s", err.Error())
+						}
 						return
 					}
 					continue
@@ -113,7 +115,7 @@ func (p *Player) sendPings() {
 	}()
 }
 
-func (p *Player) stopPlayer() {
+func (p *Player) pausePlayer() {
 	p.cancelAnswerTimeout()
 	p.cancelWagerTimeout()
 }
@@ -179,20 +181,12 @@ func (p *Player) sendMessage(msg Response) error {
 		log.Debugf("Sending message to player %s: %s", p.Name, msg.Message)
 	}
 	if p.Conn == nil {
-		log.Infof("Skipping sending message to player %s because connection is nil", p.Name)
-		return nil
+		log.Errorf("Skipping sending message to player %s because connection is nil", p.Name)
+		return fmt.Errorf("error sending message to player")
 	}
 	if err := p.Conn.WriteJSON(msg); err != nil {
 		log.Errorf("Error sending message to player %s: %s", p.Name, err.Error())
 		return fmt.Errorf("error sending message to player")
-	}
-	return nil
-}
-
-func (p *Player) closeConnection() error {
-	if err := p.Conn.Close(); err != nil {
-		log.Errorf("Error closing connection: %s", err.Error())
-		return fmt.Errorf("error closing connection")
 	}
 	return nil
 }

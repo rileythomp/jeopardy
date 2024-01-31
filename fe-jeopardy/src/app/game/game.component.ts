@@ -68,10 +68,10 @@ export class GameComponent implements OnInit {
 		this.websocketService.OnMessage((event: { data: string; }) => {
 			let resp = JSON.parse(event.data);
 
-			if (resp.code != 200) {
+			if (resp.code >= 4400) {
 				// TODO: REPLACE WITH MODAL
 				alert(resp.message);
-				if (resp.code == 500 || resp.code == 403) {
+				if (resp.code == 4500 || resp.code == 4401) {
 					this.router.navigate(['/join']);
 				}
 				return
@@ -86,6 +86,11 @@ export class GameComponent implements OnInit {
 			this.game.updateGameState(resp.game);
 			this.player.updatePlayer(resp.curPlayer);
 			this.gameMessage = resp.message;
+
+			if (resp.code == 4100) {
+				alert(resp.message)
+				return
+			}
 
 			if (this.game.IsPaused()) {
 				this.countdownSeconds = 0;

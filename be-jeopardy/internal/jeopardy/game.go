@@ -3,9 +3,9 @@ package jeopardy
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 )
 
 type (
@@ -158,8 +158,8 @@ func (g *Game) restartGame() {
 	g.FinalWagers = []string{}
 	g.FinalAnswers = []string{}
 	g.setQuestions()
-	for _, player := range g.Players {
-		player.resetPlayer()
+	for _, p := range g.Players {
+		p.resetPlayer()
 	}
 	g.startGame()
 }
@@ -172,7 +172,7 @@ func (g *Game) pauseGame(player *Player) {
 	player.Conn = nil
 	player.PlayAgain = false
 	for _, p := range g.Players {
-		p.stopPlayer()
+		p.pausePlayer()
 	}
 	g.messageAllPlayers(fmt.Sprintf("Player %s left the game", player.Name))
 	endGame := true
@@ -185,8 +185,8 @@ func (g *Game) pauseGame(player *Player) {
 		log.Infof("All players disconnected, removing game %s\n", g.Name)
 		delete(publicGames, g.Name)
 		delete(privateGames, g.Name)
-		for _, player := range g.Players {
-			delete(playerGames, player.Id)
+		for _, p := range g.Players {
+			delete(playerGames, p.Id)
 		}
 	}
 
@@ -250,7 +250,8 @@ func (g *Game) processPick(player *Player, topicIdx, valIdx int) error {
 		g.setState(RecvBuzz, &Player{})
 		msg = "New Question"
 	}
-	return g.messageAllPlayers(msg)
+	g.messageAllPlayers(msg)
+	return nil
 }
 
 func (g *Game) processBuzz(player *Player, isPass bool) error {
@@ -262,19 +263,22 @@ func (g *Game) processBuzz(player *Player, isPass bool) error {
 		player.CanBuzz = false
 		if g.noPlayerCanBuzz() {
 			g.cancelBuzzTimeout()
-			return g.skipQuestion()
+			g.skipQuestion()
+			return nil
 		}
-		return player.sendMessage(Response{
-			Code:      http.StatusOK,
+		_ = player.sendMessage(Response{
+			Code:      socket.Ok,
 			Message:   "You passed",
 			Game:      g,
 			CurPlayer: player,
 		})
+		return nil
 	}
 	g.LastToBuzz = player
 	g.cancelBuzzTimeout()
 	g.setState(RecvAns, player)
-	return g.messageAllPlayers("Player buzzed")
+	g.messageAllPlayers("Player buzzed")
+	return nil
 }
 
 func (g *Game) processAnswer(player *Player, answer string) error {
@@ -290,7 +294,8 @@ func (g *Game) processAnswer(player *Player, answer string) error {
 	g.LastAnswer = answer
 	g.LastToAnswer = player
 	g.setState(RecvVote, &Player{})
-	return g.messageAllPlayers("Player answered")
+	g.messageAllPlayers("Player answered")
+	return nil
 }
 
 func (g *Game) processVote(player *Player, confirm bool) error {
@@ -304,16 +309,18 @@ func (g *Game) processVote(player *Player, confirm bool) error {
 		g.Challengers = append(g.Challengers, player.Id)
 	}
 	if len(g.Confirmers) != 2 && len(g.Challengers) != 2 {
-		return player.sendMessage(Response{
-			Code:      http.StatusOK,
+		_ = player.sendMessage(Response{
+			Code:      socket.Ok,
 			Message:   "You voted",
 			Game:      g,
 			CurPlayer: player,
 		})
+		return nil
 	}
 	g.cancelVoteTimeout()
 	isCorrect := (g.AnsCorrectness && len(g.Confirmers) == 2) || (!g.AnsCorrectness && len(g.Challengers) == 2)
-	return g.nextQuestion(g.LastToAnswer, isCorrect)
+	g.nextQuestion(g.LastToAnswer, isCorrect)
+	return nil
 }
 
 func (g *Game) processWager(player *Player, wager int) error {
@@ -323,12 +330,13 @@ func (g *Game) processWager(player *Player, wager int) error {
 	}
 	if min, max, ok := g.validWager(wager, player.Score); !ok {
 		g.startWagerTimeout(player)
-		return player.sendMessage(Response{
-			Code:      http.StatusBadRequest,
+		_ = player.sendMessage(Response{
+			Code:      socket.BadRequest,
 			Message:   fmt.Sprintf("invalid wager, must be between %d and %d", min, max),
 			Game:      g,
 			CurPlayer: player,
 		})
+		return nil
 	}
 	var msg string
 	if g.Round == FinalRound {
@@ -336,12 +344,13 @@ func (g *Game) processWager(player *Player, wager int) error {
 		player.CanWager = false
 		g.FinalWagers = append(g.FinalWagers, player.Id)
 		if len(g.FinalWagers) != g.NumFinalWagers {
-			return player.sendMessage(Response{
-				Code:      http.StatusOK,
+			_ = player.sendMessage(Response{
+				Code:      socket.Ok,
 				Message:   "You wagered",
 				Game:      g,
 				CurPlayer: player,
 			})
+			return nil
 		}
 		g.setState(RecvAns, &Player{})
 		msg = "All wagers received"
@@ -351,7 +360,8 @@ func (g *Game) processWager(player *Player, wager int) error {
 		g.setState(RecvAns, player)
 		msg = "Player wagered"
 	}
-	return g.messageAllPlayers(msg)
+	g.messageAllPlayers(msg)
+	return nil
 }
 
 func (g *Game) processProtest(protestByPlayer *Player, protestFor string) error {
@@ -364,12 +374,13 @@ func (g *Game) processProtest(protestByPlayer *Player, protestFor string) error 
 	}
 	protestForPlayer.FinalProtestors[protestByPlayer.Id] = true
 	if len(protestForPlayer.FinalProtestors) != numPlayers/2+1 {
-		return protestByPlayer.sendMessage(Response{
-			Code:      http.StatusOK,
+		_ = protestByPlayer.sendMessage(Response{
+			Code:      socket.Ok,
 			Message:   "You protested for " + protestForPlayer.Name,
 			Game:      g,
 			CurPlayer: protestByPlayer,
 		})
+		return nil
 	}
 	if protestForPlayer.FinalCorrect {
 		protestForPlayer.Score -= 2 * protestForPlayer.FinalWager
@@ -377,7 +388,8 @@ func (g *Game) processProtest(protestByPlayer *Player, protestFor string) error 
 		protestForPlayer.Score += 2 * protestForPlayer.FinalWager
 	}
 	g.setState(PostGame, &Player{})
-	return g.messageAllPlayers("Final Jeopardy result changed")
+	g.messageAllPlayers("Final Jeopardy result changed")
+	return nil
 }
 
 func (g *Game) processFinalRoundAns(player *Player, isCorrect bool, answer string) error {
@@ -388,14 +400,16 @@ func (g *Game) processFinalRoundAns(player *Player, isCorrect bool, answer strin
 	player.FinalCorrect = isCorrect
 	if g.roundEnded() {
 		g.setState(PostGame, &Player{})
-		return g.messageAllPlayers("Final round ended")
+		g.messageAllPlayers("Final round ended")
+		return nil
 	}
-	return player.sendMessage(Response{
-		Code:      http.StatusOK,
+	_ = player.sendMessage(Response{
+		Code:      socket.Ok,
 		Message:   "You answered",
 		Game:      g,
 		CurPlayer: player,
 	})
+	return nil
 }
 
 func (g *Game) setState(state GameState, player *Player) {
@@ -492,7 +506,7 @@ func (g *Game) startFinalRound() {
 	}
 }
 
-func (g *Game) nextQuestion(player *Player, isCorrect bool) error {
+func (g *Game) nextQuestion(player *Player, isCorrect bool) {
 	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
 	if !isCorrect {
 		g.GuessedWrong = append(g.GuessedWrong, player.Id)
@@ -523,10 +537,10 @@ func (g *Game) nextQuestion(player *Player, isCorrect bool) error {
 		g.setState(RecvBuzz, &Player{})
 		msg = "Player answered incorrectly"
 	}
-	return g.messageAllPlayers(msg)
+	g.messageAllPlayers(msg)
 }
 
-func (g *Game) skipQuestion() error {
+func (g *Game) skipQuestion() {
 	var msg string
 	g.disableQuestion()
 	roundOver := g.roundEnded()
@@ -542,7 +556,7 @@ func (g *Game) skipQuestion() error {
 		g.setState(RecvPick, g.LastToPick)
 		msg = "Question unanswered"
 	}
-	return g.messageAllPlayers(msg)
+	g.messageAllPlayers(msg)
 }
 
 func (g *Game) resetGuesses() {
@@ -552,25 +566,21 @@ func (g *Game) resetGuesses() {
 	g.Challengers = []string{}
 }
 
-func (g *Game) messageAllPlayers(msg string) error {
-	for _, player := range g.Players {
-		if err := player.sendMessage(Response{
-			Code:      http.StatusOK,
+func (g *Game) messageAllPlayers(msg string) {
+	for _, p := range g.Players {
+		_ = p.sendMessage(Response{
+			Code:      socket.Ok,
 			Message:   msg,
 			Game:      g,
-			CurPlayer: player,
-		}); err != nil {
-			log.Errorf("Error sending message to player %s while messaging all players: %s, stopping game", player.Name, err.Error())
-			g.pauseGame(player)
-		}
+			CurPlayer: p,
+		})
 	}
-	return nil
 }
 
 func (g *Game) getPlayerById(id string) (*Player, error) {
-	for _, player := range g.Players {
-		if player.Id == id {
-			return player, nil
+	for _, p := range g.Players {
+		if p.Id == id {
+			return p, nil
 		}
 	}
 	return &Player{}, fmt.Errorf("player not found in game %s", g.Name)
@@ -578,8 +588,8 @@ func (g *Game) getPlayerById(id string) (*Player, error) {
 
 func (g *Game) allPlayersReady() bool {
 	ready := 0
-	for _, player := range g.Players {
-		if player.Conn != nil {
+	for _, p := range g.Players {
+		if p.Conn != nil {
 			ready++
 		}
 	}
@@ -610,9 +620,9 @@ func (g *Game) roundEnded() bool {
 
 func (g *Game) lowestPlayer() *Player {
 	lowest := g.Players[0]
-	for _, player := range g.Players {
-		if player.Score < lowest.Score {
-			lowest = player
+	for _, p := range g.Players {
+		if p.Score < lowest.Score {
+			lowest = p
 		}
 	}
 	return lowest
@@ -620,8 +630,8 @@ func (g *Game) lowestPlayer() *Player {
 
 func (g *Game) numFinalWagers() int {
 	numWagers := 0
-	for _, player := range g.Players {
-		if player.Score > 0 {
+	for _, p := range g.Players {
+		if p.Score > 0 {
 			numWagers++
 		}
 	}

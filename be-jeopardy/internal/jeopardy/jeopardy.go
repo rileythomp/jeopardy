@@ -2,11 +2,11 @@ package jeopardy
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/nwtgck/go-fakelish"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 )
 
 var (
@@ -152,8 +152,7 @@ func PlayGame(playerId string, conn SafeConn) error {
 	player.sendPings()
 	player.processMessages(game.msgChan, game.pauseChan)
 
-	// TODO: HANDLE THIS ERROR
-	_ = game.messageAllPlayers(msg)
+	game.messageAllPlayers(msg)
 	return nil
 }
 
@@ -184,9 +183,8 @@ func PlayAgain(playerId string) error {
 		return err
 	}
 
-	log.Infof("Player %s wants to play again", player.Name)
-
 	player.PlayAgain = true
+
 	restartGame := true
 	for _, p := range game.Players {
 		if !p.PlayAgain || p.Conn == nil {
@@ -194,14 +192,22 @@ func PlayAgain(playerId string) error {
 		}
 	}
 	if restartGame {
+		log.Infof("Restarting game %s", game.Name)
 		game.restartChan <- true
 		return nil
 	}
-	log.Infof("Waiting for other players to play again")
-	return player.sendMessage(Response{
-		Code:      http.StatusOK,
-		Message:   "Waiting for other players to play again",
-		Game:      game,
-		CurPlayer: player,
-	})
+
+	for _, p := range game.Players {
+		msg := fmt.Sprintf("%s wants to play again", player.Name)
+		if p.Id == player.Id {
+			msg = "Waiting for all other players to play again"
+		}
+		_ = p.sendMessage(Response{
+			Code:      socket.Info,
+			Message:   msg,
+			Game:      game,
+			CurPlayer: p,
+		})
+	}
+	return nil
 }

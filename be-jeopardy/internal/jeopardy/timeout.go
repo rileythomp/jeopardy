@@ -37,7 +37,7 @@ func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *
 		case <-timeoutCtx.Done():
 			if err := processTimeout(player); err != nil {
 				log.Errorf("Unexpected error after timeout for player %s: %s\n", player.Name, err)
-				panic("error processing a timeout")
+				// TODO: HOW TO HANDLE THIS?
 			}
 			return
 		}
@@ -56,7 +56,10 @@ func (g *Game) startPickTimeout(player *Player) {
 func (g *Game) startBuzzTimeout(player *Player) {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelBuzzTimeout = cancel
-	g.startTimeout(ctx, buzzTimeout, &Player{}, func(_ *Player) error { return g.skipQuestion() })
+	g.startTimeout(ctx, buzzTimeout, &Player{}, func(_ *Player) error {
+		g.skipQuestion()
+		return nil
+	})
 }
 
 func (g *Game) startAnswerTimeout(player *Player) {
@@ -73,7 +76,8 @@ func (g *Game) startAnswerTimeout(player *Player) {
 			// TODO: HANDLE THIS AND EMPTY ANSWERS ON THE UI NICER
 			return g.processFinalRoundAns(player, false, "answer-timeout")
 		}
-		return g.nextQuestion(player, false)
+		g.nextQuestion(player, false)
+		return nil
 	})
 }
 
@@ -81,7 +85,8 @@ func (g *Game) startVoteTimeout(player *Player) {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelVoteTimeout = cancel
 	g.startTimeout(ctx, voteTimeout, &Player{}, func(_ *Player) error {
-		return g.nextQuestion(g.LastToAnswer, g.AnsCorrectness)
+		g.nextQuestion(g.LastToAnswer, g.AnsCorrectness)
+		return nil
 	})
 }
 

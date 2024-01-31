@@ -6,6 +6,14 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const (
+	Info         = 4100
+	Ok           = 4200
+	BadRequest   = 4400
+	Unauthorized = 4401
+	ServerError  = 4500
+)
+
 type SafeConn struct {
 	mu   sync.Mutex
 	conn *websocket.Conn

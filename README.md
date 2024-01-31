@@ -19,11 +19,9 @@ $ ng serve
 
 ### TODO 
 
-* Handle end game 
+* Handle first pick after playing again correctly
 
-* Use correct timeouts on FE
-
-* Hanle blank answers, timeouts and closed connections on the UI more gracefully 
+* Handle blank answers and timeouts more gracefully on the UI 
 
 * Fetch questions from DB
 

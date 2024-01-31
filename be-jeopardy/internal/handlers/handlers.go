@@ -229,21 +229,21 @@ func PlayGame(c *gin.Context) {
 	_, msg, err := ws.ReadMessage()
 	if err != nil {
 		log.Errorf("Error reading message from WebSocket: %s", err.Error())
-		closeConnWithMsg(ws, http.StatusInternalServerError, "Error reading message WebSocket")
+		closeConnWithMsg(ws, socket.ServerError, "Error reading message WebSocket")
 		return
 	}
 
 	var req PlayRequest
 	if err := json.Unmarshal(msg, &req); err != nil {
 		log.Errorf("Error parsing play request: %s", err.Error())
-		closeConnWithMsg(ws, http.StatusBadRequest, "Error parsing play request")
+		closeConnWithMsg(ws, socket.BadRequest, "Error parsing play request")
 		return
 	}
 
 	playerId, err := auth.GetJWTSubject(req.Token)
 	if err != nil {
 		log.Errorf("Error getting playerId from token: %s", err.Error())
-		closeConnWithMsg(ws, http.StatusForbidden, "Error getting playerId from token")
+		closeConnWithMsg(ws, socket.Unauthorized, "Error getting playerId from token")
 		return
 	}
 
@@ -251,7 +251,7 @@ func PlayGame(c *gin.Context) {
 	err = jeopardy.PlayGame(playerId, conn)
 	if err != nil {
 		log.Errorf("Error during game: %s", err.Error())
-		closeConnWithMsg(ws, http.StatusInternalServerError, "Error during game: %s", err.Error())
+		closeConnWithMsg(ws, socket.ServerError, "Error during game: %s", err.Error())
 		return
 	}
 }
@@ -272,7 +272,10 @@ func PlayAgain(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, jeopardy.Response{Message: "PLAYING AGAIN"})
+	c.JSON(http.StatusOK, jeopardy.Response{
+		Code:    http.StatusOK,
+		Message: "Voted to play again",
+	})
 }
 
 func LeaveGame(c *gin.Context) {
@@ -330,7 +333,7 @@ func parseBody(body io.ReadCloser, v any) error {
 
 func closeConnWithMsg(conn *websocket.Conn, code int, msg string, args ...any) {
 	_ = conn.WriteJSON(jeopardy.Response{Code: code, Message: fmt.Sprintf(msg, args...)})
-	conn.Close()
+	_ = conn.Close()
 }
 
 func respondWithError(c *gin.Context, code int, msg string, args ...any) {
