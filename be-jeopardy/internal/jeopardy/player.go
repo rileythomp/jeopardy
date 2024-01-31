@@ -98,10 +98,13 @@ func (p *Player) sendPings() {
 					Code:    socket.Info,
 					Message: ping,
 				}); err != nil {
-					log.Errorf("Error sending ping to player %s: %s", p.Name, err.Error())
+					if p.Conn == nil {
+						log.Infof("Stopping sending pings to player %s because connection is nil", p.Name)
+						return
+					}
 					pingErrors++
 					if pingErrors >= 3 {
-						log.Errorf("Too many ping errors, closing connection to player %s", p.Name)
+						log.Infof("Too many ping errors, closing connection to player %s", p.Name)
 						if err := p.Conn.Close(); err != nil {
 							log.Errorf("Error closing connection: %s", err.Error())
 						}
@@ -181,8 +184,8 @@ func (p *Player) sendMessage(msg Response) error {
 		log.Debugf("Sending message to player %s: %s", p.Name, msg.Message)
 	}
 	if p.Conn == nil {
-		log.Errorf("Skipping sending message to player %s because connection is nil", p.Name)
-		return fmt.Errorf("error sending message to player")
+		log.Errorf("Error sending message to player %s because connection is nil", p.Name)
+		return fmt.Errorf("player has no connection")
 	}
 	if err := p.Conn.WriteJSON(msg); err != nil {
 		log.Errorf("Error sending message to player %s: %s", p.Name, err.Error())
