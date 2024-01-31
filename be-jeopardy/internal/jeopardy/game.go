@@ -162,6 +162,7 @@ func (g *Game) restartGame() {
 		p.resetPlayer()
 	}
 	g.startGame()
+	g.messageAllPlayers("We are ready to play")
 }
 
 func (g *Game) pauseGame(player *Player) {
