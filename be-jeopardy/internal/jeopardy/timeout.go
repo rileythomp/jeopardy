@@ -37,7 +37,6 @@ func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *
 		case <-timeoutCtx.Done():
 			if err := processTimeout(player); err != nil {
 				log.Errorf("Unexpected error after timeout for player %s: %s\n", player.Name, err)
-				// TODO: HOW TO HANDLE THIS?
 			}
 			return
 		}
@@ -73,7 +72,6 @@ func (g *Game) startAnswerTimeout(player *Player) {
 	}
 	go g.startTimeout(ctx, answerTimeout, player, func(player *Player) error {
 		if g.Round == FinalRound {
-			// TODO: HANDLE THIS AND EMPTY ANSWERS ON THE UI NICER
 			return g.processFinalRoundAns(player, false, "answer-timeout")
 		}
 		g.nextQuestion(player, false)
