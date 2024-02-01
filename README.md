@@ -6,6 +6,7 @@ Real-time multi-player Jeopardy game.
 
 ```
 $ cd jeopardy-be
+$ source .env
 $ go mod tidy
 $ make run
 ```
@@ -14,6 +15,7 @@ $ make run
 
 ```
 $ cd jeopardy-fe
+$ npm install
 $ ng serve
 ```
 
