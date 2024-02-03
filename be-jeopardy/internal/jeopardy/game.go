@@ -301,7 +301,7 @@ func (g *Game) processAnswer(player *Player, answer string) error {
 	if !player.CanAnswer {
 		return fmt.Errorf("player cannot answer")
 	}
-	isCorrect := g.CurQuestion.CheckAnswer(answer)
+	isCorrect := g.CurQuestion.checkAnswer(answer)
 	if g.Round == FinalRound {
 		return g.processFinalRoundAns(player, isCorrect, answer)
 	}

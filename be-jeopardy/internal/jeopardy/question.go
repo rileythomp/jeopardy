@@ -26,7 +26,7 @@ type (
 	}
 )
 
-func (q *Question) CheckAnswer(ans string) bool {
+func (q *Question) checkAnswer(ans string) bool {
 	ans = strings.ToLower(ans)
 	corrAns := strings.ToLower(q.Answer)
 	if len(ans) < 5 {
@@ -45,7 +45,7 @@ func (q *Question) CheckAnswer(ans string) bool {
 	return levenshtein.ComputeDistance(ans, corrAns) < 7
 }
 
-func (q *Question) Equal(q0 Question) bool {
+func (q *Question) equal(q0 Question) bool {
 	return q.Question == q0.Question && q.Answer == q0.Answer
 }
 
@@ -139,14 +139,14 @@ func (g *Game) firstAvailableQuestion() (int, int) {
 func (g *Game) disableQuestion() {
 	for i, category := range g.FirstRound {
 		for j, q := range category.Questions {
-			if q.Equal(g.CurQuestion) {
+			if q.equal(g.CurQuestion) {
 				g.FirstRound[i].Questions[j].CanChoose = false
 			}
 		}
 	}
 	for i, category := range g.SecondRound {
 		for j, q := range category.Questions {
-			if q.Equal(g.CurQuestion) {
+			if q.equal(g.CurQuestion) {
 				g.SecondRound[i].Questions[j].CanChoose = false
 			}
 		}
