@@ -4,24 +4,18 @@ import (
 	"context"
 	_ "embed"
 	"os"
-	"strings"
 
-	"github.com/agnivade/levenshtein"
 	"github.com/jackc/pgx/v5"
 )
 
 type (
 	Question struct {
-		Round       int    `json:"round"`
-		Value       int    `json:"value"`
-		Category    string `json:"category"`
-		Comments    string `json:"comments"`
-		Question    string `json:"question"`
-		Answer      string `json:"answer"`
-		AirDate     string `json:"airDate"`
-		Notes       string `json:"notes"`
-		CanChoose   bool   `json:"canChoose"`
-		DailyDouble bool   `json:"dailyDouble"`
+		Round    int    `json:"round"`
+		Value    int    `json:"value"`
+		Category string `json:"category"`
+		Comments string `json:"comments"`
+		Question string `json:"question"`
+		Answer   string `json:"answer"`
 	}
 
 	QuestionDB struct {
@@ -50,7 +44,7 @@ func (db *QuestionDB) GetQuestions() ([]Question, error) {
 	questions := []Question{}
 	for rows.Next() {
 		var q Question
-		err := rows.Scan(&q.Round, &q.Value, &q.Category, &q.Comments, &q.Question, &q.Answer, &q.Comments)
+		err := rows.Scan(&q.Round, &q.Value, &q.Category, &q.Comments, &q.Question, &q.Answer)
 		if err != nil {
 			return nil, err
 		}
@@ -62,27 +56,4 @@ func (db *QuestionDB) GetQuestions() ([]Question, error) {
 
 func (db *QuestionDB) Close() error {
 	return db.Conn.Close(context.Background())
-}
-
-func (q *Question) CheckAnswer(ans string) bool {
-	ans = strings.ToLower(ans)
-	corrAns := strings.ToLower(q.Answer)
-	if len(ans) < 5 {
-		return ans == corrAns
-	} else if len(corrAns) < 7 {
-		return levenshtein.ComputeDistance(ans, corrAns) < 2
-	} else if len(corrAns) < 9 {
-		return levenshtein.ComputeDistance(ans, corrAns) < 3
-	} else if len(corrAns) < 11 {
-		return levenshtein.ComputeDistance(ans, corrAns) < 4
-	} else if len(corrAns) < 13 {
-		return levenshtein.ComputeDistance(ans, corrAns) < 5
-	} else if len(corrAns) < 15 {
-		return levenshtein.ComputeDistance(ans, corrAns) < 6
-	}
-	return levenshtein.ComputeDistance(ans, corrAns) < 7
-}
-
-func (q *Question) Equal(q0 Question) bool {
-	return q.Question == q0.Question && q.Answer == q0.Answer
 }

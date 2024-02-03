@@ -15,19 +15,19 @@ r2_categories as (
 	limit 6
 ),
 round1 as (
-	select jc.round, jc.clue_value, jc.category, jc.comments, jc.answer, jc.question, jc.comments 
+	select jc.round, jc.clue_value, jc.category, jc.comments, jc.answer, jc.question 
 	from jeopardy_clues as jc 
 	join r1_categories as r1 
 	on jc.category = r1.category and jc.air_date = r1.air_date and jc.round = r1.round
 ),
 round2 as (
-	select jc.round, jc.clue_value, jc.category, jc.comments, jc.answer, jc.question, jc.comments 
+	select jc.round, jc.clue_value, jc.category, jc.comments, jc.answer, jc.question
 	from jeopardy_clues as jc 
 	join r2_categories as r2
 	on jc.category = r2.category and jc.air_date = r2.air_date and jc.round = r2.round
 ),
 final_jeopardy as (
-	select jc.round, jc.clue_value, jc.category, jc.comments, jc.answer, jc.question, jc.comments 
+	select jc.round, jc.clue_value, jc.category, jc.comments, jc.answer, jc.question 
 	from jeopardy_clues as jc
 	where round = 3
 	order by random()

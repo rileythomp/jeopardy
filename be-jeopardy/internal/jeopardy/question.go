@@ -2,15 +2,10 @@ package jeopardy
 
 import (
 	"math/rand"
+	"strings"
 
+	"github.com/agnivade/levenshtein"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
-)
-
-type (
-	Category struct {
-		Title     string        `json:"title"`
-		Questions []db.Question `json:"questions"`
-	}
 )
 
 const (
@@ -18,13 +13,50 @@ const (
 	numQuestions  = 5
 )
 
+type (
+	Category struct {
+		Title     string     `json:"title"`
+		Questions []Question `json:"questions"`
+	}
+
+	Question struct {
+		db.Question
+		CanChoose   bool `json:"canChoose"`
+		DailyDouble bool `json:"dailyDouble"`
+	}
+)
+
+func (q *Question) CheckAnswer(ans string) bool {
+	ans = strings.ToLower(ans)
+	corrAns := strings.ToLower(q.Answer)
+	if len(ans) < 5 {
+		return ans == corrAns
+	} else if len(corrAns) < 7 {
+		return levenshtein.ComputeDistance(ans, corrAns) < 2
+	} else if len(corrAns) < 9 {
+		return levenshtein.ComputeDistance(ans, corrAns) < 3
+	} else if len(corrAns) < 11 {
+		return levenshtein.ComputeDistance(ans, corrAns) < 4
+	} else if len(corrAns) < 13 {
+		return levenshtein.ComputeDistance(ans, corrAns) < 5
+	} else if len(corrAns) < 15 {
+		return levenshtein.ComputeDistance(ans, corrAns) < 6
+	}
+	return levenshtein.ComputeDistance(ans, corrAns) < 7
+}
+
+func (q *Question) Equal(q0 Question) bool {
+	return q.Question == q0.Question && q.Answer == q0.Answer
+}
+
 func (g *Game) setQuestions() error {
 	questions, err := g.questionDB.GetQuestions()
 	if err != nil {
 		return err
 	}
 	category := Category{}
-	for i, question := range questions {
+	for i, q := range questions {
+		question := Question{Question: q}
 		if question.Round == 3 {
 			g.FinalQuestion = question
 			continue
