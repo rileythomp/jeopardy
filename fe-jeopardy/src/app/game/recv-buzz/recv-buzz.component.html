@@ -1,4 +1,8 @@
 <div>
+    <span>Category: {{ game.CurCategory() }} </span>
+    <br>
+    <span *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</span>
+    <br>
     Question: {{ game.CurQuestion() }}
     <br>
     Value: {{ game.CurValue() }}

@@ -5,25 +5,25 @@ import { WebsocketService } from 'src/app/services/websocket.service';
 import { GameStateService } from 'src/app/services/game-state.service';
 
 @Component({
-    selector: 'app-recv-pick',
-    templateUrl: './recv-pick.component.html',
-    styleUrls: ['./recv-pick.component.less']
+	selector: 'app-recv-pick',
+	templateUrl: './recv-pick.component.html',
+	styleUrls: ['./recv-pick.component.less']
 })
 export class RecvPickComponent {
-    @Input() countdownSeconds: number;
-    topics: string[];
-    questionRows: Question[][];
+	@Input() countdownSeconds: number;
+	categories: string[];
+	questionRows: Question[][];
 
-    constructor(
-        private websocketService: WebsocketService,
-        protected game: GameStateService,
-        protected player: PlayerService,
-    ) {
-		this.topics = this.game.Topics();
+	constructor(
+		private websocketService: WebsocketService,
+		protected game: GameStateService,
+		protected player: PlayerService,
+	) {
+		this.categories = this.game.Categories();
 		this.questionRows = this.game.QuestionRows();
 	}
 
-    highlightQuestion(event: any, color: string) {
+	highlightQuestion(event: any, color: string) {
 		if (event.target.style.backgroundColor == 'lightpink') {
 			return
 		}
@@ -32,10 +32,10 @@ export class RecvPickComponent {
 		}
 	}
 
-    handlePick(topicIdx: number, valIdx: number) {
-		if (this.player.CanPick() && this.game.QuestionCanBePicked(topicIdx, valIdx)) {
+	handlePick(catIdx: number, valIdx: number) {
+		if (this.player.CanPick() && this.game.QuestionCanBePicked(catIdx, valIdx)) {
 			this.websocketService.Send({
-				topicIdx: topicIdx,
+				catIdx: catIdx,
 				valIdx: valIdx,
 			})
 		}

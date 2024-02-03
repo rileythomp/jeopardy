@@ -12,6 +12,22 @@ conn = psycopg2.connect(
 )
 db = conn.cursor()
 
+db.execute(
+    '''
+    create table if not exists jeopardy_clues (
+        round int,
+        clue_value int,  
+        daily_double_value int,
+        category text, 
+        comments text,
+        answer text, 
+        question text, 
+        air_date text, 
+        notes text
+    );
+    '''
+)
+
 inserts = 0
 start = time.time()
 with os.scandir('clues') as files:
@@ -25,9 +41,8 @@ with os.scandir('clues') as files:
                 rows += 1
                 if rows == 1:
                     continue
-                del clue[2]
                 db.execute(
-                    'insert into jeopardy_clues (round, clue_value, category, comments, answer, question, air_date, notes) values (%s, %s, %s, %s, %s, %s, %s, %s)',
+                    'insert into jeopardy_clues (round, clue_value, daily_double_value, category, comments, answer, question, air_date, notes) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
                     clue
                 )
                 inserts += 1
@@ -43,6 +58,22 @@ db.execute(
     set category = replace(category, '\\"', '"'),
     answer = replace(answer, '\\"', '"'),
     question = replace(question, '\\"', '"');
+    '''
+)
+
+db.execute(
+    '''
+    update jeopardy_clues 
+    set comments = ''
+    where comments != '' and comments not like '(%: %)';
+    '''
+)
+
+db.execute(
+    '''
+    update jeopardy_clues 
+    set comments = rtrim(substring(comments from position(':' in comments) + 2), ')') 
+    where comments != '' and comments like '(%: %)';
     '''
 )
 

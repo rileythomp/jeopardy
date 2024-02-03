@@ -183,9 +183,6 @@ func (p *Player) readMessage() ([]byte, error) {
 }
 
 func (p *Player) sendMessage(msg Response) error {
-	if msg.Message != ping {
-		log.Debugf("Sending message to player %s: %s", p.Name, msg.Message)
-	}
 	if p.Conn == nil {
 		log.Errorf("Error sending message to player %s because connection is nil", p.Name)
 		return fmt.Errorf("player has no connection")

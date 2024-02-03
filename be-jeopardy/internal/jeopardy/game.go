@@ -4,33 +4,35 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 )
 
 type (
 	Game struct {
-		Name           string     `json:"name"`
-		State          GameState  `json:"state"`
-		Round          RoundState `json:"round"`
-		FirstRound     []Topic    `json:"firstRound"`
-		SecondRound    []Topic    `json:"secondRound"`
-		FinalQuestion  Question   `json:"finalQuestion"`
-		CurQuestion    Question   `json:"curQuestion"`
-		Players        []*Player  `json:"players"`
-		LastToPick     *Player    `json:"lastToPick"`
-		LastToBuzz     *Player    `json:"lastToBuzz"`
-		LastToAnswer   *Player    `json:"lastToAnswer"`
-		LastAnswer     string     `json:"lastAnswer"`
-		AnsCorrectness bool       `json:"ansCorrectness"`
-		GuessedWrong   []string   `json:"guessedWrong"`
-		Passed         []string   `json:"passed"`
-		Confirmers     []string   `json:"confirmations"`
-		Challengers    []string   `json:"challenges"`
-		NumFinalWagers int        `json:"numFinalWagers"`
-		FinalWagers    []string   `json:"finalWagers"`
-		FinalAnswers   []string   `json:"finalAnswers"`
-		Paused         bool       `json:"paused"`
+		Name           string      `json:"name"`
+		State          GameState   `json:"state"`
+		Round          RoundState  `json:"round"`
+		FirstRound     []Category  `json:"firstRound"`
+		SecondRound    []Category  `json:"secondRound"`
+		FinalQuestion  db.Question `json:"finalQuestion"`
+		CurQuestion    db.Question `json:"curQuestion"`
+		Players        []*Player   `json:"players"`
+		LastToPick     *Player     `json:"lastToPick"`
+		LastToBuzz     *Player     `json:"lastToBuzz"`
+		LastToAnswer   *Player     `json:"lastToAnswer"`
+		PreviousAnswer string      `json:"previousAnswer"`
+		LastAnswer     string      `json:"lastAnswer"`
+		AnsCorrectness bool        `json:"ansCorrectness"`
+		GuessedWrong   []string    `json:"guessedWrong"`
+		Passed         []string    `json:"passed"`
+		Confirmers     []string    `json:"confirmations"`
+		Challengers    []string    `json:"challenges"`
+		NumFinalWagers int         `json:"numFinalWagers"`
+		FinalWagers    []string    `json:"finalWagers"`
+		FinalAnswers   []string    `json:"finalAnswers"`
+		Paused         bool        `json:"paused"`
 
 		cancelPickTimeout context.CancelFunc
 		cancelBuzzTimeout context.CancelFunc
@@ -39,6 +41,13 @@ type (
 		msgChan     chan Message
 		pauseChan   chan *Player
 		restartChan chan bool
+
+		questionDB QuestionDB
+	}
+
+	QuestionDB interface {
+		GetQuestions() ([]db.Question, error)
+		Close() error
 	}
 
 	Message struct {
@@ -52,8 +61,8 @@ type (
 	}
 
 	PickMessage struct {
-		TopicIdx int `json:"topicIdx"`
-		ValIdx   int `json:"valIdx"`
+		CatIdx int `json:"catIdx"`
+		ValIdx int `json:"valIdx"`
 	}
 
 	BuzzMessage struct {
@@ -107,18 +116,19 @@ const (
 
 const numPlayers = 3
 
-func NewGame(name string) (*Game, error) {
+func NewGame(db QuestionDB) (*Game, error) {
 	game := &Game{
 		State:             PreGame,
 		Players:           []*Player{},
 		Round:             FirstRound,
-		Name:              name,
+		Name:              genGameCode(),
 		cancelPickTimeout: func() {},
 		cancelBuzzTimeout: func() {},
 		cancelVoteTimeout: func() {},
 		msgChan:           make(chan Message),
 		pauseChan:         make(chan *Player),
 		restartChan:       make(chan bool),
+		questionDB:        db,
 	}
 	if err := game.setQuestions(); err != nil {
 		return nil, err
@@ -184,6 +194,9 @@ func (g *Game) pauseGame(player *Player) {
 	}
 	if endGame {
 		log.Infof("All players disconnected, removing game %s\n", g.Name)
+		if err := g.questionDB.Close(); err != nil {
+			log.Errorf("Error closing question db: %s\n", err.Error())
+		}
 		delete(publicGames, g.Name)
 		delete(privateGames, g.Name)
 		for _, p := range g.Players {
@@ -203,7 +216,7 @@ func (g *Game) processMsg(msg Message) error {
 	switch g.State {
 	case RecvPick:
 		log.Infof("Player %s picked\n", player.Name)
-		err = g.processPick(player, msg.TopicIdx, msg.ValIdx)
+		err = g.processPick(player, msg.CatIdx, msg.ValIdx)
 	case RecvBuzz:
 		log.Infof("Player %s buzzed\n", player.Name)
 		err = g.processBuzz(player, msg.IsPass)
@@ -225,19 +238,19 @@ func (g *Game) processMsg(msg Message) error {
 	return err
 }
 
-func (g *Game) processPick(player *Player, topicIdx, valIdx int) error {
+func (g *Game) processPick(player *Player, catIdx, valIdx int) error {
 	g.cancelPickTimeout()
 	if !player.CanPick {
 		return fmt.Errorf("player cannot pick")
 	}
-	if topicIdx < 0 || valIdx < 0 || topicIdx >= numTopics || valIdx >= numQuestions {
+	if catIdx < 0 || valIdx < 0 || catIdx >= numCategories || valIdx >= numQuestions {
 		return fmt.Errorf("invalid question pick")
 	}
 	curRound := g.FirstRound
 	if g.Round == SecondRound {
 		curRound = g.SecondRound
 	}
-	curQuestion := curRound[topicIdx].Questions[valIdx]
+	curQuestion := curRound[catIdx].Questions[valIdx]
 	if !curQuestion.CanChoose {
 		return fmt.Errorf("question cannot be chosen")
 	}
@@ -251,6 +264,7 @@ func (g *Game) processPick(player *Player, topicIdx, valIdx int) error {
 		g.setState(RecvBuzz, &Player{})
 		msg = "New Question"
 	}
+	g.PreviousAnswer = g.CurQuestion.Answer
 	g.messageAllPlayers(msg)
 	return nil
 }
@@ -287,7 +301,7 @@ func (g *Game) processAnswer(player *Player, answer string) error {
 	if !player.CanAnswer {
 		return fmt.Errorf("player cannot answer")
 	}
-	isCorrect := g.CurQuestion.checkAnswer(answer)
+	isCorrect := g.CurQuestion.CheckAnswer(answer)
 	if g.Round == FinalRound {
 		return g.processFinalRoundAns(player, isCorrect, answer)
 	}
@@ -519,8 +533,7 @@ func (g *Game) nextQuestion(player *Player, isCorrect bool) {
 	var msg string
 	roundOver := g.roundEnded()
 	if roundOver && g.Round == FirstRound {
-		// g.startSecondRound()
-		g.startFinalRound()
+		g.startSecondRound()
 		msg = "First round ended"
 	} else if roundOver && g.Round == SecondRound {
 		g.startFinalRound()
@@ -547,8 +560,7 @@ func (g *Game) skipQuestion() {
 	g.disableQuestion()
 	roundOver := g.roundEnded()
 	if roundOver && g.Round == FirstRound {
-		// g.startSecondRound()
-		g.startFinalRound()
+		g.startSecondRound()
 		msg = "First round ended"
 	} else if roundOver && g.Round == SecondRound {
 		g.startFinalRound()
@@ -610,8 +622,8 @@ func (g *Game) roundEnded() bool {
 	if g.Round == SecondRound {
 		curRound = g.SecondRound
 	}
-	for _, topic := range curRound {
-		for _, question := range topic.Questions {
+	for _, category := range curRound {
+		for _, question := range category.Questions {
 			if question.CanChoose {
 				return false
 			}
