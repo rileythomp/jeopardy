@@ -14,6 +14,7 @@ export type Game = {
     lastToAnswer: Player;
     guessedWrong: string[];
     paused: boolean;
+    startBuzzCountdown: boolean;
 };
 
 export type Player = {

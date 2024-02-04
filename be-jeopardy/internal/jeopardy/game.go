@@ -20,7 +20,6 @@ type (
 		CurQuestion      Question   `json:"curQuestion"`
 		Players          []*Player  `json:"players"`
 		LastToPick       *Player    `json:"lastToPick"`
-		LastToBuzz       *Player    `json:"lastToBuzz"`
 		LastToAnswer     *Player    `json:"lastToAnswer"`
 		PreviousQuestion string     `json:"previousQuestion"`
 		PreviousAnswer   string     `json:"previousAnswer"`
@@ -34,6 +33,8 @@ type (
 		FinalWagers      []string   `json:"finalWagers"`
 		FinalAnswers     []string   `json:"finalAnswers"`
 		Paused           bool       `json:"paused"`
+
+		StartBuzzCountdown bool `json:"startBuzzCountdown"`
 
 		cancelPickTimeout context.CancelFunc
 		cancelBuzzTimeout context.CancelFunc
@@ -157,7 +158,6 @@ func (g *Game) restartGame() {
 	g.State = PreGame
 	g.Round = FirstRound
 	g.LastToPick = &Player{}
-	g.LastToBuzz = &Player{}
 	g.LastToAnswer = &Player{}
 	g.LastAnswer = ""
 	g.AnsCorrectness = false
@@ -240,13 +240,13 @@ func (g *Game) processMsg(msg Message) error {
 }
 
 func (g *Game) processPick(player *Player, catIdx, valIdx int) error {
-	g.cancelPickTimeout()
 	if !player.CanPick {
 		return fmt.Errorf("player cannot pick")
 	}
 	if catIdx < 0 || valIdx < 0 || catIdx >= numCategories || valIdx >= numQuestions {
 		return fmt.Errorf("invalid question pick")
 	}
+	g.cancelPickTimeout()
 	curRound := g.FirstRound
 	if g.Round == SecondRound {
 		curRound = g.SecondRound
@@ -283,6 +283,7 @@ func (g *Game) processBuzz(player *Player, isPass bool) error {
 			g.skipQuestion()
 			return nil
 		}
+		g.StartBuzzCountdown = false
 		_ = player.sendMessage(Response{
 			Code:      socket.Ok,
 			Message:   "You passed",
@@ -291,7 +292,6 @@ func (g *Game) processBuzz(player *Player, isPass bool) error {
 		})
 		return nil
 	}
-	g.LastToBuzz = player
 	g.cancelBuzzTimeout()
 	g.setState(RecvAns, player)
 	g.messageAllPlayers("Player buzzed")
@@ -299,10 +299,10 @@ func (g *Game) processBuzz(player *Player, isPass bool) error {
 }
 
 func (g *Game) processAnswer(player *Player, answer string) error {
-	player.cancelAnswerTimeout()
 	if !player.CanAnswer {
 		return fmt.Errorf("player cannot answer")
 	}
+	player.cancelAnswerTimeout()
 	isCorrect := g.CurQuestion.checkAnswer(answer)
 	if g.Round == FinalRound {
 		return g.processFinalRoundAns(player, isCorrect, answer)
@@ -341,10 +341,10 @@ func (g *Game) processVote(player *Player, confirm bool) error {
 }
 
 func (g *Game) processWager(player *Player, wager int) error {
-	player.cancelWagerTimeout()
 	if !player.CanWager {
 		return fmt.Errorf("player cannot wager")
 	}
+	player.cancelWagerTimeout()
 	if min, max, ok := g.validWager(wager, player.Score); !ok {
 		g.startWagerTimeout(player)
 		_ = player.sendMessage(Response{
@@ -507,9 +507,10 @@ func (g *Game) startGame() {
 }
 
 func (g *Game) startSecondRound() {
-	g.Round = SecondRound
-	g.resetGuesses()
-	g.setState(RecvPick, g.lowestPlayer())
+	g.startFinalRound()
+	// g.Round = SecondRound
+	// g.resetGuesses()
+	// g.setState(RecvPick, g.lowestPlayer())
 }
 
 func (g *Game) startFinalRound() {

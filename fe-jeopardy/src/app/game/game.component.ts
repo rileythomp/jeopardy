@@ -109,25 +109,21 @@ export class GameComponent implements OnInit {
 						this.player.BlockBuzz(true)
 						setTimeout(() => {
 							this.player.BlockBuzz(false)
-							if (this.player.CanBuzz()) {
+							if (this.game.StartBuzzCountdown()) {
 								this.startCountdownTimer(buzzTimeout - buzzDelay / 1000);
 							}
 						}, buzzDelay);
 					} else {
-						if (this.player.CanBuzz()) {
+						if (this.game.StartBuzzCountdown()) {
 							this.startCountdownTimer(buzzTimeout);
 						}
 					}
 					break;
 				case GameState.RecvAns:
-					if (this.player.CanAnswer()) {
-						this.startCountdownTimer(defaultAnsTimeout);
-					}
+					this.startCountdownTimer(defaultAnsTimeout);
 					break;
 				case GameState.RecvPick:
-					if (this.player.CanPick()) {
-						this.startCountdownTimer(pickTimeout);
-					}
+					this.startCountdownTimer(pickTimeout);
 					break;
 				case GameState.RecvVote:
 					if (this.player.CanVote()) {
@@ -135,9 +131,7 @@ export class GameComponent implements OnInit {
 					}
 					break
 				case GameState.RecvWager:
-					if (this.player.CanWager()) {
-						this.startCountdownTimer(dailyDoubleWagerTimeout);
-					}
+					this.startCountdownTimer(dailyDoubleWagerTimeout);
 					break;
 				default:
 					// TODO: REPLACE WITH MODAL

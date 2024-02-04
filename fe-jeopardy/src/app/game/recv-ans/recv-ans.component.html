@@ -9,8 +9,8 @@
     <div *ngIf="player.CanAnswer()">
         <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
         <button (click)="handleAnswer()">Answer</button>
-        <p>seconds to answer: {{ countdownSeconds }}</p>
     </div>
+    <p>seconds to answer: {{ countdownSeconds }}</p>
 
     <div *ngIf="!player.CanAnswer()">
         {{ game.AnsweringPlayer() }} is answering the question
@@ -23,6 +23,6 @@
     <div *ngIf="player.CanAnswer()">
         <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
         <button (click)="handleAnswer()">Answer</button>
-        <p>seconds to final answer: {{ countdownSeconds }}</p>
     </div>
+    <p>seconds to final answer: {{ countdownSeconds }}</p>
 </div>
