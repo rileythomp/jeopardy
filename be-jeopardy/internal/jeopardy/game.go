@@ -11,28 +11,29 @@ import (
 
 type (
 	Game struct {
-		Name           string     `json:"name"`
-		State          GameState  `json:"state"`
-		Round          RoundState `json:"round"`
-		FirstRound     []Category `json:"firstRound"`
-		SecondRound    []Category `json:"secondRound"`
-		FinalQuestion  Question   `json:"finalQuestion"`
-		CurQuestion    Question   `json:"curQuestion"`
-		Players        []*Player  `json:"players"`
-		LastToPick     *Player    `json:"lastToPick"`
-		LastToBuzz     *Player    `json:"lastToBuzz"`
-		LastToAnswer   *Player    `json:"lastToAnswer"`
-		PreviousAnswer string     `json:"previousAnswer"`
-		LastAnswer     string     `json:"lastAnswer"`
-		AnsCorrectness bool       `json:"ansCorrectness"`
-		GuessedWrong   []string   `json:"guessedWrong"`
-		Passed         []string   `json:"passed"`
-		Confirmers     []string   `json:"confirmations"`
-		Challengers    []string   `json:"challenges"`
-		NumFinalWagers int        `json:"numFinalWagers"`
-		FinalWagers    []string   `json:"finalWagers"`
-		FinalAnswers   []string   `json:"finalAnswers"`
-		Paused         bool       `json:"paused"`
+		Name             string     `json:"name"`
+		State            GameState  `json:"state"`
+		Round            RoundState `json:"round"`
+		FirstRound       []Category `json:"firstRound"`
+		SecondRound      []Category `json:"secondRound"`
+		FinalQuestion    Question   `json:"finalQuestion"`
+		CurQuestion      Question   `json:"curQuestion"`
+		Players          []*Player  `json:"players"`
+		LastToPick       *Player    `json:"lastToPick"`
+		LastToBuzz       *Player    `json:"lastToBuzz"`
+		LastToAnswer     *Player    `json:"lastToAnswer"`
+		PreviousQuestion string     `json:"previousQuestion"`
+		PreviousAnswer   string     `json:"previousAnswer"`
+		LastAnswer       string     `json:"lastAnswer"`
+		AnsCorrectness   bool       `json:"ansCorrectness"`
+		GuessedWrong     []string   `json:"guessedWrong"`
+		Passed           []string   `json:"passed"`
+		Confirmers       []string   `json:"confirmations"`
+		Challengers      []string   `json:"challenges"`
+		NumFinalWagers   int        `json:"numFinalWagers"`
+		FinalWagers      []string   `json:"finalWagers"`
+		FinalAnswers     []string   `json:"finalAnswers"`
+		Paused           bool       `json:"paused"`
 
 		cancelPickTimeout context.CancelFunc
 		cancelBuzzTimeout context.CancelFunc
@@ -264,6 +265,7 @@ func (g *Game) processPick(player *Player, catIdx, valIdx int) error {
 		g.setState(RecvBuzz, &Player{})
 		msg = "New Question"
 	}
+	g.PreviousQuestion = g.CurQuestion.Question.Question
 	g.PreviousAnswer = g.CurQuestion.Answer
 	g.messageAllPlayers(msg)
 	return nil

@@ -7,6 +7,7 @@ export type Game = {
     secondRound: Category[];
     finalQuestion: Question;
     curQuestion: Question;
+    previousQuestion: string;
     previousAnswer: string;
     lastAnswer: string;
     ansCorrectness: boolean;

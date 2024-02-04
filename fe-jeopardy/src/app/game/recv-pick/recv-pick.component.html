@@ -1,4 +1,5 @@
 <div>
+    <p *ngIf="game.PreviousQuestion() != ''">Previous question: {{ game.PreviousQuestion() }} </p>
     <p *ngIf="game.PreviousAnswer() != ''">Previous answer: {{ game.PreviousAnswer() }}</p>
     <p>It is {{ game.PickingPlayer() }}'s turn to pick a question</p>
     <table>

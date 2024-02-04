@@ -82,6 +82,10 @@ export class GameStateService {
 		return this.game.lastAnswer;
 	}
 
+	PreviousQuestion(): string {
+		return this.game.previousQuestion;
+	}
+
 	PreviousAnswer(): string {
 		return this.game.previousAnswer;
 	}
