@@ -38,29 +38,28 @@ export class GameStateService {
 		let firstRow = [];
 		let secondRow = [];
 		let thirdRow = [];
-		// let fourthRow = [];
-		// let fifthRow = [];
+		let fourthRow = [];
+		let fifthRow = [];
 		let round = this.game.firstRound;
 		if (this.game.round == RoundState.SecondRound) {
 			round = this.game.secondRound;
 		}
-		for (let topic of round) {
-			firstRow.push(topic.questions[0]);
-			secondRow.push(topic.questions[1]);
-			thirdRow.push(topic.questions[2]);
-			// fourthRow.push(topic.questions[3]);
-			// fifthRow.push(topic.questions[4]);
+		for (let category of round) {
+			firstRow.push(category.questions[0]);
+			secondRow.push(category.questions[1]);
+			thirdRow.push(category.questions[2]);
+			fourthRow.push(category.questions[3]);
+			fifthRow.push(category.questions[4]);
 		}
-		return [firstRow, secondRow, thirdRow];
-		// return [firstRow, secondRow, thirdRow, fourthRow, fifthRow];
+		return [firstRow, secondRow, thirdRow, fourthRow, fifthRow];
 	}
 
-	Topics(): string[] {
+	Categories(): string[] {
 		let round = this.game.firstRound;
 		if (this.game.round == RoundState.SecondRound) {
 			round = this.game.secondRound;
 		}
-		return round.map((topic: {title: string}) => topic.title);
+		return round.map((category: { title: string }) => category.title);
 	}
 
 	PickingPlayer(): string {
@@ -81,6 +80,10 @@ export class GameStateService {
 
 	LastAnswer(): string {
 		return this.game.lastAnswer;
+	}
+
+	PreviousAnswer(): string {
+		return this.game.previousAnswer;
 	}
 
 	FinalAnswer(): string {
@@ -145,6 +148,14 @@ export class GameStateService {
 		return `All players have tied`
 	}
 
+	CurCategory(): string {
+		return this.game.curQuestion.category;
+	}
+
+	CurComments(): string {
+		return this.game.curQuestion.comments;
+	}
+
 	CurQuestion(): string {
 		return this.game.curQuestion.question;
 	}
@@ -153,12 +164,12 @@ export class GameStateService {
 		return this.game.curQuestion.value;
 	}
 
-	QuestionCanBePicked(topicIdx: number, valIdx: number): boolean {
+	QuestionCanBePicked(catIdx: number, valIdx: number): boolean {
 		let round = this.game.firstRound;
 		if (this.game.round == RoundState.SecondRound) {
 			round = this.game.secondRound;
 		}
-		return round[topicIdx].questions[valIdx].canChoose;
+		return round[catIdx].questions[valIdx].canChoose;
 	}
 
 	CurQuestionFirstBuzz(): boolean {

@@ -8,23 +8,23 @@ import (
 )
 
 const (
-	// pickTimeout               = 10 * time.Second
-	// buzzTimeout               = 10 * time.Second
-	// defaultAnsTimeout         = 10 * time.Second
-	// dailyDoubleAnsTimeout     = 10 * time.Second
-	// finalJeopardyAnsTimeout   = 10 * time.Second
-	// voteTimeout               = 10 * time.Second
-	// dailyDoubleWagerTimeout   = 10 * time.Second
-	// finalJeopardyWagerTimeout = 10 * time.Second
-
-	pickTimeout               = 2 * time.Second
-	buzzTimeout               = 2 * time.Second
+	pickTimeout               = 10 * time.Second
+	buzzTimeout               = 20 * time.Second
 	defaultAnsTimeout         = 10 * time.Second
 	dailyDoubleAnsTimeout     = 10 * time.Second
 	finalJeopardyAnsTimeout   = 10 * time.Second
-	voteTimeout               = 2 * time.Second
+	voteTimeout               = 10 * time.Second
 	dailyDoubleWagerTimeout   = 30 * time.Second
 	finalJeopardyWagerTimeout = 30 * time.Second
+
+	// pickTimeout               = 2 * time.Second
+	// buzzTimeout               = 2 * time.Second
+	// defaultAnsTimeout         = 10 * time.Second
+	// dailyDoubleAnsTimeout     = 10 * time.Second
+	// finalJeopardyAnsTimeout   = 10 * time.Second
+	// voteTimeout               = 2 * time.Second
+	// dailyDoubleWagerTimeout   = 30 * time.Second
+	// finalJeopardyWagerTimeout = 30 * time.Second
 )
 
 func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *Player, processTimeout func(player *Player) error) {
@@ -47,8 +47,8 @@ func (g *Game) startPickTimeout(player *Player) {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelPickTimeout = cancel
 	g.startTimeout(ctx, pickTimeout, &Player{}, func(_ *Player) error {
-		topicIdx, valIdx := g.firstAvailableQuestion()
-		return g.processPick(player, topicIdx, valIdx)
+		catIdx, valIdx := g.firstAvailableQuestion()
+		return g.processPick(player, catIdx, valIdx)
 	})
 }
 

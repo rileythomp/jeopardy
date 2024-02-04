@@ -7,25 +7,25 @@ import { JwtService } from '../services/jwt.service';
 import { GameState, Ping } from '../model/model';
 import { environment } from '../../environments/environment';
 
-// const  pickTimeout = 10
-// const  buzzTimeout = 10
-// const  defaultAnsTimeout = 10
-// const  dailyDoubleAnsTimeout = 10
-// const  finalJeopardyAnsTimeout = 10
-// const  voteTimeout = 10
-// const  dailyDoubleWagerTimeout = 10
-// const  finalJeopardyWagerTimeout = 10
-// const  buzzDelay = 2000/2
-
-const pickTimeout = 2
-const buzzTimeout = 2
+const pickTimeout = 10
+const buzzTimeout = 20
 const defaultAnsTimeout = 10
 const dailyDoubleAnsTimeout = 10
 const finalJeopardyAnsTimeout = 10
-const voteTimeout = 2
+const voteTimeout = 10
 const dailyDoubleWagerTimeout = 30
 const finalJeopardyWagerTimeout = 30
-const buzzDelay = 2000 / 2
+const buzzDelay = 2000
+
+// const pickTimeout = 2
+// const buzzTimeout = 2
+// const defaultAnsTimeout = 10
+// const dailyDoubleAnsTimeout = 10
+// const finalJeopardyAnsTimeout = 10
+// const voteTimeout = 2
+// const dailyDoubleWagerTimeout = 30
+// const finalJeopardyWagerTimeout = 30
+// const buzzDelay = 2000 / 2
 
 @Component({
 	selector: 'app-game',

@@ -3,10 +3,11 @@ export type Game = {
     state: GameState;
     round: RoundState;
     players: Player[];
-    firstRound: Topic[];
-    secondRound: Topic[];
+    firstRound: Category[];
+    secondRound: Category[];
     finalQuestion: Question;
     curQuestion: Question;
+    previousAnswer: string;
     lastAnswer: string;
     ansCorrectness: boolean;
     lastToAnswer: Player;
@@ -31,12 +32,14 @@ export type Player = {
     conn: any;
 };
 
-type Topic = {
+type Category = {
     title: string;
     questions: Question[];
 }
 
 export type Question = {
+    category: string;
+    comments: string;
     question: string;
     answer: string;
     value: number;

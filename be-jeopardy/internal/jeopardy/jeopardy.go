@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nwtgck/go-fakelish"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 )
@@ -40,7 +41,12 @@ func CreatePrivateGame(playerName string) (*Game, string, error) {
 		return &Game{}, "", fmt.Errorf("player name must be between 1 and 20 characters")
 	}
 
-	game, err := NewGame(genGameCode())
+	questionDB, err := db.NewQuestionDB()
+	if err != nil {
+		log.Errorf("Error connecting to database: %s", err.Error())
+		return &Game{}, "", fmt.Errorf("Unexpected error creating private game")
+	}
+	game, err := NewGame(questionDB)
 	if err != nil {
 		log.Errorf("Error creating game: %s", err.Error())
 		return &Game{}, "", err
@@ -67,8 +73,12 @@ func JoinPublicGame(playerName string) (*Game, string, error) {
 		}
 	}
 	if game == nil {
-		var err error
-		game, err = NewGame(genGameCode())
+		questionDB, err := db.NewQuestionDB()
+		if err != nil {
+			log.Errorf("Error connecting to database: %s", err.Error())
+			return &Game{}, "", fmt.Errorf("Unexpected error creating private game")
+		}
+		game, err = NewGame(questionDB)
 		if err != nil {
 			log.Errorf("Error creating game: %s", err.Error())
 			return &Game{}, "", err
