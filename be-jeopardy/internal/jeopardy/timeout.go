@@ -8,14 +8,14 @@ import (
 )
 
 const (
-	pickTimeout               = 10 * time.Second
-	buzzTimeout               = 20 * time.Second
-	defaultAnsTimeout         = 10 * time.Second
-	dailyDoubleAnsTimeout     = 10 * time.Second
-	finalJeopardyAnsTimeout   = 10 * time.Second
-	voteTimeout               = 10 * time.Second
-	dailyDoubleWagerTimeout   = 30 * time.Second
-	finalJeopardyWagerTimeout = 30 * time.Second
+	pickTimeout               = 60 * time.Second
+	buzzTimeout               = 60 * time.Second
+	defaultAnsTimeout         = 60 * time.Second
+	dailyDoubleAnsTimeout     = 60 * time.Second
+	finalJeopardyAnsTimeout   = 60 * time.Second
+	voteTimeout               = 60 * time.Second
+	dailyDoubleWagerTimeout   = 60 * time.Second
+	finalJeopardyWagerTimeout = 60 * time.Second
 
 	// pickTimeout               = 2 * time.Second
 	// buzzTimeout               = 2 * time.Second
