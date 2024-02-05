@@ -183,4 +183,12 @@ export class GameStateService {
 	StartBuzzCountdown(): boolean {
 		return this.game.startBuzzCountdown;
 	}
+
+	StartFinalWagerCountdown(): boolean {
+		return this.game.startFinalWagerCountdown;
+	}
+
+	StartFinalAnswerCountdown(): boolean {
+		return this.game.startFinalAnswerCountdown;
+	}
 }

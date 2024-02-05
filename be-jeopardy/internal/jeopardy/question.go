@@ -46,7 +46,7 @@ func (q *Question) checkAnswer(ans string) bool {
 }
 
 func (q *Question) equal(q0 Question) bool {
-	return q.Question == q0.Question && q.Answer == q0.Answer
+	return q.Clue == q0.Clue && q.Answer == q0.Answer
 }
 
 func (g *Game) setQuestions() error {
@@ -85,7 +85,7 @@ func (g *Game) setDailyDoubles() {
 }
 
 func (g *Game) setFirstRoundDailyDouble() {
-	tIdx := rand.Intn(6)
+	tIdx := rand.Intn(numCategories)
 	qIdx := 0
 	num := rand.Intn(10000)
 	if num < 15 {
@@ -103,7 +103,7 @@ func (g *Game) setFirstRoundDailyDouble() {
 }
 
 func (g *Game) setSecondRoundDailyDouble() {
-	tIdx := rand.Intn(6)
+	tIdx := rand.Intn(numCategories)
 	qIdx := 0
 	num := rand.Intn(10000)
 	if num < 15 {

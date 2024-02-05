@@ -1,4 +1,5 @@
 <div *ngIf="!game.FinalRound()">
+    <p>Category: {{ game.CurCategory() }} </p>
     <div *ngIf="player.CanWager()">
         <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
         <button (click)="handleWager()">Wager</button>
@@ -12,6 +13,7 @@
 
 <div *ngIf="game.FinalRound()">
     Final Jeopardy
+    <p>Category: {{ game.CurCategory() }} </p>
     <div *ngIf="player.CanWager()">
         <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
         <button (click)="handleWager()">Wager</button>

@@ -17,14 +17,14 @@ const dailyDoubleWagerTimeout = 60
 const finalJeopardyWagerTimeout = 60
 const buzzDelay = 2000
 
-// const pickTimeout = 2
-// const buzzTimeout = 2
+// const pickTimeout = 5
+// const buzzTimeout = 5
 // const defaultAnsTimeout = 10
 // const dailyDoubleAnsTimeout = 10
 // const finalJeopardyAnsTimeout = 10
-// const voteTimeout = 2
-// const dailyDoubleWagerTimeout = 30
-// const finalJeopardyWagerTimeout = 30
+// const voteTimeout = 5
+// const dailyDoubleWagerTimeout = 10
+// const finalJeopardyWagerTimeout = 10
 // const buzzDelay = 2000 / 2
 
 @Component({
@@ -120,7 +120,11 @@ export class GameComponent implements OnInit {
 					}
 					break;
 				case GameState.RecvAns:
-					this.startCountdownTimer(defaultAnsTimeout);
+					if (!this.game.FinalRound()) {
+						this.startCountdownTimer(defaultAnsTimeout);
+					} else if (this.game.StartFinalAnswerCountdown()) {
+						this.startCountdownTimer(finalJeopardyAnsTimeout);
+					}
 					break;
 				case GameState.RecvPick:
 					this.startCountdownTimer(pickTimeout);
@@ -131,7 +135,11 @@ export class GameComponent implements OnInit {
 					}
 					break
 				case GameState.RecvWager:
-					this.startCountdownTimer(dailyDoubleWagerTimeout);
+					if (!this.game.FinalRound()) {
+						this.startCountdownTimer(dailyDoubleWagerTimeout);
+					} else if (this.game.StartFinalWagerCountdown()) {
+						this.startCountdownTimer(finalJeopardyWagerTimeout);
+					}
 					break;
 				default:
 					// TODO: REPLACE WITH MODAL

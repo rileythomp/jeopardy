@@ -17,14 +17,14 @@ const (
 	dailyDoubleWagerTimeout   = 60 * time.Second
 	finalJeopardyWagerTimeout = 60 * time.Second
 
-	// pickTimeout               = 2 * time.Second
-	// buzzTimeout               = 2 * time.Second
+	// pickTimeout               = 5 * time.Second
+	// buzzTimeout               = 5 * time.Second
 	// defaultAnsTimeout         = 10 * time.Second
 	// dailyDoubleAnsTimeout     = 10 * time.Second
 	// finalJeopardyAnsTimeout   = 10 * time.Second
-	// voteTimeout               = 2 * time.Second
-	// dailyDoubleWagerTimeout   = 30 * time.Second
-	// finalJeopardyWagerTimeout = 30 * time.Second
+	// voteTimeout               = 5 * time.Second
+	// dailyDoubleWagerTimeout   = 10 * time.Second
+	// finalJeopardyWagerTimeout = 10 * time.Second
 )
 
 func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *Player, processTimeout func(player *Player) error) {
@@ -70,6 +70,7 @@ func (g *Game) startAnswerTimeout(player *Player) {
 		answerTimeout = dailyDoubleAnsTimeout
 	} else if g.Round == FinalRound {
 		answerTimeout = finalJeopardyAnsTimeout
+		g.StartFinalAnswerCountdown = true
 	}
 	go g.startTimeout(ctx, answerTimeout, player, func(player *Player) error {
 		if g.Round == FinalRound {
@@ -95,6 +96,7 @@ func (g *Game) startWagerTimeout(player *Player) {
 	wagerTimeout := dailyDoubleWagerTimeout
 	if g.Round == FinalRound {
 		wagerTimeout = finalJeopardyWagerTimeout
+		g.StartFinalWagerCountdown = true
 	}
 	g.startTimeout(ctx, wagerTimeout, player, func(player *Player) error {
 		wager := 5

@@ -14,7 +14,7 @@ type (
 		Value    int    `json:"value"`
 		Category string `json:"category"`
 		Comments string `json:"comments"`
-		Question string `json:"question"`
+		Clue     string `json:"question"`
 		Answer   string `json:"answer"`
 	}
 
@@ -44,7 +44,7 @@ func (db *QuestionDB) GetQuestions() ([]Question, error) {
 	questions := []Question{}
 	for rows.Next() {
 		var q Question
-		err := rows.Scan(&q.Round, &q.Value, &q.Category, &q.Comments, &q.Question, &q.Answer)
+		err := rows.Scan(&q.Round, &q.Value, &q.Category, &q.Comments, &q.Clue, &q.Answer)
 		if err != nil {
 			return nil, err
 		}

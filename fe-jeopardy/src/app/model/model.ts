@@ -15,12 +15,15 @@ export type Game = {
     guessedWrong: string[];
     paused: boolean;
     startBuzzCountdown: boolean;
+    startFinalWagerCountdown: boolean;
+    startFinalAnswerCountdown: boolean;
 };
 
 export type Player = {
     id: string;
     name: string;
     score: number;
+    finalWager: number;
     finalCorrect: boolean;
     finalAnswer: string;
     finalProtestors: any;

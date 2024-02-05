@@ -57,4 +57,8 @@ export class PlayerService {
 	PlayAgain(): boolean {
 		return this.player.playAgain;
 	}
+
+	FinalWager(): number {
+		return this.player.finalWager;
+	}
 }

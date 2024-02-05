@@ -34,7 +34,9 @@ type (
 		FinalAnswers     []string   `json:"finalAnswers"`
 		Paused           bool       `json:"paused"`
 
-		StartBuzzCountdown bool `json:"startBuzzCountdown"`
+		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
+		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
+		StartFinalWagerCountdown  bool `json:"startFinalWagerCountdown"`
 
 		cancelPickTimeout context.CancelFunc
 		cancelBuzzTimeout context.CancelFunc
@@ -265,7 +267,7 @@ func (g *Game) processPick(player *Player, catIdx, valIdx int) error {
 		g.setState(RecvBuzz, &Player{})
 		msg = "New Question"
 	}
-	g.PreviousQuestion = g.CurQuestion.Question.Question
+	g.PreviousQuestion = g.CurQuestion.Clue
 	g.PreviousAnswer = g.CurQuestion.Answer
 	g.messageAllPlayers(msg)
 	return nil
@@ -361,6 +363,7 @@ func (g *Game) processWager(player *Player, wager int) error {
 		player.CanWager = false
 		g.FinalWagers = append(g.FinalWagers, player.Id)
 		if len(g.FinalWagers) != g.NumFinalWagers {
+			g.StartFinalWagerCountdown = false
 			_ = player.sendMessage(Response{
 				Code:      socket.Ok,
 				Message:   "You wagered",
@@ -421,6 +424,7 @@ func (g *Game) processFinalRoundAns(player *Player, isCorrect bool, answer strin
 		g.messageAllPlayers("Final round ended")
 		return nil
 	}
+	g.StartFinalAnswerCountdown = false
 	_ = player.sendMessage(Response{
 		Code:      socket.Ok,
 		Message:   "You answered",
@@ -514,6 +518,9 @@ func (g *Game) startSecondRound() {
 }
 
 func (g *Game) startFinalRound() {
+	for _, p := range g.Players {
+		p.Score = 100
+	}
 	g.Round = FinalRound
 	g.resetGuesses()
 	g.CurQuestion = g.FinalQuestion
