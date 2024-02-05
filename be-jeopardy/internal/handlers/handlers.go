@@ -26,7 +26,7 @@ type (
 		GameCode   string `json:"gameCode"`
 	}
 
-	PlayRequest struct {
+	TokenRequest struct {
 		Token string `json:"token,omitempty"`
 	}
 )
@@ -87,6 +87,11 @@ var (
 			Method:  http.MethodGet,
 			Path:    "/jeopardy/player-games",
 			Handler: GetPlayerGames,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/chat",
+			Handler: JoinGameChat,
 		},
 	}
 
@@ -216,6 +221,46 @@ func JoinPublicGame(c *gin.Context) {
 	})
 }
 
+func JoinGameChat(c *gin.Context) {
+	log.Infof("Received request to join game chat")
+
+	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		log.Errorf("Error upgrading connection to WebSocket: %s", err.Error())
+		respondWithError(c, http.StatusInternalServerError, "Error joining chat")
+		return
+	}
+
+	_, msg, err := ws.ReadMessage()
+	if err != nil {
+		log.Errorf("Error reading message from WebSocket: %s", err.Error())
+		closeConnWithMsg(ws, socket.ServerError, "Error reading message from WebSocket")
+		return
+	}
+
+	var req TokenRequest
+	if err := json.Unmarshal(msg, &req); err != nil {
+		log.Errorf("Error parsing chat request: %s", err.Error())
+		closeConnWithMsg(ws, socket.BadRequest, "Error parsing chat request")
+		return
+	}
+
+	playerId, err := auth.GetJWTSubject(req.Token)
+	if err != nil {
+		log.Errorf("Error getting playerId from token: %s", err.Error())
+		closeConnWithMsg(ws, socket.Unauthorized, "Error getting playerId from token")
+		return
+	}
+
+	conn := socket.NewSafeConn(ws)
+	err = jeopardy.JoinGameChat(playerId, conn)
+	if err != nil {
+		log.Errorf("Error during chat: %s", err.Error())
+		closeConnWithMsg(ws, socket.ServerError, "Error during chat: %s", err.Error())
+		return
+	}
+}
+
 func PlayGame(c *gin.Context) {
 	log.Infof("Received play request")
 
@@ -229,11 +274,11 @@ func PlayGame(c *gin.Context) {
 	_, msg, err := ws.ReadMessage()
 	if err != nil {
 		log.Errorf("Error reading message from WebSocket: %s", err.Error())
-		closeConnWithMsg(ws, socket.ServerError, "Error reading message WebSocket")
+		closeConnWithMsg(ws, socket.ServerError, "Error reading message from WebSocket")
 		return
 	}
 
-	var req PlayRequest
+	var req TokenRequest
 	if err := json.Unmarshal(msg, &req); err != nil {
 		log.Errorf("Error parsing play request: %s", err.Error())
 		closeConnWithMsg(ws, socket.BadRequest, "Error parsing play request")

@@ -34,7 +34,8 @@ type Player struct {
 	FinalProtestors map[string]bool `json:"finalProtestors"`
 	PlayAgain       bool            `json:"playAgain"`
 
-	Conn SafeConn `json:"conn"`
+	Conn     SafeConn `json:"conn"`
+	ChatConn SafeConn `json:"chatConn"`
 
 	cancelAnswerTimeout context.CancelFunc
 	cancelWagerTimeout  context.CancelFunc
