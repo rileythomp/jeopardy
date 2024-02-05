@@ -15,6 +15,7 @@ import { RecvVoteComponent } from './game/recv-vote/recv-vote.component';
 import { RecvWagerComponent } from './game/recv-wager/recv-wager.component';
 import { PostGameComponent } from './game/post-game/post-game.component';
 import { LinkJoinComponent } from './link-join/link-join.component';
+import { ChatComponent } from './game/chat/chat.component';
 
 @NgModule({
   declarations: [
@@ -29,6 +30,7 @@ import { LinkJoinComponent } from './link-join/link-join.component';
     RecvWagerComponent,
     PostGameComponent,
     LinkJoinComponent,
+    ChatComponent,
   ],
   imports: [
     BrowserModule,
