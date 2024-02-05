@@ -1,8 +1,10 @@
 <div>
-    <p>Category: {{ game.CurCategory() }}</p>
-    <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
-    <p>Question: {{ game.CurQuestion() }}</p>
-    <p>Value: {{ game.CurValue() }}</p>
+    <div>
+        <p>Category: {{ game.CurCategory() }}</p>
+        <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
+        <p>Question: {{ game.CurQuestion() }}</p>
+        <p>Value: {{ game.CurValue() }}</p>
+    </div>
     <div *ngIf="player.CanBuzz() && !game.BuzzBlocked()">
         <button (click)="handleBuzz(false)">Buzz</button>
         <button (click)="handleBuzz(true)">Pass</button>

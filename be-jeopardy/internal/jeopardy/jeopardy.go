@@ -202,7 +202,6 @@ func PlayAgain(playerId string) error {
 		}
 	}
 	if restartGame {
-		log.Infof("Restarting game %s", game.Name)
 		game.restartChan <- true
 		return nil
 	}

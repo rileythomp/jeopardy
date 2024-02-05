@@ -221,13 +221,21 @@ func (g *Game) processMsg(msg Message) error {
 		log.Infof("Player %s picked\n", player.Name)
 		err = g.processPick(player, msg.CatIdx, msg.ValIdx)
 	case RecvBuzz:
-		log.Infof("Player %s buzzed\n", player.Name)
+		action := "buzzed"
+		if msg.IsPass {
+			action = "passed"
+		}
+		log.Infof("Player %s %s\n", player.Name, action)
 		err = g.processBuzz(player, msg.IsPass)
 	case RecvAns:
 		log.Infof("Player %s answered\n", player.Name)
 		err = g.processAnswer(player, msg.Answer)
 	case RecvVote:
-		log.Infof("Player %s voted\n", player.Name)
+		action := "accepted"
+		if !msg.Confirm {
+			action = "challenged"
+		}
+		log.Infof("Player %s %s\n", player.Name, action)
 		err = g.processVote(player, msg.Confirm)
 	case RecvWager:
 		log.Infof("Player %s wagered\n", player.Name)

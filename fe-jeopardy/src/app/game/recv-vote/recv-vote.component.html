@@ -1,7 +1,14 @@
 <div *ngIf="player.CanVote()">
-    {{ game.LastToAnswer() }} answered <br>
-    {{ game.CurQuestion() }} <br>
-    <b>{{ game.AnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{ game.LastAnswer() }}</b>. <br>
+    <div>
+        <p>Category: {{ game.CurCategory() }}</p>
+        <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
+        <p>Question: {{ game.CurQuestion() }}</p>
+        <p>Value: {{ game.CurValue() }}</p>
+    </div>
+    <p>
+        {{ game.LastToAnswer() }} answered <b>{{ game.AnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{
+            game.LastAnswer() }}</b>. <br>
+    </p>
     <button (click)="handleVote(true)">Accept</button>
     <button (click)="handleVote(false)">Challenge</button>
 </div>
