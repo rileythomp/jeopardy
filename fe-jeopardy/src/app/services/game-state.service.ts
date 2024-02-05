@@ -191,4 +191,12 @@ export class GameStateService {
 	StartFinalAnswerCountdown(): boolean {
 		return this.game.startFinalAnswerCountdown;
 	}
+
+	BlockBuzz(block: boolean): void {
+		this.game.buzzBlocked = block;
+	}
+
+	BuzzBlocked(): boolean {
+		return this.game.buzzBlocked;
+	}
 }

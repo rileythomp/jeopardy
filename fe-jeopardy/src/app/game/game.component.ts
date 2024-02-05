@@ -106,9 +106,9 @@ export class GameComponent implements OnInit {
 					break
 				case GameState.RecvBuzz:
 					if (this.game.CurQuestionFirstBuzz()) {
-						this.player.BlockBuzz(true)
+						this.game.BlockBuzz(true)
 						setTimeout(() => {
-							this.player.BlockBuzz(false)
+							this.game.BlockBuzz(false)
 							if (this.game.StartBuzzCountdown()) {
 								this.startCountdownTimer(buzzTimeout - buzzDelay / 1000);
 							}

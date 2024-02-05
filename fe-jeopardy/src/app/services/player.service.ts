@@ -30,16 +30,12 @@ export class PlayerService {
 		return this.player.name;
 	}
 
-	BlockBuzz(block: boolean): void {
-		this.player.buzzBlocked = block;
-	}
-
 	CanPick(): boolean {
 		return this.player.canPick;
 	}
 
 	CanBuzz(): boolean {
-		return this.player.canBuzz && !this.player.buzzBlocked;
+		return this.player.canBuzz;
 	}
 
 	CanAnswer(): boolean {

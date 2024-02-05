@@ -17,6 +17,7 @@ export type Game = {
     startBuzzCountdown: boolean;
     startFinalWagerCountdown: boolean;
     startFinalAnswerCountdown: boolean;
+    buzzBlocked: boolean;
 };
 
 export type Player = {
@@ -32,7 +33,6 @@ export type Player = {
     canAnswer: boolean;
     canWager: boolean;
     canVote: boolean;
-    buzzBlocked: boolean;
     playAgain: boolean;
     conn: any;
 };
