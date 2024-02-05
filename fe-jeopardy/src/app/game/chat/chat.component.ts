@@ -16,6 +16,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 	protected messages: Message[] = [];
 	protected message: string;
 	protected hideChat = true;
+	protected unreadMessages = 0;
 
 	constructor(
 		private chatService: ChatService,
@@ -53,6 +54,10 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 				message: resp.message,
 				timestamp: resp.timeStamp,
 			});
+
+			if (this.hideChat) {
+				this.unreadMessages++;
+			}
 		})
 	}
 
@@ -78,6 +83,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
 	openChat(): void {
 		this.hideChat = false;
+		this.unreadMessages = 0;
 	}
 
 	closeChat(): void {

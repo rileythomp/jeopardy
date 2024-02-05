@@ -35,6 +35,10 @@
 
         .chat-message {
             padding: 10px;
+
+            span {
+                overflow-wrap: break-word;
+            }
         }
 
         .chat-message:nth-child(odd) {
@@ -69,6 +73,21 @@
     line-height: 50px;
     background-color: white;
     font-size: 30px;
+
+    #unread-notif {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 20px;
+        height: 20px;
+        background-color: red;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 20px;
+        z-index: 1;
+        font-size: 12px;
+    }
 }
 
 #chat-box:hover {
