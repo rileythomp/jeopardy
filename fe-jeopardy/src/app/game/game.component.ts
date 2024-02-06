@@ -1,11 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { GameStateService } from '../services/game-state.service';
-import { WebsocketService } from '../services/websocket.service';
-import { PlayerService } from '../services/player.service';
-import { JwtService } from '../services/jwt.service';
-import { GameState, Ping } from '../model/model';
-import { environment } from '../../environments/environment';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core'
+import { Router } from '@angular/router'
+import { GameStateService } from '../services/game-state.service'
+import { WebsocketService } from '../services/websocket.service'
+import { PlayerService } from '../services/player.service'
+import { JwtService } from '../services/jwt.service'
+import { GameState, Ping } from '../model/model'
+import { environment } from '../../environments/environment'
 
 const pickTimeout = 60
 const buzzTimeout = 60
@@ -33,13 +33,17 @@ const buzzDelay = 2000
 	styleUrls: ['./game.component.less'],
 })
 export class GameComponent implements OnInit {
-	private jwt: string;
-	private countdownInterval: NodeJS.Timeout;
-	protected gameLink: string;
-	protected countdownSeconds: number;
-	protected gameMessage: string;
-	protected questionAnswer: string;
-	protected wagerAmt: string;
+	private jwt: string
+	private countdownInterval: NodeJS.Timeout
+	protected gameLink: string
+	protected countdownSeconds: number
+	protected gameMessage: string
+	protected questionAnswer: string
+	protected wagerAmt: string
+
+	@ViewChild('jeopardyAudio') private jeopardyAudio: ElementRef
+	protected playMusic: boolean = false
+	protected showMusic: boolean = true
 
 	constructor(
 		private router: Router,
@@ -48,31 +52,31 @@ export class GameComponent implements OnInit {
 		protected game: GameStateService,
 		protected player: PlayerService,
 	) {
-		this.gameLink = environment.gameLink;
+		this.gameLink = environment.gameLink
 	}
 
 	ngOnInit(): void {
 		this.jwtService.jwt$.subscribe(jwt => {
-			this.jwt = jwt;
-		});
+			this.jwt = jwt
+		})
 
-		this.websocketService.Connect('play');
+		this.websocketService.Connect('play')
 
 		this.websocketService.OnOpen(() => {
 			let playReq = {
 				token: this.jwt,
 			}
-			this.websocketService.Send(playReq);
+			this.websocketService.Send(playReq)
 		})
 
-		this.websocketService.OnMessage((event: { data: string; }) => {
-			let resp = JSON.parse(event.data);
+		this.websocketService.OnMessage((event: { data: string }) => {
+			let resp = JSON.parse(event.data)
 
 			if (resp.code >= 4400) {
 				// TODO: REPLACE WITH MODAL
-				alert(resp.message);
+				alert(resp.message)
 				if (resp.code == 4500 || resp.code == 4401) {
-					this.router.navigate(['/join']);
+					this.router.navigate(['/join'])
 				}
 				return
 			}
@@ -81,11 +85,11 @@ export class GameComponent implements OnInit {
 				return
 			}
 
-			console.log(resp);
+			console.log(resp)
 
-			this.game.updateGameState(resp.game);
-			this.player.updatePlayer(resp.curPlayer);
-			this.gameMessage = resp.message;
+			this.game.updateGameState(resp.game)
+			this.player.updatePlayer(resp.curPlayer)
+			this.gameMessage = resp.message
 
 			if (resp.code == 4100) {
 				alert(resp.message)
@@ -93,10 +97,10 @@ export class GameComponent implements OnInit {
 			}
 
 			if (this.game.IsPaused()) {
-				this.countdownSeconds = 0;
-				clearInterval(this.countdownInterval);
+				this.countdownSeconds = 0
+				clearInterval(this.countdownInterval)
 				// TODO: REPLACE WITH MODAL
-				alert(`${resp.message}, will resume when 3 players are ready`);
+				alert(`${resp.message}, will resume when 3 players are ready`)
 				return
 			}
 
@@ -104,69 +108,83 @@ export class GameComponent implements OnInit {
 				case GameState.PreGame:
 				case GameState.PostGame:
 					break
+				case GameState.RecvPick:
+					this.stopMusic()
+					this.showMusic = false
+					this.startCountdownTimer(pickTimeout)
+					break
 				case GameState.RecvBuzz:
 					if (this.game.CurQuestionFirstBuzz()) {
 						this.game.BlockBuzz(true)
 						setTimeout(() => {
 							this.game.BlockBuzz(false)
 							if (this.game.StartBuzzCountdown()) {
-								this.startCountdownTimer(buzzTimeout - buzzDelay / 1000);
+								this.startCountdownTimer(buzzTimeout - buzzDelay / 1000)
 							}
-						}, buzzDelay);
+						}, buzzDelay)
 					} else {
 						if (this.game.StartBuzzCountdown()) {
-							this.startCountdownTimer(buzzTimeout);
+							this.startCountdownTimer(buzzTimeout)
 						}
 					}
-					break;
+					break
 				case GameState.RecvAns:
 					if (!this.game.FinalRound()) {
-						this.startCountdownTimer(defaultAnsTimeout);
+						this.startCountdownTimer(defaultAnsTimeout)
 					} else if (this.game.StartFinalAnswerCountdown()) {
-						this.startCountdownTimer(finalJeopardyAnsTimeout);
+						this.showMusic = true
+						this.startCountdownTimer(finalJeopardyAnsTimeout)
 					}
-					break;
-				case GameState.RecvPick:
-					this.startCountdownTimer(pickTimeout);
-					break;
+					break
 				case GameState.RecvVote:
 					if (this.player.CanVote()) {
-						this.startCountdownTimer(voteTimeout);
+						this.startCountdownTimer(voteTimeout)
 					}
 					break
 				case GameState.RecvWager:
 					if (!this.game.FinalRound()) {
-						this.startCountdownTimer(dailyDoubleWagerTimeout);
+						this.startCountdownTimer(dailyDoubleWagerTimeout)
 					} else if (this.game.StartFinalWagerCountdown()) {
-						this.startCountdownTimer(finalJeopardyWagerTimeout);
+						this.showMusic = true
+						this.startCountdownTimer(finalJeopardyWagerTimeout)
 					}
-					break;
+					break
 				default:
 					// TODO: REPLACE WITH MODAL
-					alert('Unable to update game, redirecting to home page');
-					this.router.navigate(['/join']);
-					break;
+					alert('Unable to update game, redirecting to home page')
+					this.router.navigate(['/join'])
+					break
 			}
 		})
 	}
 
-	startCountdownTimer(seconds: number) {
+	startCountdownTimer(seconds: number): void {
 		clearInterval(this.countdownInterval)
-		this.countdownSeconds = seconds;
+		this.countdownSeconds = seconds
 		this.countdownInterval = setInterval(() => {
-			this.countdownSeconds -= 1;
+			this.countdownSeconds -= 1
 			if (this.countdownSeconds <= 0) {
-				clearInterval(this.countdownInterval);
+				clearInterval(this.countdownInterval)
 			}
-		}, 1000);
+		}, 1000)
 	}
 
-	openJoinLink() {
-		window.open('join/' + this.game.Name(), '_blank');
+	openJoinLink(): void {
+		window.open('join/' + this.game.Name(), '_blank')
 	}
 
-	copyJoinLink() {
-		let joinLink = `${this.gameLink}/join/${this.game.Name()}`;
-		navigator.clipboard.writeText(joinLink).then(function () { }, function (err) { });
+	copyJoinLink(): void {
+		let joinLink = `${this.gameLink}/join/${this.game.Name()}`
+		navigator.clipboard.writeText(joinLink).then(function () { }, function (err) { })
+	}
+
+	startMusic(): void {
+		this.playMusic = true
+		this.jeopardyAudio.nativeElement.play()
+	}
+
+	stopMusic(): void {
+		this.playMusic = false
+		this.jeopardyAudio.nativeElement.pause()
 	}
 }

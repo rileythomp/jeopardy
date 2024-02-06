@@ -1,3 +1,11 @@
+<div *ngIf="showMusic" id='jeopardy-music'>
+    <ion-icon (click)="stopMusic()" *ngIf="playMusic" name="volume-high-outline"></ion-icon>
+    <ion-icon (click)="startMusic()" *ngIf="!playMusic" name="volume-mute-outline"></ion-icon>
+    <audio loop #jeopardyAudio>
+        <source src="../../assets/jeopardy_music.mp3" />
+    </audio>
+</div>
+
 <ol>
     <li *ngFor="let player of game.Players()">{{ player.conn ? player.name : 'Waiting for player' }}: {{ player.score }}
     </li>
