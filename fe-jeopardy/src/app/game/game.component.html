@@ -1,24 +1,27 @@
 <div *ngIf="showMusic" id='jeopardy-music'>
-    <ion-icon (click)="stopMusic()" *ngIf="playMusic" name="volume-high-outline"></ion-icon>
-    <ion-icon (click)="startMusic()" *ngIf="!playMusic" name="volume-mute-outline"></ion-icon>
-    <div id='music-info' *ngIf="showMusicInfo">
-        <ion-icon name="chevron-up-outline"></ion-icon>
-        <p>Click for Jeopardy music</p>
-    </div>
-    <audio loop #jeopardyAudio>
-        <source src="../../assets/jeopardy_music.mp3" />
-    </audio>
+	<ion-icon (click)="stopMusic()" *ngIf="playMusic" name="volume-high-outline"></ion-icon>
+	<ion-icon (click)="startMusic()" *ngIf="!playMusic" name="volume-mute-outline"></ion-icon>
+	<div id='music-info' *ngIf="showMusicInfo">
+		<ion-icon name="chevron-up-outline"></ion-icon>
+		<p>Click for Jeopardy music</p>
+	</div>
+	<audio loop #jeopardyAudio>
+		<source src="../../assets/jeopardy_music.mp3" />
+	</audio>
 </div>
 
-<ol>
-    <li *ngFor="let player of game.Players()">{{ player.conn ? player.name : 'Waiting for player' }}: {{ player.score }}
-    </li>
-</ol>
+<div id='players' class='container'>
+	<div *ngFor="let player of game.Players()" class='box'>
+		<p [ngStyle]="{'color': player.score < 0 ? 'red' : 'black'}">{{ player.score < 0 ? '-' : '' }}${{
+				abs(player.score) }} </p>
+				<p>{{ player.conn ? player.name : 'Waiting for player to join' }}</p>
+	</div>
+</div>
 
 <p> You are playing as {{ player.Name() }}</p>
 
 <p>Link to join: <span id='joinLink' (click)="openJoinLink()">{{gameLink}}/join/{{game.Name()}}</span>&nbsp;<ion-icon
-        name="copy-outline" id="copyLink" (click)="copyJoinLink()"></ion-icon></p>
+		name="copy-outline" id="copyLink" (click)="copyJoinLink()"></ion-icon></p>
 
 <app-pre-game *ngIf="game.PreGame()" [gameMessage]="gameMessage" [gameName]="game.Name()"></app-pre-game>
 

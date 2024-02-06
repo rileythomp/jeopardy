@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { JwtService } from '../services/jwt.service';
 import { ApiService } from '../services/api.service';
@@ -10,7 +10,7 @@ import { Observer } from 'rxjs';
 	templateUrl: './join.component.html',
 	styleUrls: ['./join.component.less'],
 })
-export class JoinComponent implements OnInit {
+export class JoinComponent {
 	playerName: string = '';
 	gameCode: string = '';
 
@@ -20,13 +20,6 @@ export class JoinComponent implements OnInit {
 		private apiService: ApiService,
 	) { }
 
-	ngOnInit(): void {
-		// (async ()=>{
-		// 	this.playerName = await generateFakeWordByLength(7);
-		// 	this.gameName = 'autojoined'
-		// 	this.joinGame(true);
-		// })();
-	}
 
 	private joinResp(): Partial<Observer<any>> {
 		return {

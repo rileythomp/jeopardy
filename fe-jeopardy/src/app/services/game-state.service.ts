@@ -1,202 +1,208 @@
-import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
-import { Game, Player, Question, GameState, RoundState } from '../model/model';
+import { Injectable } from '@angular/core'
+import { Subject } from 'rxjs'
+import { Game, Player, Question, GameState, RoundState } from '../model/model'
 
 @Injectable({
 	providedIn: 'root'
 })
 export class GameStateService {
-	private game: Game;
-	private gameStateSubject = new Subject<any>();
+	private game: Game
+	private gameStateSubject = new Subject<any>()
 
 	constructor() {
-		this.game = <Game>{};
+		this.game = <Game>{}
 	}
 
 	onGameStateChange() {
-		return this.gameStateSubject.asObservable();
+		return this.gameStateSubject.asObservable()
 	}
 
 	updateGameState(newState: Game) {
-		this.game = newState;
-		this.gameStateSubject.next(this.game);
+		this.game = newState
+		this.gameStateSubject.next(this.game)
 	}
 
 	Name(): string {
-		return this.game.name;
+		return this.game.name
 	}
 
 	State(): GameState {
-		return this.game.state;
+		return this.game.state
 	}
 
 	Players(): Player[] {
-		return this.game.players;
+		if (!this.game.players) {
+			this.game.players = []
+		}
+		while (this.game.players.length < 3) {
+			this.game.players.push(<Player>{})
+		}
+		return this.game.players
 	}
 
 	QuestionRows(): Question[][] {
-		let firstRow = [];
-		let secondRow = [];
-		let thirdRow = [];
-		let fourthRow = [];
-		let fifthRow = [];
-		let round = this.game.firstRound;
+		let firstRow = []
+		let secondRow = []
+		let thirdRow = []
+		let fourthRow = []
+		let fifthRow = []
+		let round = this.game.firstRound
 		if (this.game.round == RoundState.SecondRound) {
-			round = this.game.secondRound;
+			round = this.game.secondRound
 		}
 		for (let category of round) {
-			firstRow.push(category.questions[0]);
-			secondRow.push(category.questions[1]);
-			thirdRow.push(category.questions[2]);
-			fourthRow.push(category.questions[3]);
-			fifthRow.push(category.questions[4]);
+			firstRow.push(category.questions[0])
+			secondRow.push(category.questions[1])
+			thirdRow.push(category.questions[2])
+			fourthRow.push(category.questions[3])
+			fifthRow.push(category.questions[4])
 		}
-		return [firstRow, secondRow, thirdRow, fourthRow, fifthRow];
+		return [firstRow, secondRow, thirdRow, fourthRow, fifthRow]
 	}
 
 	Categories(): string[] {
-		let round = this.game.firstRound;
+		let round = this.game.firstRound
 		if (this.game.round == RoundState.SecondRound) {
-			round = this.game.secondRound;
+			round = this.game.secondRound
 		}
-		return round.map((category: { title: string }) => category.title);
+		return round.map((category: { title: string }) => category.title)
 	}
 
 	PickingPlayer(): string {
-		return this.game.players.find((player: Player) => player.canPick)?.name ?? '';
+		return this.game.players.find((player: Player) => player.canPick)?.name ?? ''
 	}
 
 	AnsweringPlayer(): string {
-		return this.game.players.find((player: Player) => player.canAnswer)?.name ?? '';
+		return this.game.players.find((player: Player) => player.canAnswer)?.name ?? ''
 	}
 
 	LastToAnswer(): string {
-		return this.game.lastToAnswer.name;
+		return this.game.lastToAnswer.name
 	}
 
 	WageringPlayer(): string {
-		return this.game.players.find((player: Player) => player.canWager)?.name ?? '';
+		return this.game.players.find((player: Player) => player.canWager)?.name ?? ''
 	}
 
 	LastAnswer(): string {
-		return this.game.lastAnswer;
+		return this.game.lastAnswer
 	}
 
 	PreviousQuestion(): string {
-		return this.game.previousQuestion;
+		return this.game.previousQuestion
 	}
 
 	PreviousAnswer(): string {
-		return this.game.previousAnswer;
+		return this.game.previousAnswer
 	}
 
 	FinalAnswer(): string {
-		return this.game.finalQuestion.answer;
+		return this.game.finalQuestion.answer
 	}
 
 	AnsCorrectness(): boolean {
-		return this.game.ansCorrectness;
+		return this.game.ansCorrectness
 	}
 
 	IsPaused(): boolean {
-		return this.game.paused;
+		return this.game.paused
 	}
 
 	PreGame(): boolean {
-		return this.game.state == GameState.PreGame;
+		return this.game.state == GameState.PreGame
 	}
 
 	RecvPick(): boolean {
-		return this.game.state == GameState.RecvPick;
+		return this.game.state == GameState.RecvPick
 	}
 
 	RecvBuzz(): boolean {
-		return this.game.state == GameState.RecvBuzz;
+		return this.game.state == GameState.RecvBuzz
 	}
 
 	RecvAns(): boolean {
-		return this.game.state == GameState.RecvAns;
+		return this.game.state == GameState.RecvAns
 	}
 
 	RecvVote(): boolean {
-		return this.game.state == GameState.RecvVote;
+		return this.game.state == GameState.RecvVote
 	}
 
 	RecvWager(): boolean {
-		return this.game.state == GameState.RecvWager;
+		return this.game.state == GameState.RecvWager
 	}
 
 	FinalRound(): boolean {
-		return this.game.round == RoundState.FinalRound;
+		return this.game.round == RoundState.FinalRound
 	}
 
 	PostGame(): boolean {
-		return this.game.state == GameState.PostGame;
+		return this.game.state == GameState.PostGame
 	}
 
 	HighestScorers(): string[] {
-		const maxScore = Math.max(...this.game.players.map(player => player.score));
-		return this.game.players.filter(player => player.score == maxScore).map(player => player.name);
+		const maxScore = Math.max(...this.game.players.map(player => player.score))
+		return this.game.players.filter(player => player.score == maxScore).map(player => player.name)
 	}
 
 	EndGameMessage(): string {
 		if (this.game.state != GameState.PostGame) {
-			return '';
+			return ''
 		}
-		let winners = this.HighestScorers();
+		let winners = this.HighestScorers()
 		if (winners.length == 1) {
-			return `The winner is ${winners[0]}`;
+			return `The winner is ${winners[0]}`
 		} else if (winners.length == 2) {
-			return `The winners are ${winners[0]} and ${winners[1]}`;
+			return `The winners are ${winners[0]} and ${winners[1]}`
 		}
 		return `All players have tied`
 	}
 
 	CurCategory(): string {
-		return this.game.curQuestion.category;
+		return this.game.curQuestion.category
 	}
 
 	CurComments(): string {
-		return this.game.curQuestion.comments;
+		return this.game.curQuestion.comments
 	}
 
 	CurQuestion(): string {
-		return this.game.curQuestion.question;
+		return this.game.curQuestion.question
 	}
 
 	CurValue(): number {
-		return this.game.curQuestion.value;
+		return this.game.curQuestion.value
 	}
 
 	QuestionCanBePicked(catIdx: number, valIdx: number): boolean {
-		let round = this.game.firstRound;
+		let round = this.game.firstRound
 		if (this.game.round == RoundState.SecondRound) {
-			round = this.game.secondRound;
+			round = this.game.secondRound
 		}
-		return round[catIdx].questions[valIdx].canChoose;
+		return round[catIdx].questions[valIdx].canChoose
 	}
 
 	CurQuestionFirstBuzz(): boolean {
-		return !this.game.guessedWrong || this.game.guessedWrong.length == 0;
+		return !this.game.guessedWrong || this.game.guessedWrong.length == 0
 	}
 
 	StartBuzzCountdown(): boolean {
-		return this.game.startBuzzCountdown;
+		return this.game.startBuzzCountdown
 	}
 
 	StartFinalWagerCountdown(): boolean {
-		return this.game.startFinalWagerCountdown;
+		return this.game.startFinalWagerCountdown
 	}
 
 	StartFinalAnswerCountdown(): boolean {
-		return this.game.startFinalAnswerCountdown;
+		return this.game.startFinalAnswerCountdown
 	}
 
 	BlockBuzz(block: boolean): void {
-		this.game.buzzBlocked = block;
+		this.game.buzzBlocked = block
 	}
 
 	BuzzBlocked(): boolean {
-		return this.game.buzzBlocked;
+		return this.game.buzzBlocked
 	}
 }

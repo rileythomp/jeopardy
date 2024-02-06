@@ -84,7 +84,8 @@ export class GameComponent implements OnInit {
 
 			if (resp.code >= 4400) {
 				// TODO: REPLACE WITH MODAL
-				alert(resp.message)
+				// alert(resp.message)
+				console.log(resp.message)
 				if (resp.code == 4500 || resp.code == 4401) {
 					this.router.navigate(['/join'])
 				}
@@ -196,5 +197,12 @@ export class GameComponent implements OnInit {
 	stopMusic(): void {
 		this.playMusic = false
 		this.jeopardyAudio.nativeElement.pause()
+	}
+
+	abs(num: number): number {
+		if (!num) {
+			return 0
+		}
+		return Math.abs(num)
 	}
 }

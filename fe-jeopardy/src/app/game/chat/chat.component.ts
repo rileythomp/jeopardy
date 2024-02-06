@@ -40,7 +40,8 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
 			if (resp.code >= 4400) {
 				// TODO: HANDLE THIS BETTER
-				alert(resp.message)
+				// alert(resp.message)
+				console.log(resp.message)
 				return
 			}
 

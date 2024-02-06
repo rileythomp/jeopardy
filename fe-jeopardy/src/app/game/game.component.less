@@ -55,3 +55,28 @@
     cursor: pointer;
     transform: scale(1.1);
 }
+
+.container {
+    position: fixed;
+    right: 0;
+    top: 60px;
+    width: 120px; // TODO: adjust as needed
+    height: calc(100vh - 60px); // ACCOUNT FOR TOOLBAR HEIGHT
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid black;
+
+    .box {
+        flex: 1; // equally distribute the space
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+        padding: 10px;
+        border-bottom: 1px solid black;
+
+        p {
+            overflow-wrap: break-word;
+        }
+    }
+}
