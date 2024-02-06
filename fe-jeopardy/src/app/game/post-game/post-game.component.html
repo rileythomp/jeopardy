@@ -17,6 +17,9 @@
         </div>
     </ol>
 
+    <p>Category: {{ game.CurCategory() }} </p>
+    <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
+    <p>Question: {{ game.CurQuestion() }}</p>
     <p>Final Jeopardy Answer: {{ game.FinalAnswer() }}</p>
 
     {{ game.EndGameMessage() }}

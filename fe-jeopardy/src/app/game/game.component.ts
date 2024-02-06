@@ -15,7 +15,7 @@ const finalJeopardyAnsTimeout = 60
 const voteTimeout = 60
 const dailyDoubleWagerTimeout = 60
 const finalJeopardyWagerTimeout = 60
-const buzzDelay = 2000
+const buzzDelay = 0
 
 // const pickTimeout = 5
 // const buzzTimeout = 5

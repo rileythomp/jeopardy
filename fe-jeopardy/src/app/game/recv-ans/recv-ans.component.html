@@ -23,7 +23,7 @@
         <p>Category: {{ game.CurCategory() }}</p>
         <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
         <p>Question: {{ game.CurQuestion() }}</p>
-        <p>Wger: {{ player.FinalWager() }}</p>
+        <p>Wager: {{ player.FinalWager() }}</p>
     </div>
     <div *ngIf="player.CanAnswer()">
         <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">

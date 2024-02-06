@@ -1,9 +1,9 @@
-import { Component, OnInit, AfterViewChecked } from '@angular/core';
-import { Message } from '../../model/model';
-import { PlayerService } from 'src/app/services/player.service';
-import { JwtService } from 'src/app/services/jwt.service';
-import { ChatService } from 'src/app/services/chat.service';
-import { Ping } from '../../model/model';
+import { Component, OnInit, AfterViewChecked } from '@angular/core'
+import { Message } from '../../model/model'
+import { PlayerService } from 'src/app/services/player.service'
+import { JwtService } from 'src/app/services/jwt.service'
+import { ChatService } from 'src/app/services/chat.service'
+import { Ping } from '../../model/model'
 
 
 @Component({
@@ -12,11 +12,11 @@ import { Ping } from '../../model/model';
 	styleUrls: ['./chat.component.less']
 })
 export class ChatComponent implements OnInit, AfterViewChecked {
-	private jwt: string;
-	protected messages: Message[] = [];
-	protected message: string;
-	protected hideChat = true;
-	protected unreadMessages = 0;
+	private jwt: string
+	protected messages: Message[] = []
+	protected message: string
+	protected hideChat = true
+	protected unreadMessages = 0
 
 	constructor(
 		private chatService: ChatService,
@@ -26,67 +26,68 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
 	ngOnInit(): void {
 		this.jwtService.jwt$.subscribe(jwt => {
-			this.jwt = jwt;
-		});
+			this.jwt = jwt
+		})
 
-		this.chatService.Connect();
+		this.chatService.Connect()
 
 		this.chatService.OnOpen(() => {
 			this.chatService.Send({ token: this.jwt })
 		})
 
 		this.chatService.OnMessage((event: { data: string }) => {
-			let resp = JSON.parse(event.data);
+			let resp = JSON.parse(event.data)
 
 			if (resp.code >= 4400) {
 				// TODO: HANDLE THIS BETTER
-				alert(resp.message);
+				alert(resp.message)
+				return
 			}
 
 			if (resp.message == Ping) {
 				return
 			}
 
-			console.log(resp);
+			console.log(resp)
 
 			this.messages.push({
 				username: resp.playerName,
 				message: resp.message,
 				timestamp: resp.timeStamp,
-			});
+			})
 
 			if (this.hideChat) {
-				this.unreadMessages++;
+				this.unreadMessages++
 			}
 		})
 	}
 
 	ngAfterViewChecked(): void {
-		this.scrollToBottom();
+		this.scrollToBottom()
 	}
 
 	sendMessage(): void {
 		if (!this.message) {
-			return;
+			return
 		}
-		this.chatService.Send({ message: this.message });
+		this.chatService.Send({ message: this.message })
 		this.message = ''
 	}
 
 	scrollToBottom(): void {
 		let chatMessages = document.getElementById('chat-messages')
 		if (!chatMessages) {
-			return;
+			return
 		}
-		chatMessages.scrollTop = chatMessages.scrollHeight;
+		chatMessages.scrollTop = chatMessages.scrollHeight
 	}
 
 	openChat(): void {
-		this.hideChat = false;
-		this.unreadMessages = 0;
+		this.hideChat = false
+		this.unreadMessages = 0
 	}
 
 	closeChat(): void {
-		this.hideChat = true;
+		this.hideChat = true
 	}
 }
