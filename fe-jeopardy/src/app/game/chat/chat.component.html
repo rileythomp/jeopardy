@@ -1,0 +1,22 @@
+<div *ngIf="!hideChat" id='game-chat'>
+    <div id='chat-header'>
+        <span>Jeopardy Chat</span>
+        <ion-icon name="close-outline" (click)="closeChat()"></ion-icon>
+    </div>
+
+    <div id='chat-messages'>
+        <div class='chat-message' *ngFor="let message of messages">
+            <span>{{message.username}}: {{message.message}}</span>
+        </div>
+    </div>
+
+    <div id='chat-input'>
+        <input [(ngModel)]="message" (keyup.enter)="sendMessage()" placeholder="Type a message..." />
+        <button (click)="sendMessage()">Send</button>
+    </div>
+</div>
+
+<div *ngIf="hideChat" id='chat-box' (click)="openChat()">
+    <div id='unread-notif' *ngIf="unreadMessages > 0">{{ unreadMessages }}</div>
+    <ion-icon name="chatbubbles-outline"></ion-icon>
+</div>

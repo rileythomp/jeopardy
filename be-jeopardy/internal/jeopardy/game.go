@@ -45,6 +45,7 @@ type (
 		msgChan     chan Message
 		pauseChan   chan *Player
 		restartChan chan bool
+		chatChan    chan ChatMessage
 
 		questionDB QuestionDB
 	}
@@ -132,28 +133,34 @@ func NewGame(db QuestionDB) (*Game, error) {
 		msgChan:           make(chan Message),
 		pauseChan:         make(chan *Player),
 		restartChan:       make(chan bool),
+		chatChan:          make(chan ChatMessage),
 		questionDB:        db,
 	}
 	if err := game.setQuestions(); err != nil {
 		return nil, err
 	}
+	game.processMessages()
+	game.processChatMessages()
+	return game, nil
+}
+
+func (g *Game) processMessages() {
 	go func() {
 		for {
 			select {
-			case msg := <-game.msgChan:
-				if err := game.processMsg(msg); err != nil {
+			case msg := <-g.msgChan:
+				if err := g.processMsg(msg); err != nil {
 					log.Errorf("Error processing message: %s\n", err.Error())
 				}
-			case player := <-game.pauseChan:
-				log.Infof("Stopping game %s\n", game.Name)
-				game.pauseGame(player)
-			case <-game.restartChan:
-				log.Infof("Restarting game %s\n", game.Name)
-				game.restartGame()
+			case player := <-g.pauseChan:
+				log.Infof("Stopping game %s\n", g.Name)
+				g.pauseGame(player)
+			case <-g.restartChan:
+				log.Infof("Restarting game %s\n", g.Name)
+				g.restartGame()
 			}
 		}
 	}()
-	return game, nil
 }
 
 func (g *Game) restartGame() {

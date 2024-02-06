@@ -70,3 +70,9 @@ export enum RoundState {
 }
 
 export const Ping = 'ping';
+
+export type Message = {
+    username: string;
+    message: string;
+    timestamp: string;
+}
