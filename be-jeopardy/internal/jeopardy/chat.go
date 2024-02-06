@@ -65,7 +65,6 @@ func (g *Game) processChatMessages() {
 		for {
 			select {
 			case msg := <-g.chatChan:
-				log.Infof("Processing chat message: %+v\n", msg)
 				for _, p := range g.Players {
 					_ = p.sendChatMessage(msg)
 				}
