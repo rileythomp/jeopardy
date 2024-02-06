@@ -21,6 +21,4 @@ $ ng serve
 
 ### TODO 
 
-* Fetch questions from DB
-
 * Improve UI 

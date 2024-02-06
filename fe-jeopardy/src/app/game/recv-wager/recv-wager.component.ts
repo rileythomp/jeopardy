@@ -9,8 +9,8 @@ import { WebsocketService } from '../../services/websocket.service';
     styleUrls: ['./recv-wager.component.less']
 })
 export class RecvWagerComponent {
-    @Input() countdownSeconds: number;
-    wagerAmt: string;
+    @Input() countdownSeconds: number
+    wagerAmt: string
 
     constructor(
         private websocketService: WebsocketService,
@@ -24,6 +24,6 @@ export class RecvWagerComponent {
                 wager: this.wagerAmt,
             })
         }
-        this.wagerAmt = '';
+        this.wagerAmt = ''
     }
 }

@@ -1,6 +1,10 @@
 <div *ngIf="showMusic" id='jeopardy-music'>
     <ion-icon (click)="stopMusic()" *ngIf="playMusic" name="volume-high-outline"></ion-icon>
     <ion-icon (click)="startMusic()" *ngIf="!playMusic" name="volume-mute-outline"></ion-icon>
+    <div id='music-info' *ngIf="showMusicInfo">
+        <ion-icon name="chevron-up-outline"></ion-icon>
+        <p>Click for Jeopardy music</p>
+    </div>
     <audio loop #jeopardyAudio>
         <source src="../../assets/jeopardy_music.mp3" />
     </audio>

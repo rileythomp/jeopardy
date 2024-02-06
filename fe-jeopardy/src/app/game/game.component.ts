@@ -44,6 +44,7 @@ export class GameComponent implements OnInit {
 	@ViewChild('jeopardyAudio') private jeopardyAudio: ElementRef
 	protected playMusic: boolean = false
 	protected showMusic: boolean = true
+	protected showMusicInfo: boolean = false
 
 	constructor(
 		private router: Router,
@@ -59,6 +60,15 @@ export class GameComponent implements OnInit {
 		this.jwtService.jwt$.subscribe(jwt => {
 			this.jwt = jwt
 		})
+
+		let showJeopardyMusicInfo = localStorage.getItem('showJeopardyMusicInfo')
+		if (showJeopardyMusicInfo === null) {
+			this.showMusicInfo = true
+			setTimeout(() => {
+				this.showMusicInfo = false
+			}, 5000)
+			localStorage.setItem('showJeopardyMusicInfo', 'shown')
+		}
 
 		this.websocketService.Connect('play')
 
