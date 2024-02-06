@@ -90,4 +90,14 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 	closeChat(): void {
 		this.hideChat = true
 	}
+
+	epochTo12HrFormat(epoch: number) {
+		let date = new Date(epoch * 1000)
+		let hours = date.getHours()
+		let minutes = "0" + date.getMinutes()
+		let suffix = hours >= 12 ? 'PM' : 'AM'
+		hours = hours % 12
+		hours = hours ? hours : 12
+		return hours + ':' + minutes.slice(-2) + suffix
+	}
 }

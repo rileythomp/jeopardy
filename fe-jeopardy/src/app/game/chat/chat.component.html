@@ -6,7 +6,9 @@
 
     <div id='chat-messages'>
         <div class='chat-message' *ngFor="let message of messages">
-            <span>{{message.username}}: {{message.message}}</span>
+            <span class='message-username'>{{message.username}}</span>
+            <span class='message-time'>{{epochTo12HrFormat(message.timestamp)}}</span>
+            <p>{{message.message}}</p>
         </div>
     </div>
 

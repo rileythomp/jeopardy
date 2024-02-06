@@ -4,7 +4,7 @@
     bottom: 10px;
     width: 250px;
     min-height: 200px;
-    max-height: 300px;
+    max-height: 400px;
     border: 2px solid black;
     border-radius: 5px;
 
@@ -34,9 +34,19 @@
         background-color: white;
 
         .chat-message {
-            padding: 10px;
+            padding: 8px;
 
-            span {
+            .message-username {
+                font-weight: bold;
+            }
+
+            .message-time {
+                float: right;
+                font-size: 10px;
+            }
+
+            p {
+                margin: 0;
                 overflow-wrap: break-word;
             }
         }
