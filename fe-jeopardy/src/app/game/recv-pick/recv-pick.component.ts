@@ -19,16 +19,13 @@ export class RecvPickComponent {
 		protected game: GameStateService,
 		protected player: PlayerService,
 	) {
-		this.categories = this.game.Categories();
-		this.questionRows = this.game.QuestionRows();
+		this.categories = this.game.Categories()
+		this.questionRows = this.game.QuestionRows()
 	}
 
-	highlightQuestion(event: any, color: string) {
-		if (event.target.style.backgroundColor == 'lightpink') {
-			return
-		}
-		if (this.player.CanPick()) {
-			event.target.style.backgroundColor = color;
+	changeCursor(canChoose: boolean, pointer: string) {
+		if (canChoose && this.player.CanPick()) {
+			document.body.style.cursor = pointer
 		}
 	}
 

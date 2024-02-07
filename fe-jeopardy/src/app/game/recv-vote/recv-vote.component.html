@@ -2,7 +2,7 @@
     <div>
         <p>Category: {{ game.CurCategory() }}</p>
         <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
-        <p>Question: {{ game.CurQuestion() }}</p>
+        <p class='question-text'>Question: {{ game.CurQuestion() }}</p>
         <p>Value: {{ game.CurValue() }}</p>
     </div>
     <p>

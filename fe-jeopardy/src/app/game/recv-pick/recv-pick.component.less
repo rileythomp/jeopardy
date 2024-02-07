@@ -1,6 +1,33 @@
-td {
-    border: 1px solid black;
+table {
     border-collapse: collapse;
-    padding: 0.5em;
-    text-align: center;
+
+    td {
+        border: 5px solid black;
+        padding: 10px;
+        text-align: center;
+        background-color: #060ce9;
+        font-weight: bold;
+    }
+
+    .question-board-box {
+        width: 125px;
+        text-align: center;
+        vertical-align: middle;
+        user-select: none;
+    }
+
+    .category {
+        color: white;
+        min-height: 40px;
+    }
+
+    .question-value {
+        color: #ffcc00;
+        line-height: 30px;
+        height: 40px;
+        span {
+            font-weight: bolder;
+            font-size: 2em;
+        }
+    }
 }

@@ -1,18 +1,24 @@
 <div>
     <p *ngIf="game.PreviousQuestion() != ''">Previous question: {{ game.PreviousQuestion() }} </p>
     <p *ngIf="game.PreviousAnswer() != ''">Previous answer: {{ game.PreviousAnswer() }}</p>
-    <p>It is {{ game.PickingPlayer() }}'s turn to pick a question</p>
+    <!-- <p>It's {{ player.CanPick() ? 'your' : game.PickingPlayer()+ '\'s' }} turn to pick a question</p> -->
     <table>
         <tr>
-            <td *ngFor="let title of categories">
-                {{ title }}
+            <td class='category' *ngFor="let title of categories">
+                <div class='question-board-box'>
+                    {{ title }}
+                </div>
             </td>
         </tr>
         <tr *ngFor="let row of questionRows; let valIdx = index">
-            <td *ngFor="let q of row; let catIdx = index" (mouseover)="highlightQuestion($event, 'lightgreen')"
+            <!-- <td *ngFor="let q of row; let catIdx = index" (mouseover)="highlightQuestion($event, 'lightgreen')"
                 (mouseout)="highlightQuestion($event, 'white')" (click)="handlePick(catIdx, valIdx)"
-                [ngStyle]="{'background-color': q.canChoose ? 'white' : 'lightpink'}">
-                {{ q.value }}
+                [ngStyle]="{'background-color': q.canChoose ? 'white' : 'lightpink'}"> -->
+            <td class='question-value' *ngFor="let q of row; let catIdx = index" (click)="handlePick(catIdx, valIdx)"
+                (mouseover)="changeCursor(q.canChoose, 'pointer')" (mouseout)="changeCursor(q.canChoose, 'default')">
+                <div class='question-board-box'>
+                    <span class="value">{{ q.canChoose ? '$'+q.value : '' }}</span>
+                </div>
             </td>
         </tr>
     </table>
