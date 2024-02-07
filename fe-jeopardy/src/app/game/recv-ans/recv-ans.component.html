@@ -1,9 +1,9 @@
 <div *ngIf="!game.FinalRound()">
     <div>
-        <p>Category: {{ game.CurCategory() }}</p>
+        <p>{{ game.CurCategory() }}</p>
         <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
         <p class='question-text'>Question: {{ game.CurQuestion() }}</p>
-        <p>Value: {{ game.CurValue() }}</p>
+        <p>${{ game.CurValue() }}</p>
     </div>
 
     <div *ngIf="player.CanAnswer()">
@@ -20,10 +20,10 @@
 <div *ngIf="game.FinalRound()">
     Final Jeopardy
     <div>
-        <p>Category: {{ game.CurCategory() }}</p>
+        <p>{{ game.CurCategory() }}</p>
         <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
         <p>Question: {{ game.CurQuestion() }}</p>
-        <p>Wager: {{ player.FinalWager() }}</p>
+        <p>Wager: ${{ player.FinalWager() }}</p>
     </div>
     <div *ngIf="player.CanAnswer()">
         <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">

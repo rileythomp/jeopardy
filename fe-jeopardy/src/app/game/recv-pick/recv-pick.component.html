@@ -1,4 +1,4 @@
-<div>
+<div id='pick-container'>
     <p [ngStyle]="{'visibility': game.PreviousQuestion() != '' ? 'visible' : 'hidden'}">Previous question: {{ game.PreviousQuestion() }} </p>
     <p [ngStyle]="{'visibility': game.PreviousAnswer() != '' ? 'visible' : 'hidden'}">Previous answer: <b>{{ game.PreviousAnswer() }}</b></p>
     <!-- <p>It's {{ player.CanPick() ? 'your' : game.PickingPlayer()+ '\'s' }} turn to pick a question</p> -->

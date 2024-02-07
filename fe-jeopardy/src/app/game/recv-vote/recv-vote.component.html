@@ -1,9 +1,9 @@
 <div *ngIf="player.CanVote()">
     <div>
-        <p>Category: {{ game.CurCategory() }}</p>
+        <p>{{ game.CurCategory() }}</p>
         <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
         <p class='question-text'>Question: {{ game.CurQuestion() }}</p>
-        <p>Value: {{ game.CurValue() }}</p>
+        <p>${{ game.CurValue() }}</p>
     </div>
     <p>
         {{ game.LastToAnswer() }} answered <b>{{ game.AnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{

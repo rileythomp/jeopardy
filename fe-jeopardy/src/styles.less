@@ -1,5 +1,27 @@
 /* You can add global styles to this file, and also import other style files */
 
+input {
+    box-sizing: border-box;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid lightgrey;
+    outline: none;
+}
+
+input:focus {
+    outline: 1px solid; 
+    outline-color: grey;
+}
+
+button {
+    padding: 10px;
+}
+
+button:focus {
+    outline: 1px solid; 
+    outline-color: grey;
+}
+
 .question-text {
     user-select: none;
 }
@@ -10,31 +32,15 @@
 
     input {
         width: 100%;
-        box-sizing: border-box;
-        padding: 10px;
-        border-radius: 5px;
-        border: 1px solid lightgrey;
-        outline: none;
     }
+}
 
-    input:focus {
-        outline: 1px solid; 
-        outline-color: grey;
-    }
+.button-container {
+    display: flex;
 
-    .button-container {
-        display: flex;
-
-        button {
-            flex: 1;
-            width: 160px;
-            padding: 10px;
-            margin-top: 10px;
-        }
-
-        button:focus {
-            outline: 1px solid; 
-            outline-color: grey;
-        }
+    button {
+        flex: 1;
+        width: 160px;
+        margin-top: 10px;
     }
 }
