@@ -1,2 +1,8 @@
-<input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
-<button (click)="joinGame(playerName, gameCode)">Join game</button>
+<div class='join-container'>
+    <div class='input-container'>
+        <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
+        <div class='button-container'>
+            <button (click)="joinGame(playerName, gameCode)">Join game</button>
+        </div>
+    </div>
+</div>
