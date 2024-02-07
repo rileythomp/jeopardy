@@ -11,17 +11,17 @@ export class JwtService {
   public jwt$: Observable<string>;
 
   constructor() {
-    const storedJwt: string = sessionStorage.getItem(jeopardyJWT) ?? '';
+    const storedJwt: string = localStorage.getItem(jeopardyJWT) ?? '';
     this.jwtSubject = new BehaviorSubject<string>(storedJwt);
     this.jwt$ = this.jwtSubject.asObservable();
   }
 
   SetJWT(jwt: string): void {
-    sessionStorage.setItem(jeopardyJWT, jwt);
+    localStorage.setItem(jeopardyJWT, jwt);
     this.jwtSubject.next(jwt);
   }
 
   GetJWT(): string {
-    return sessionStorage.getItem(jeopardyJWT) ?? '';
+    return localStorage.getItem(jeopardyJWT) ?? '';
   }
 }
