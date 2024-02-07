@@ -526,16 +526,12 @@ func (g *Game) startGame() {
 }
 
 func (g *Game) startSecondRound() {
-	g.startFinalRound()
-	// g.Round = SecondRound
-	// g.resetGuesses()
-	// g.setState(RecvPick, g.lowestPlayer())
+	g.Round = SecondRound
+	g.resetGuesses()
+	g.setState(RecvPick, g.lowestPlayer())
 }
 
 func (g *Game) startFinalRound() {
-	for _, p := range g.Players {
-		p.Score = 100
-	}
 	g.Round = FinalRound
 	g.resetGuesses()
 	g.CurQuestion = g.FinalQuestion
