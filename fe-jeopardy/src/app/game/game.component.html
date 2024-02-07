@@ -14,12 +14,15 @@
 	<div *ngFor="let player of game.Players()" class='box'>
 		<p [ngStyle]="{'color': player.score < 0 ? 'red' : 'black'}">{{ player.score < 0 ? '-' : '' }}${{
 				abs(player.score) }} </p>
-				<p>{{ player.conn ? player.name : 'Waiting for player to join' }}</p>
+				<p [ngStyle]="{'font-weight': player.canPick ? 'bold' : 'normal'}">{{ player.conn ? player.name :
+					'Waiting for
+					player to join' }}</p>
 	</div>
 </div>
 
-<p *ngIf="game.PreGame() || game.PostGame() || game.IsPaused()">Link to join: <span id='joinLink' (click)="openJoinLink()">{{gameLink}}/join/{{game.Name()}}</span>&nbsp;<ion-icon
-		name="copy-outline" id="copyLink" (click)="copyJoinLink()"></ion-icon></p>
+<p *ngIf="game.PreGame() || game.PostGame() || game.IsPaused()">Link to join: <span id='joinLink'
+		(click)="openJoinLink()">{{gameLink}}/join/{{game.Name()}}</span>&nbsp;<ion-icon name="copy-outline"
+		id="copyLink" (click)="copyJoinLink()"></ion-icon></p>
 
 <app-pre-game *ngIf="game.PreGame()" [gameMessage]="gameMessage" [gameName]="game.Name()"></app-pre-game>
 
