@@ -1,11 +1,6 @@
 <div class='buzz-container'>
     <div class='question-info'>
-        <p>{{ game.CurCategory() }}</p>
-        <p class='comments' *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
-        <p>${{ game.CurValue() }}</p>
-        <div id='question-box'>
-            {{ game.CurQuestion() }}
-        </div>
+        <app-question></app-question>
         <div class='button-container' *ngIf="player.CanBuzz() && !game.BuzzBlocked()">
             <button (click)="handleBuzz(false)">Buzz</button>
             <button (click)="handleBuzz(true)">Pass</button>

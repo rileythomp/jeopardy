@@ -26,7 +26,7 @@
 
 <app-chat></app-chat>
 
-<div *ngIf="showMusic" id='jeopardy-music'>
+<div *ngIf="game.PreGame() || game.PostGame() || game.FinalRound()" id='jeopardy-music'>
 	<ion-icon (click)="stopMusic()" *ngIf="playMusic" name="volume-high-outline"></ion-icon>
 	<ion-icon (click)="startMusic()" *ngIf="!playMusic" name="volume-mute-outline"></ion-icon>
 	<div id='music-info' *ngIf="showMusicInfo">

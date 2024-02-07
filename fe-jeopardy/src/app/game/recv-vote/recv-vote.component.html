@@ -1,16 +1,15 @@
-<div *ngIf="player.CanVote()">
+<div class='vote-container' *ngIf="player.CanVote()">
     <div>
-        <p>{{ game.CurCategory() }}</p>
-        <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
-        <p class='question-text'>Question: {{ game.CurQuestion() }}</p>
-        <p>${{ game.CurValue() }}</p>
+        <app-question></app-question>
     </div>
     <p>
         {{ game.LastToAnswer() }} answered <b>{{ game.AnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{
             game.LastAnswer() }}</b>. <br>
     </p>
-    <button (click)="handleVote(true)">Accept</button>
-    <button (click)="handleVote(false)">Challenge</button>
+    <div class='button-container'>
+        <button (click)="handleVote(true)">Accept</button>
+        <button (click)="handleVote(false)">Challenge</button>
+    </div>
 </div>
 <p>seconds to vote: {{ countdownSeconds }}</p>
 

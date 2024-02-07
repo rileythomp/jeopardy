@@ -43,7 +43,6 @@ export class GameComponent implements OnInit {
 
 	@ViewChild('jeopardyAudio') private jeopardyAudio: ElementRef
 	protected playMusic: boolean = false
-	protected showMusic: boolean = true
 	protected showMusicInfo: boolean = false
 
 	constructor(
@@ -82,10 +81,16 @@ export class GameComponent implements OnInit {
 
 			if (resp.code >= 4400) {
 				// TODO: REPLACE WITH MODAL
-				// alert(resp.message)
 				console.log(resp.message)
-				if (resp.code == 4500 || resp.code == 4401) {
-					this.router.navigate(['/join'])
+				switch (resp.code) {
+					case 4401:
+					case 4500:
+						// alert(resp.message)
+						console.log(resp.message)
+						this.router.navigate(['/join'])
+						break
+					case 4400:
+						alert(resp.message)
 				}
 				return
 			}
@@ -118,7 +123,6 @@ export class GameComponent implements OnInit {
 				case GameState.PostGame:
 					break
 				case GameState.RecvPick:
-					this.showMusic = false
 					this.startCountdownTimer(pickTimeout)
 					break
 				case GameState.RecvBuzz:
@@ -140,7 +144,6 @@ export class GameComponent implements OnInit {
 					if (!this.game.FinalRound()) {
 						this.startCountdownTimer(defaultAnsTimeout)
 					} else if (this.game.StartFinalAnswerCountdown()) {
-						this.showMusic = true
 						this.startCountdownTimer(finalJeopardyAnsTimeout)
 					}
 					break
@@ -153,7 +156,6 @@ export class GameComponent implements OnInit {
 					if (!this.game.FinalRound()) {
 						this.startCountdownTimer(dailyDoubleWagerTimeout)
 					} else if (this.game.StartFinalWagerCountdown()) {
-						this.showMusic = true
 						this.startCountdownTimer(finalJeopardyWagerTimeout)
 					}
 					break
