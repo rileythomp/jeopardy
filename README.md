@@ -22,3 +22,7 @@ $ ng serve
 ### TODO 
 
 * Improve UI 
+
+* Improve answer marking
+
+* Allow AI players

@@ -10,7 +10,6 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/jackc/pgx/v5 v5.5.2
-	github.com/nwtgck/go-fakelish v0.1.3
 	github.com/stretchr/testify v1.8.4
 )
 

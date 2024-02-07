@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/nwtgck/go-fakelish"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
@@ -30,10 +29,6 @@ func GetPlayerGames() map[string]string {
 		playerGameNames[playerId] = game.Name
 	}
 	return playerGameNames
-}
-
-func genGameCode() string {
-	return fakelish.GenerateFakeWord(8, 8)
 }
 
 func CreatePrivateGame(playerName string) (*Game, string, error) {
