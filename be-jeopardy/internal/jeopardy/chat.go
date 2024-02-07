@@ -103,7 +103,7 @@ func (p *Player) sendChatPings() {
 		pingErrors := 0
 		for {
 			select {
-			case <-p.sendPingTicker.C:
+			case <-p.sendChatPing.C:
 				if err := p.sendMessage(Response{
 					Code:    socket.Info,
 					Message: ping,

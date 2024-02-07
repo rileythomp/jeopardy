@@ -31,6 +31,7 @@ export class RecvPickComponent {
 
 	handlePick(catIdx: number, valIdx: number) {
 		if (this.player.CanPick() && this.game.QuestionCanBePicked(catIdx, valIdx)) {
+			document.body.style.cursor = 'default'
 			this.websocketService.Send({
 				catIdx: catIdx,
 				valIdx: valIdx,

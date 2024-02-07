@@ -120,7 +120,6 @@ export class GameComponent implements OnInit {
 				case GameState.PostGame:
 					break
 				case GameState.RecvPick:
-					this.stopMusic()
 					this.showMusic = false
 					this.startCountdownTimer(pickTimeout)
 					break

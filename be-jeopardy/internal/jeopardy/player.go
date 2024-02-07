@@ -40,7 +40,8 @@ type Player struct {
 	cancelAnswerTimeout context.CancelFunc
 	cancelWagerTimeout  context.CancelFunc
 
-	sendPingTicker *time.Ticker
+	sendGamePing *time.Ticker
+	sendChatPing *time.Ticker
 }
 
 const (
@@ -61,7 +62,8 @@ func NewPlayer(name string) *Player {
 		FinalProtestors:     map[string]bool{},
 		cancelAnswerTimeout: func() {},
 		cancelWagerTimeout:  func() {},
-		sendPingTicker:      time.NewTicker(pingFrequency),
+		sendGamePing:        time.NewTicker(pingFrequency),
+		sendChatPing:        time.NewTicker(pingFrequency),
 	}
 }
 
@@ -94,7 +96,7 @@ func (p *Player) sendPings() {
 		pingErrors := 0
 		for {
 			select {
-			case <-p.sendPingTicker.C:
+			case <-p.sendGamePing.C:
 				if err := p.sendMessage(Response{
 					Code:    socket.Info,
 					Message: ping,
