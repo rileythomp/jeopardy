@@ -1,3 +1,61 @@
+.players-container {
+    position: fixed;
+    right: 0;
+    top: 60px;
+    width: 120px;
+    height: calc(100vh - 60px); // account for height height
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid black;
+
+    .box {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+        padding: 10px;
+        border-bottom: 1px solid black;
+
+        p {
+            overflow-wrap: break-word;
+        }
+    }
+}
+
+#game-container {
+    position: fixed;
+    left: 0;
+    top: 60px;
+    height: calc(100vh - 70px); // account for header height
+    width: calc(100% - 120px); // account for players-container width
+    display: flex;
+    justify-content: center;
+    // align-items: center; // center vertically
+
+    .game-view {
+        margin-top: 50px;
+    }
+}
+
+#share-link {
+    position: fixed;
+
+    #joinLink {
+        color: blue;
+        text-decoration: underline;
+    }
+    
+    #joinLink:hover {
+        cursor: pointer;
+    }
+    
+    #copyLink:hover {
+        cursor: pointer;
+        transform: scale(1.1);
+    }
+}
+
 #jeopardy-music {
     position: fixed;
     left: 10px;
@@ -38,45 +96,6 @@
 
         p {
             margin: 0;
-        }
-    }
-}
-
-#joinLink {
-    color: blue;
-    text-decoration: underline;
-}
-
-#joinLink:hover {
-    cursor: pointer;
-}
-
-#copyLink:hover {
-    cursor: pointer;
-    transform: scale(1.1);
-}
-
-.container {
-    position: fixed;
-    right: 0;
-    top: 60px;
-    width: 120px; // TODO: adjust as needed
-    height: calc(100vh - 60px); // ACCOUNT FOR TOOLBAR HEIGHT
-    display: flex;
-    flex-direction: column;
-    border-left: 1px solid black;
-
-    .box {
-        flex: 1; // equally distribute the space
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        text-align: center;
-        padding: 10px;
-        border-bottom: 1px solid black;
-
-        p {
-            overflow-wrap: break-word;
         }
     }
 }
