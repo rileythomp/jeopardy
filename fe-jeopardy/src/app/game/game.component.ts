@@ -52,9 +52,7 @@ export class GameComponent implements OnInit {
 		private jwtService: JwtService,
 		protected game: GameStateService,
 		protected player: PlayerService,
-	) {
-		this.gameLink = environment.gameLink
-	}
+	) {}
 
 	ngOnInit(): void {
 		this.jwtService.jwt$.subscribe(jwt => {
@@ -177,15 +175,6 @@ export class GameComponent implements OnInit {
 				clearInterval(this.countdownInterval)
 			}
 		}, 1000)
-	}
-
-	openJoinLink(): void {
-		window.open('join/' + this.game.Name(), '_blank')
-	}
-
-	copyJoinLink(): void {
-		let joinLink = `${this.gameLink}/join/${this.game.Name()}`
-		navigator.clipboard.writeText(joinLink).then(function () { }, function (err) { })
 	}
 
 	startMusic(): void {

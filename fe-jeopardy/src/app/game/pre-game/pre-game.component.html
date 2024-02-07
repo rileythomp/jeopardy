@@ -1,3 +1,8 @@
-<div>
-    <p>{{gameMessage}}</p>
+<div id='pre-game-container'>
+    <h2>{{gameMessage}}</h2>
+
+    <p *ngIf="game.PreGame() || game.PostGame() || game.IsPaused()">
+        Link to join: <span id='joinLink' (click)="openJoinLink()">{{gameLink}}/join/{{game.Name()}}</span>&nbsp;
+        <ion-icon name="copy-outline" id="copyLink" (click)="copyJoinLink()"></ion-icon>
+    </p>
 </div>

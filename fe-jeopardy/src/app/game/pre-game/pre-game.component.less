@@ -1,0 +1,42 @@
+#pre-game-container {
+	margin-top: 20vh;
+}
+
+h2:after {
+    content: "...";
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: bottom;
+    animation: ellipsis-dot 2s infinite;
+    animation-fill-mode: forwards;
+    width: 1.25em;
+}
+
+@keyframes ellipsis-dot {
+    25% {
+        content: "";
+    }
+    50% {
+        content: ".";
+    }
+    75% {
+        content: "..";
+    }
+    100% {
+        content: "...";
+    }
+}
+
+#joinLink {
+	color: blue;
+	text-decoration: underline;
+}
+
+#joinLink:hover {
+	cursor: pointer;
+}
+
+#copyLink:hover {
+	cursor: pointer;
+	transform: scale(1.1);
+}
