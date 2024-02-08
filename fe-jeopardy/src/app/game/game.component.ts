@@ -7,14 +7,14 @@ import { JwtService } from '../services/jwt.service'
 import { GameState, Ping } from '../model/model'
 import { environment } from '../../environments/environment'
 
-const pickTimeout = 60
-const buzzTimeout = 60
-const defaultAnsTimeout = 60
-const dailyDoubleAnsTimeout = 60
-const finalJeopardyAnsTimeout = 60
-const voteTimeout = 60
-const dailyDoubleWagerTimeout = 60
-const finalJeopardyWagerTimeout = 60
+const pickTimeout = 600
+const buzzTimeout = 600
+const defaultAnsTimeout = 600
+const dailyDoubleAnsTimeout = 600
+const finalJeopardyAnsTimeout = 600
+const voteTimeout = 600
+const dailyDoubleWagerTimeout = 600
+const finalJeopardyWagerTimeout = 600
 const buzzDelay = 0
 
 // const pickTimeout = 5

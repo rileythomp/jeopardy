@@ -1,21 +1,16 @@
-<div id='answer-container' *ngIf="!game.FinalRound()">
+<div id='answer-container'>
+    <h2 *ngIf="game.FinalRound()">Final Jeopardy</h2>
+
     <app-question></app-question>
-    <div id='answer-input' *ngIf="player.CanAnswer()">
+
+    <div id='answer-input' class='flex-row' *ngIf="player.CanAnswer()">
         <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
         <button (click)="handleAnswer()">Answer</button>
     </div>
-    <div *ngIf="!player.CanAnswer()">
+
+    <div *ngIf="!game.FinalRound() && !player.CanAnswer()">
         <p>{{ game.AnsweringPlayer() }} is answering the question</p>
     </div>
-    <p>seconds to answer: {{ countdownSeconds }}</p>
-</div>
 
-<div id='answer-container' *ngIf="game.FinalRound()">
-    <h2>Final Jeopardy</h2>
-    <app-question></app-question>
-    <div id='answer-input' *ngIf="player.CanAnswer()">
-        <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
-        <button (click)="handleAnswer()">Answer</button>
-    </div>
-    <p>seconds to final answer: {{ countdownSeconds }}</p>
+    <p>seconds to answer: {{ countdownSeconds }}</p>
 </div>

@@ -7,7 +7,7 @@
 #question-box {
     width: 400px;
     color: white;
-    background-color: #060ce9;
+    background-color: var(--jeopardy-blue);
     padding: 30px;
     text-align: center;
     font-size: 1.5em;
@@ -15,26 +15,23 @@
     border-radius: 5px;
 }
 
-.button-container {
+#end-game-buttons {
+    gap: 30px;
+
     button {
-        margin-left: 35px;
-        margin-right: 35px;
-        margin-top: 15px;
         padding: 20px 0;
     }
 }
 
 .player-answer {
     margin: 15px 0;
-    display: flex; 
     align-items: center; 
 
-    span {
-        flex: 1;
+    button {
+        flex: 0;
     }
 }
 
 hr {
-    margin-top: 25px;
-    margin-bottom: 10px;
+    margin: 30px 0;
 }

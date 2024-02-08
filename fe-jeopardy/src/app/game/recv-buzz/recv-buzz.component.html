@@ -1,6 +1,6 @@
 <div id='buzz-container'>
     <app-question></app-question>
-    <div class='button-container' *ngIf="player.CanBuzz() && !game.BuzzBlocked()">
+    <div id='buzz-buttons' class='flex-row' *ngIf="player.CanBuzz() && !game.BuzzBlocked()">
         <button (click)="handleBuzz(false)">Buzz</button>
         <button (click)="handleBuzz(true)">Pass</button>
     </div>

@@ -11,7 +11,7 @@
     <p *ngIf="this.game.HighestScorers().length > 2">All players have tied</p>
 
     <div *ngFor="let p of game.Players()">
-        <div class='player-answer' *ngIf="p.finalAnswer != ''">
+        <div class='player-answer flex-row' *ngIf="p.finalAnswer != ''">
             <span *ngIf="p.finalAnswer != 'answer-timeout'">
                 {{ p.name }} answered <b>{{ p.finalCorrect ? 'correctly': 'incorrectly' }}</b> with <b>{{ p.finalAnswer }}</b>
             </span>
@@ -24,7 +24,7 @@
 
     <hr>
 
-    <div class='button-container'>
+    <div id='end-game-buttons' class='flex-row'>
         <button *ngIf='!player.PlayAgain()' (click)="playAgain()">Play again</button>
         <button (click)="leaveGame()">Home</button>
     </div>

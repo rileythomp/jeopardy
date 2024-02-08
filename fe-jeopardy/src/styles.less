@@ -1,45 +1,35 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    --jeopardy-blue: #060ce9;
+    --jeopardy-yellow: #ffcc00;
+}
 
-input {
-    box-sizing: border-box;
-    padding: 10px;
+input, button {
+    padding: 10px; 
     border-radius: 5px;
-    border: 1px solid lightgrey;
-    outline: none;
+    border: 1px solid grey;
 }
 
-input:focus {
-    outline: 1px solid; 
-    outline-color: grey;
+input:focus, button:focus {
+    outline: 1px solid grey;
 }
 
-button {
-    padding: 10px;
+button:hover {
+    background-color: lightgrey;
 }
 
-button:focus {
-    outline: 1px solid; 
-    outline-color: grey;
-}
-
-.question-text {
-    user-select: none;
-}
-
-.input-container {
+.flex-row {
     display: flex;
-    flex-direction: column;
 
-    input {
+    * {
         flex: 1;
     }
 }
 
-.button-container {
+.flex-column {
     display: flex;
-    gap: 15px;
+    flex-direction: column;
 
-    button {
+    * {
         flex: 1;
     }
 }

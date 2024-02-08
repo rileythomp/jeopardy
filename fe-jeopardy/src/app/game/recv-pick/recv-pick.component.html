@@ -13,7 +13,7 @@
                 (mouseover)="changeCursor(q.canChoose, 'pointer')"
                 (mouseout)="changeCursor(q.canChoose, 'default')">
                 <div class='question-board-box'>
-                    <span class="value">{{ q.canChoose ? '$'+q.value : '' }}</span>
+                    <span>{{ q.canChoose ? '$'+q.value : '' }}</span>
                 </div>
             </td>
         </tr>

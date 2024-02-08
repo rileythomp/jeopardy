@@ -1,6 +1,6 @@
-<div class='join-container'>
+<div class='join-container flex-column'>
     <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
-    <div class='button-container'>
+    <div class='flex-row'>
         <button (click)="joinGame(playerName, gameCode)">Join game</button>
     </div>
 </div>

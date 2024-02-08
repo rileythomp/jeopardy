@@ -5,7 +5,7 @@
     <p>
         {{ game.LastToAnswer() }} answered <b>{{ game.AnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{ game.LastAnswer() }}</b>.
     </p>
-    <div class='button-container' *ngIf="player.CanVote()">
+    <div id='vote-buttons' class='flex-row' *ngIf="player.CanVote()">
         <button (click)="handleVote(true)">Accept</button>
         <button (click)="handleVote(false)">Challenge</button>
     </div>

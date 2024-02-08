@@ -1,5 +1,5 @@
-<div id='players-container'>
-	<div *ngFor="let p of game.Players()" class='box'>
+<div id='players-container' class='flex-column'>
+	<div class='player-box flex-column' *ngFor="let p of game.Players()">
 		<p [ngStyle]="{'color': p.score < 0 ? 'red' : 'black'}">{{ p.score < 0 ? '-' : '' }}${{ abs(p.score) }} </p>
 		<p [ngStyle]="{'font-weight': p.id == player.Id() ? 'bold' : 'normal'}">{{ p.conn ? p.name : 'Waiting for player to join' }}</p>
 	</div>
@@ -17,7 +17,7 @@
 
 <app-chat></app-chat>
 
-<div id='jeopardy-music' *ngIf="game.PreGame() || game.FinalRound() || game.PostGame()">
+<div id='jeopardy-music'>
 	<ion-icon (click)="stopMusic()" *ngIf="playMusic" name="volume-high-outline"></ion-icon>
 	<ion-icon (click)="startMusic()" *ngIf="!playMusic" name="volume-mute-outline"></ion-icon>
 	<div id='music-info' *ngIf="showMusicInfo">
