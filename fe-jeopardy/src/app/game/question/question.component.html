@@ -1,5 +1,5 @@
 <p>{{ game.CurCategory() }}</p>
-<p class='comments' *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
+<p id='question-comments' *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
 <p *ngIf="!game.FinalRound()">${{ game.CurValue() }}</p>
 <p *ngIf="game.FinalRound() && player.CanAnswer()">Wager: ${{ player.FinalWager() }}</p>
 <div id='question-box'>

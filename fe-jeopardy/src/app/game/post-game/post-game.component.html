@@ -10,17 +10,16 @@
     <p *ngIf="this.game.HighestScorers().length == 2">The winners are {{ this.game.HighestScorers()[0] }} and {{ this.game.HighestScorers()[1] }}</p>
     <p *ngIf="this.game.HighestScorers().length > 2">All players have tied</p>
 
-    <div class='player-answer' *ngFor="let player of game.Players()">
-        <span *ngIf="player.finalAnswer != '' && player.finalAnswer != 'answer-timeout'">
-            {{ player.name }} answered <b>{{ player.finalCorrect ? 'correctly': 'incorrectly' }}</b> with <b>{{
-                player.finalAnswer }}</b>
-        </span>
-        <button *ngIf="player.finalAnswer != '' && player.finalAnswer != 'answer-timeout' && canProtestForPlayer(player)"
-        (click)="protestFinalCorrectness(player.id)">Protest</button>
-
-        <span *ngIf="player.finalAnswer == 'answer-timeout'">
-            {{ player.name }} didn't answer in time.
-        </span>
+    <div *ngFor="let p of game.Players()">
+        <div class='player-answer' *ngIf="p.finalAnswer != ''">
+            <span *ngIf="p.finalAnswer != 'answer-timeout'">
+                {{ p.name }} answered <b>{{ p.finalCorrect ? 'correctly': 'incorrectly' }}</b> with <b>{{ p.finalAnswer }}</b>
+            </span>
+            <button *ngIf="p.finalAnswer != 'answer-timeout' && canProtestForPlayer(p)"
+                (click)="protestFinalCorrectness(p.id)">Protest</button>
+    
+            <span *ngIf="p.finalAnswer == 'answer-timeout'">{{ p.name }} didn't answer in time.</span>
+        </div>
     </div>
 
     <hr>

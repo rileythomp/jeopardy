@@ -1,18 +1,14 @@
-<div class='vote-container' *ngIf="player.CanVote()">
+<div class='vote-container'>
     <div>
         <app-question></app-question>
     </div>
     <p>
-        {{ game.LastToAnswer() }} answered <b>{{ game.AnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{
-            game.LastAnswer() }}</b>. <br>
+        {{ game.LastToAnswer() }} answered <b>{{ game.AnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{ game.LastAnswer() }}</b>.
     </p>
-    <div class='button-container'>
+    <div class='button-container' *ngIf="player.CanVote()">
         <button (click)="handleVote(true)">Accept</button>
         <button (click)="handleVote(false)">Challenge</button>
     </div>
-</div>
-<p>seconds to vote: {{ countdownSeconds }}</p>
-
-<div *ngIf="!player.CanVote()">
-    Waiting for other players to accept or challenge the answer
+	<p *ngIf="!player.CanVote()"> Waiting for other players to accept or challenge the answer</p>
+	<p>seconds to vote: {{ countdownSeconds }}</p>
 </div>

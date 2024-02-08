@@ -1,10 +1,8 @@
-<div class='buzz-container'>
-    <div class='question-info'>
-        <app-question></app-question>
-        <div class='button-container' *ngIf="player.CanBuzz() && !game.BuzzBlocked()">
-            <button (click)="handleBuzz(false)">Buzz</button>
-            <button (click)="handleBuzz(true)">Pass</button>
-        </div>
+<div id='buzz-container'>
+    <app-question></app-question>
+    <div class='button-container' *ngIf="player.CanBuzz() && !game.BuzzBlocked()">
+        <button (click)="handleBuzz(false)">Buzz</button>
+        <button (click)="handleBuzz(true)">Pass</button>
     </div>
     <p *ngIf="!game.BuzzBlocked()">seconds to buzz: {{ countdownSeconds }}</p>
 </div>

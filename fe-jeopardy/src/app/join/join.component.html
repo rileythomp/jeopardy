@@ -2,15 +2,15 @@
     <div class='input-container'>
         <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
 
-        <div class='button-container'>
+        <div id='join-buttons' class='button-container'>
             <button (click)="joinPublicGame(playerName)">Join any game</button>
-            <button style='margin-left: 10px; margin-right: 10px;' (click)="createPrivateGame(playerName)">Create a private game</button>
+            <button (click)="createPrivateGame(playerName)">Create a private game</button>
             <button (click)="toggleGameCodeInput()">Join game by code</button>
         </div>
     </div>
     
-    <div class='input-container'>
-        <input *ngIf="showGameCodeInput" (keydown.enter)="joinGameByCode(playerName, gameCode)" style='margin-top: 10px;' type="text" [(ngModel)]="gameCode" placeholder="Game code">
+    <div id='game-code-input'  class='input-container' *ngIf="showGameCodeInput" >
+        <input  (keydown.enter)="joinGameByCode(playerName, gameCode)" type="text" [(ngModel)]="gameCode" placeholder="Game code">
     </div>
 
     <hr>

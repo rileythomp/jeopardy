@@ -1,5 +1,5 @@
 <div id='pre-game-container'>
-    <h2>{{gameMessage}}</h2>
+    <h2>Waiting for more players</h2>
 
     <p *ngIf="game.PreGame() || game.PostGame() || game.IsPaused()">
         Link to join: <span id='joinLink' (click)="openJoinLink()">{{gameLink}}/join/{{game.Name()}}</span>&nbsp;

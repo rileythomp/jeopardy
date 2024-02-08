@@ -1,9 +1,6 @@
-<div class='answer-container' *ngIf="!game.FinalRound()">
-    <div class='question-info'>
-        <app-question></app-question>
-    </div>
-
-    <div class='answer-input' *ngIf="player.CanAnswer()">
+<div id='answer-container' *ngIf="!game.FinalRound()">
+    <app-question></app-question>
+    <div id='answer-input' *ngIf="player.CanAnswer()">
         <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
         <button (click)="handleAnswer()">Answer</button>
     </div>
@@ -13,10 +10,10 @@
     <p>seconds to answer: {{ countdownSeconds }}</p>
 </div>
 
-<div class='answer-container' *ngIf="game.FinalRound()">
+<div id='answer-container' *ngIf="game.FinalRound()">
     <h2>Final Jeopardy</h2>
     <app-question></app-question>
-    <div class='answer-input' *ngIf="player.CanAnswer()">
+    <div id='answer-input' *ngIf="player.CanAnswer()">
         <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
         <button (click)="handleAnswer()">Answer</button>
     </div>
