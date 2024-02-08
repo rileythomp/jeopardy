@@ -1,6 +1,6 @@
 <div id='wager-container'>
     <h2 *ngIf="game.FinalRound()">Final Jeopardy</h2>
-    <p id='question-category'>{{ game.CurCategory() }}</p>
+    <p class='question-category'>{{ game.CurCategory() }}</p>
     <div id='wager-input' class='flex-column' *ngIf="player.CanWager()">
         <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
         <button (click)="handleWager()">Wager</button>

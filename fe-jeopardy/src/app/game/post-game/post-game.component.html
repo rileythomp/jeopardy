@@ -1,7 +1,7 @@
 <div>
     <p class='question-category'>{{ game.CurCategory() }} </p>
     <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
-    <div id='question-box'>
+    <div class='question-box'>
         {{ game.CurQuestion() }}
     </div>
     <p>Final Jeopardy Answer: <b>{{ game.FinalAnswer() }}</b></p>

@@ -18,7 +18,7 @@
     </div>
 </div>
 
-<div *ngIf="hideChat" id='chat-box' (click)="openChat()">
+<div id='chat-box' *ngIf="hideChat" (click)="openChat()">
     <div id='unread-notif' *ngIf="unreadMessages > 0">{{ unreadMessages }}</div>
     <ion-icon name="chatbubbles-outline"></ion-icon>
 </div>
