@@ -1,6 +1,8 @@
 :root {
     --jeopardy-blue: #060ce9;
     --jeopardy-yellow: #ffcc00;
+    --header-height: 60px;
+    --players-container-width: 120px;
 }
 
 input, button {
@@ -32,4 +34,22 @@ button:hover {
     * {
         flex: 1;
     }
+}
+
+.join-container {
+    width: 500px;
+    margin: auto;
+    margin-top: calc(var(--header-height) + 30px);
+}
+
+#question-box {
+    width: 450px;
+    padding: 30px;
+    background-color: var(--jeopardy-blue);
+    color: white;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    border-radius: 5px;
+    user-select: none;
 }

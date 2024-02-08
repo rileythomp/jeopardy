@@ -1,9 +1,9 @@
 #players-container {
     position: fixed;
     right: 0;
-    top: 60px;
-    width: 120px;
-    height: calc(100vh - 60px); // account for header height
+    top: var(--header-height);
+    width: var(--players-container-width);
+    height: calc(100vh - var(--header-height));
     border-left: 1px solid black;
 
     .player-box {
@@ -21,9 +21,9 @@
 #game-container {
     position: fixed;
     left: 0;
-    top: 60px;
-    height: calc(100vh - 70px); // account for header height
-    width: calc(100% - 120px); // account for players-container width
+    top: var(--header-height);
+    height: calc(100vh - var(--header-height) - 10px);
+    width: calc(100% - var(--players-container-width));
     display: flex;
     justify-content: center;
 }
@@ -31,7 +31,7 @@
 #jeopardy-music {
     position: fixed;
     left: 15px;
-    top: 75px;
+    top: calc(var(--header-height) + 15px);
 
     ion-icon {
         font-size: 2em;

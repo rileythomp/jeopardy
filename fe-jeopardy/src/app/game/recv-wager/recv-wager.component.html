@@ -1,4 +1,4 @@
-<div>
+<div id='wager-container'>
     <h2 *ngIf="game.FinalRound()">Final Jeopardy</h2>
     <p id='question-category'>{{ game.CurCategory() }}</p>
     <div id='wager-input' class='flex-column' *ngIf="player.CanWager()">

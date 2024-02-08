@@ -1,5 +1,5 @@
 <div class='join-container flex-column'>
-    <div class='flex-column'>
+    <div id='join-inputs' class='flex-column'>
         <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
 
         <div id='join-buttons' class='flex-row'>
@@ -7,15 +7,11 @@
             <button (click)="createPrivateGame(playerName)">Create a private game</button>
             <button (click)="toggleGameCodeInput()">Join game by code</button>
         </div>
-    </div>
-    
-    <div id='game-code-input' class='flex-row' *ngIf="showGameCodeInput">
-        <input  (keydown.enter)="joinGameByCode(playerName, gameCode)" type="text" [(ngModel)]="gameCode" placeholder="Game code">
+
+        <input *ngIf="showGameCodeInput" (keydown.enter)="joinGameByCode(playerName, gameCode)" type="text" [(ngModel)]="gameCode" placeholder="Game code">
     </div>
 
     <hr>
     
-    <div class='flex-row'>
-        <button style='margin-top: 0' (click)="rejoin()">Disconnected? Click to rejoin</button>
-    </div>
+    <button style='margin-top: 0' (click)="rejoin()">Disconnected? Click to rejoin</button>
 </div>
