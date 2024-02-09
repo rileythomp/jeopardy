@@ -19,10 +19,8 @@ $ npm install
 $ ng serve
 ```
 
-### TODO 
+### TODO
 
-* Improve UI 
+- Improve answer marking
 
-* Improve answer marking
-
-* Allow AI players
+- Play against AI

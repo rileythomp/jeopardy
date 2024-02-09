@@ -7,7 +7,6 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
-	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 )
 
 type ChatMessage struct {
@@ -104,9 +103,10 @@ func (p *Player) sendChatPings() {
 		for {
 			select {
 			case <-p.sendChatPing.C:
-				if err := p.sendMessage(Response{
-					Code:    socket.Info,
-					Message: ping,
+				if err := p.sendChatMessage(ChatMessage{
+					PlayerName: ping,
+					Message:    ping,
+					TimeStamp:  time.Now().Unix(),
 				}); err != nil {
 					if p.ChatConn == nil {
 						log.Infof("Stopping sending chat pings to player %s because connection is nil", p.Name)

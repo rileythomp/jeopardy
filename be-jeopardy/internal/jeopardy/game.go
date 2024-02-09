@@ -202,6 +202,7 @@ func (g *Game) pauseGame(player *Player) {
 	g.cancelBuzzTimeout()
 	g.cancelVoteTimeout()
 	player.Conn = nil
+	player.ChatConn = nil
 	player.PlayAgain = false
 	for _, p := range g.Players {
 		p.pausePlayer()
