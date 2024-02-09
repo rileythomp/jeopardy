@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component } from '@angular/core';
 import { GameStateService } from '../../services/game-state.service';
 import { PlayerService } from '../../services/player.service';
 import { WebsocketService } from '../../services/websocket.service';
@@ -9,8 +9,6 @@ import { WebsocketService } from '../../services/websocket.service';
     styleUrls: ['./recv-vote.component.less']
 })
 export class RecvVoteComponent {
-    @Input() countdownSeconds: number;
-
     constructor(
         private websocketService: WebsocketService,
         protected game: GameStateService,

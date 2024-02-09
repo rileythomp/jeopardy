@@ -1,4 +1,4 @@
-<div *ngIf="!hideChat" id='game-chat'>
+<div id='game-chat' class='flex-column' *ngIf="!hideChat">
     <div id='chat-header'>
         <span>Jeopardy Chat</span>
         <ion-icon name="close-outline" (click)="closeChat()"></ion-icon>
@@ -12,13 +12,13 @@
         </div>
     </div>
 
-    <div id='chat-input'>
+    <div id='chat-input' class='flex-row'>
         <input [(ngModel)]="message" (keyup.enter)="sendMessage()" placeholder="Type a message..." />
-        <button (click)="sendMessage()">Send</button>
+        <button (click)="sendMessage()"><ion-icon name="paper-plane-outline"></ion-icon></button>
     </div>
 </div>
 
-<div *ngIf="hideChat" id='chat-box' (click)="openChat()">
+<div id='chat-box' *ngIf="hideChat" (click)="openChat()">
     <div id='unread-notif' *ngIf="unreadMessages > 0">{{ unreadMessages }}</div>
     <ion-icon name="chatbubbles-outline"></ion-icon>
 </div>

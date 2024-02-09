@@ -145,19 +145,6 @@ export class GameStateService {
 		return this.game.players.filter(player => player.score == maxScore).map(player => player.name)
 	}
 
-	EndGameMessage(): string {
-		if (this.game.state != GameState.PostGame) {
-			return ''
-		}
-		let winners = this.HighestScorers()
-		if (winners.length == 1) {
-			return `The winner is ${winners[0]}`
-		} else if (winners.length == 2) {
-			return `The winners are ${winners[0]} and ${winners[1]}`
-		}
-		return `All players have tied`
-	}
-
 	CurCategory(): string {
 		return this.game.curQuestion.category
 	}

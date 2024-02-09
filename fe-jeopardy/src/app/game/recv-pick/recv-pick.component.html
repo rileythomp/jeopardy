@@ -1,26 +1,21 @@
-<div>
-    <p *ngIf="game.PreviousQuestion() != ''">Previous question: {{ game.PreviousQuestion() }} </p>
-    <p *ngIf="game.PreviousAnswer() != ''">Previous answer: {{ game.PreviousAnswer() }}</p>
-    <!-- <p>It's {{ player.CanPick() ? 'your' : game.PickingPlayer()+ '\'s' }} turn to pick a question</p> -->
+<div id='pick-container'>
+    <p [ngStyle]="{'visibility': game.PreviousQuestion() != '' ? 'visible' : 'hidden'}">Previous question: {{ game.PreviousQuestion() }} </p>
+    <p [ngStyle]="{'visibility': game.PreviousAnswer() != '' ? 'visible' : 'hidden'}">Previous answer: <b>{{ game.PreviousAnswer() }}</b></p>
     <table>
         <tr>
-            <td class='category' *ngFor="let title of categories">
-                <div class='question-board-box'>
-                    {{ title }}
-                </div>
+            <td class='category-title' *ngFor="let title of categories">
+                <div class='question-board-box'>{{ title }}</div>
             </td>
         </tr>
         <tr *ngFor="let row of questionRows; let valIdx = index">
-            <!-- <td *ngFor="let q of row; let catIdx = index" (mouseover)="highlightQuestion($event, 'lightgreen')"
-                (mouseout)="highlightQuestion($event, 'white')" (click)="handlePick(catIdx, valIdx)"
-                [ngStyle]="{'background-color': q.canChoose ? 'white' : 'lightpink'}"> -->
-            <td class='question-value' *ngFor="let q of row; let catIdx = index" (click)="handlePick(catIdx, valIdx)"
-                (mouseover)="changeCursor(q.canChoose, 'pointer')" (mouseout)="changeCursor(q.canChoose, 'default')">
+            <td class='question-value' *ngFor="let q of row; let catIdx = index"
+                (click)="handlePick(catIdx, valIdx)"
+                (mouseover)="changeCursor(q.canChoose, 'pointer')"
+                (mouseout)="changeCursor(q.canChoose, 'default')">
                 <div class='question-board-box'>
-                    <span class="value">{{ q.canChoose ? '$'+q.value : '' }}</span>
+                    <span>{{ q.canChoose ? '$'+q.value : '' }}</span>
                 </div>
             </td>
         </tr>
     </table>
-    <p>seconds to pick: {{ countdownSeconds }}</p>
 </div>

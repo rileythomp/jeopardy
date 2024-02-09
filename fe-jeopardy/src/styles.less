@@ -1,6 +1,61 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    --jeopardy-blue: #060ce9;
+    --jeopardy-yellow: #ffcc00;
+    --header-height: 60px;
+    --players-container-width: 120px;
+}
 
-.question-text {
+input, button {
+    padding: 10px; 
+    border-radius: 5px;
+    border: 1px solid grey;
+}
+
+input:focus, button:focus {
+    outline: 1px solid grey;
+}
+
+button:hover {
+    background-color: lightgrey;
+}
+
+.flex-row {
+    display: flex;
+
+    * {
+        flex: 1;
+    }
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+
+    * {
+        flex: 1;
+    }
+}
+
+.join-container {
+    width: 500px;
+    margin: auto;
+    margin-top: calc(var(--header-height) + 30px);
+}
+
+.question-box {
+    width: 450px;
+    padding: 30px;
+    background-color: var(--jeopardy-blue);
+    color: white;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    border-radius: 5px;
     user-select: none;
 }
 
+.question-category {
+    font-size: 1.5em;
+    margin: 15px 0;
+    overflow-wrap: break-word;
+}

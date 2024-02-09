@@ -1,5 +1,5 @@
-import { Component, Input } from '@angular/core';
-import { GameState, Question } from 'src/app/model/model';
+import { Component } from '@angular/core';
+import { Question } from 'src/app/model/model';
 import { PlayerService } from 'src/app/services/player.service';
 import { WebsocketService } from 'src/app/services/websocket.service';
 import { GameStateService } from 'src/app/services/game-state.service';
@@ -10,7 +10,6 @@ import { GameStateService } from 'src/app/services/game-state.service';
 	styleUrls: ['./recv-pick.component.less']
 })
 export class RecvPickComponent {
-	@Input() countdownSeconds: number;
 	categories: string[];
 	questionRows: Question[][];
 

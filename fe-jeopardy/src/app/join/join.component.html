@@ -1,12 +1,17 @@
-<div class="container">
-    <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
+<div class='join-container flex-column'>
+    <div id='join-inputs' class='flex-column'>
+        <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
 
-    <button (click)="joinPublicGame(playerName)">Join any game</button>
+        <div id='join-buttons' class='flex-row'>
+            <button (click)="joinPublicGame(playerName)">Join any game</button>
+            <button (click)="createPrivateGame(playerName)">Create a private game</button>
+            <button (click)="toggleGameCodeInput()">Join game by code</button>
+        </div>
 
-    <input type="text" [(ngModel)]="gameCode" placeholder="Game code">
-    <button (click)="joinGameByCode(playerName, gameCode)">Join game by code</button>
+        <input *ngIf="showGameCodeInput" (keydown.enter)="joinGameByCode(playerName, gameCode)" type="text" [(ngModel)]="gameCode" placeholder="Game code">
+    </div>
 
-    <button (click)="createPrivateGame(playerName)">Create a private game</button>
+    <hr>
+    
+    <button (click)="rejoin()">Disconnected? Click to rejoin</button>
 </div>
-
-<button (click)="rejoin()">Disconnected? Click to rejoin</button>

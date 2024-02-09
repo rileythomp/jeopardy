@@ -33,6 +33,7 @@ type (
 		FinalWagers      []string   `json:"finalWagers"`
 		FinalAnswers     []string   `json:"finalAnswers"`
 		Paused           bool       `json:"paused"`
+		PausedState      GameState  `json:"pausedState"`
 
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
@@ -187,6 +188,10 @@ func (g *Game) restartGame() {
 
 func (g *Game) pauseGame(player *Player) {
 	g.Paused = true
+	g.PausedState = g.State
+	if g.State != PostGame {
+		g.State = PreGame
+	}
 	g.cancelPickTimeout()
 	g.cancelBuzzTimeout()
 	g.cancelVoteTimeout()
@@ -503,6 +508,9 @@ func (g *Game) setState(state GameState, player *Player) {
 }
 
 func (g *Game) startGame() {
+	if g.Paused {
+		g.State = g.PausedState
+	}
 	g.Paused = false
 	state, player := g.State, &Player{}
 	if state == PreGame {
@@ -526,6 +534,8 @@ func (g *Game) startGame() {
 }
 
 func (g *Game) startSecondRound() {
+	g.startFinalRound()
+	return
 	g.Round = SecondRound
 	g.resetGuesses()
 	g.setState(RecvPick, g.lowestPlayer())

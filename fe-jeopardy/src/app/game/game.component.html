@@ -1,4 +1,27 @@
-<div *ngIf="showMusic" id='jeopardy-music'>
+<div id='players-container' class='flex-column'>
+	<div class='player-box flex-column' *ngFor="let p of game.Players()">
+		<p [ngStyle]="{'color': p.score < 0 ? 'red' : 'black'}">{{ p.score < 0 ? '-' : '' }}${{ abs(p.score) }} </p>
+		<p [ngStyle]="{'font-weight': p.id == player.Id() ? 'bold' : 'normal'}">{{ p.conn ? p.name : 'Waiting for player to join' }}</p>
+	</div>
+</div>
+
+<div id='game-container'>
+	<div id='game-state'>
+		<app-pre-game *ngIf="game.PreGame()" [gameName]="game.Name()"></app-pre-game>
+		<app-recv-pick *ngIf="game.RecvPick()"></app-recv-pick>
+		<app-recv-buzz *ngIf="game.RecvBuzz()"></app-recv-buzz>
+		<app-recv-ans *ngIf="game.RecvAns()"></app-recv-ans>
+		<app-recv-vote *ngIf="game.RecvVote()"></app-recv-vote>
+		<app-recv-wager *ngIf="game.RecvWager()"></app-recv-wager>
+		<app-post-game *ngIf="game.PostGame()"></app-post-game>
+
+		<div id='countdown-bar' class='flex-row'></div>
+	</div>
+</div>
+
+<app-chat></app-chat>
+
+<div id='jeopardy-music'>
 	<ion-icon (click)="stopMusic()" *ngIf="playMusic" name="volume-high-outline"></ion-icon>
 	<ion-icon (click)="startMusic()" *ngIf="!playMusic" name="volume-mute-outline"></ion-icon>
 	<div id='music-info' *ngIf="showMusicInfo">
@@ -9,33 +32,3 @@
 		<source src="../../assets/jeopardy_music.mp3" />
 	</audio>
 </div>
-
-<div id='players' class='container'>
-	<div *ngFor="let player of game.Players()" class='box'>
-		<p [ngStyle]="{'color': player.score < 0 ? 'red' : 'black'}">{{ player.score < 0 ? '-' : '' }}${{
-				abs(player.score) }} </p>
-				<p [ngStyle]="{'font-weight': player.canPick ? 'bold' : 'normal'}">{{ player.conn ? player.name :
-					'Waiting for
-					player to join' }}</p>
-	</div>
-</div>
-
-<p *ngIf="game.PreGame() || game.PostGame() || game.IsPaused()">Link to join: <span id='joinLink'
-		(click)="openJoinLink()">{{gameLink}}/join/{{game.Name()}}</span>&nbsp;<ion-icon name="copy-outline"
-		id="copyLink" (click)="copyJoinLink()"></ion-icon></p>
-
-<app-pre-game *ngIf="game.PreGame()" [gameMessage]="gameMessage" [gameName]="game.Name()"></app-pre-game>
-
-<app-recv-pick *ngIf="game.RecvPick()" [countdownSeconds]="countdownSeconds"></app-recv-pick>
-
-<app-recv-buzz *ngIf="game.RecvBuzz()" [countdownSeconds]="countdownSeconds"></app-recv-buzz>
-
-<app-recv-ans *ngIf="game.RecvAns()" [countdownSeconds]="countdownSeconds"></app-recv-ans>
-
-<app-recv-vote *ngIf="game.RecvVote()" [countdownSeconds]="countdownSeconds"></app-recv-vote>
-
-<app-recv-wager *ngIf="game.RecvWager()" [countdownSeconds]="countdownSeconds"></app-recv-wager>
-
-<app-post-game *ngIf="game.PostGame()"></app-post-game>
-
-<app-chat></app-chat>

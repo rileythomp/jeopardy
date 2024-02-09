@@ -1,13 +1,7 @@
 <div>
-    <div>
-        <p>Category: {{ game.CurCategory() }}</p>
-        <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
-        <p class='question-text'>Question: {{ game.CurQuestion() }}</p>
-        <p>Value: {{ game.CurValue() }}</p>
-    </div>
-    <div *ngIf="player.CanBuzz() && !game.BuzzBlocked()">
+    <app-question></app-question>
+    <div id='buzz-buttons' class='flex-row' *ngIf="player.CanBuzz() && !game.BuzzBlocked()">
         <button (click)="handleBuzz(false)">Buzz</button>
         <button (click)="handleBuzz(true)">Pass</button>
     </div>
-    <p *ngIf="!game.BuzzBlocked()">seconds to buzz: {{ countdownSeconds }}</p>
 </div>

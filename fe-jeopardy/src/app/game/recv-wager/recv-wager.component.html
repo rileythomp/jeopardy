@@ -1,22 +1,11 @@
-<div *ngIf="!game.FinalRound()">
-    <p>Category: {{ game.CurCategory() }} </p>
-    <div *ngIf="player.CanWager()">
+<div id='wager-container'>
+    <h2 *ngIf="game.FinalRound()">Final Jeopardy</h2>
+    <p class='question-category'>{{ game.CurCategory() }}</p>
+    <div id='wager-input' class='flex-column' *ngIf="player.CanWager()">
         <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
         <button (click)="handleWager()">Wager</button>
     </div>
-    <p>seconds to wager: {{ countdownSeconds }}</p>
-
-    <div *ngIf="!player.CanWager()">
+    <div *ngIf="!game.FinalRound() && !player.CanWager()">
         {{ game.WageringPlayer() }} is choosing a wager
     </div>
-</div>
-
-<div *ngIf="game.FinalRound()">
-    Final Jeopardy
-    <p>Category: {{ game.CurCategory() }} </p>
-    <div *ngIf="player.CanWager()">
-        <input type="number" [(ngModel)]="wagerAmt" placeholder="Enter your wager">
-        <button (click)="handleWager()">Wager</button>
-    </div>
-    <p>seconds to final wager: {{ countdownSeconds }}</p>
 </div>

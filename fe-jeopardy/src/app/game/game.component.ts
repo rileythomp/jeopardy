@@ -7,25 +7,15 @@ import { JwtService } from '../services/jwt.service'
 import { GameState, Ping } from '../model/model'
 import { environment } from '../../environments/environment'
 
-const pickTimeout = 60
-const buzzTimeout = 60
-const defaultAnsTimeout = 60
-const dailyDoubleAnsTimeout = 60
-const finalJeopardyAnsTimeout = 60
-const voteTimeout = 60
-const dailyDoubleWagerTimeout = 60
-const finalJeopardyWagerTimeout = 60
+const pickTimeout = 10
+const buzzTimeout = 10
+const defaultAnsTimeout = 10
+const dailyDoubleAnsTimeout = 10
+const finalJeopardyAnsTimeout = 10
+const voteTimeout = 10
+const dailyDoubleWagerTimeout = 10
+const finalJeopardyWagerTimeout = 10
 const buzzDelay = 0
-
-// const pickTimeout = 5
-// const buzzTimeout = 5
-// const defaultAnsTimeout = 10
-// const dailyDoubleAnsTimeout = 10
-// const finalJeopardyAnsTimeout = 10
-// const voteTimeout = 5
-// const dailyDoubleWagerTimeout = 10
-// const finalJeopardyWagerTimeout = 10
-// const buzzDelay = 2000 / 2
 
 @Component({
 	selector: 'app-game',
@@ -36,14 +26,12 @@ export class GameComponent implements OnInit {
 	private jwt: string
 	private countdownInterval: NodeJS.Timeout
 	protected gameLink: string
-	protected countdownSeconds: number
 	protected gameMessage: string
 	protected questionAnswer: string
 	protected wagerAmt: string
 
 	@ViewChild('jeopardyAudio') private jeopardyAudio: ElementRef
 	protected playMusic: boolean = false
-	protected showMusic: boolean = true
 	protected showMusicInfo: boolean = false
 
 	constructor(
@@ -52,9 +40,7 @@ export class GameComponent implements OnInit {
 		private jwtService: JwtService,
 		protected game: GameStateService,
 		protected player: PlayerService,
-	) {
-		this.gameLink = environment.gameLink
-	}
+	) {}
 
 	ngOnInit(): void {
 		this.jwtService.jwt$.subscribe(jwt => {
@@ -84,10 +70,16 @@ export class GameComponent implements OnInit {
 
 			if (resp.code >= 4400) {
 				// TODO: REPLACE WITH MODAL
-				// alert(resp.message)
 				console.log(resp.message)
-				if (resp.code == 4500 || resp.code == 4401) {
-					this.router.navigate(['/join'])
+				switch (resp.code) {
+					case 4401:
+					case 4500:
+						// alert(resp.message)
+						console.log(resp.message)
+						this.router.navigate(['/join'])
+						break
+					case 4400:
+						alert(resp.message)
 				}
 				return
 			}
@@ -108,8 +100,7 @@ export class GameComponent implements OnInit {
 			}
 
 			if (this.game.IsPaused()) {
-				this.countdownSeconds = 0
-				clearInterval(this.countdownInterval)
+				this.cancelCountdown()
 				// TODO: REPLACE WITH MODAL
 				alert(`${resp.message}, will resume when 3 players are ready`)
 				return
@@ -120,7 +111,6 @@ export class GameComponent implements OnInit {
 				case GameState.PostGame:
 					break
 				case GameState.RecvPick:
-					this.showMusic = false
 					this.startCountdownTimer(pickTimeout)
 					break
 				case GameState.RecvBuzz:
@@ -142,7 +132,6 @@ export class GameComponent implements OnInit {
 					if (!this.game.FinalRound()) {
 						this.startCountdownTimer(defaultAnsTimeout)
 					} else if (this.game.StartFinalAnswerCountdown()) {
-						this.showMusic = true
 						this.startCountdownTimer(finalJeopardyAnsTimeout)
 					}
 					break
@@ -155,7 +144,6 @@ export class GameComponent implements OnInit {
 					if (!this.game.FinalRound()) {
 						this.startCountdownTimer(dailyDoubleWagerTimeout)
 					} else if (this.game.StartFinalWagerCountdown()) {
-						this.showMusic = true
 						this.startCountdownTimer(finalJeopardyWagerTimeout)
 					}
 					break
@@ -169,23 +157,30 @@ export class GameComponent implements OnInit {
 	}
 
 	startCountdownTimer(seconds: number): void {
-		clearInterval(this.countdownInterval)
-		this.countdownSeconds = seconds
+		this.cancelCountdown()
+		let countdownBar = document.getElementById('countdown-bar')
+		for (let i = 0; i < 2 * (seconds - 1); i++) {
+			let countdownBox = document.createElement('div')
+			countdownBox.id = `countdown-${i}`
+			countdownBox.style.backgroundColor = 'red'
+			countdownBar!.appendChild(countdownBox)
+		}
+		let start = 0 
+		let end = countdownBar!.children.length - 1
 		this.countdownInterval = setInterval(() => {
-			this.countdownSeconds -= 1
-			if (this.countdownSeconds <= 0) {
-				clearInterval(this.countdownInterval)
-			}
+			document.getElementById(`countdown-${start}`)!.style.backgroundColor = 'white'
+			document.getElementById(`countdown-${end}`)!.style.backgroundColor = 'white'
+			start += 1
+			end -= 1
 		}, 1000)
 	}
 
-	openJoinLink(): void {
-		window.open('join/' + this.game.Name(), '_blank')
-	}
-
-	copyJoinLink(): void {
-		let joinLink = `${this.gameLink}/join/${this.game.Name()}`
-		navigator.clipboard.writeText(joinLink).then(function () { }, function (err) { })
+	cancelCountdown(): void {
+		clearInterval(this.countdownInterval)
+		let countdownBar = document.getElementById('countdown-bar')
+		while (countdownBar!.firstChild) {
+			countdownBar!.removeChild(countdownBar!.firstChild)
+		}
 	}
 
 	startMusic(): void {
