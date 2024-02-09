@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	pickTimeout               = 60 * time.Second
+	pickTimeout               = 10 * time.Second
 	buzzTimeout               = 60 * time.Second
 	defaultAnsTimeout         = 60 * time.Second
 	dailyDoubleAnsTimeout     = 60 * time.Second

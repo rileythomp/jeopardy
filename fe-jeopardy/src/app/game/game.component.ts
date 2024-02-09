@@ -7,14 +7,14 @@ import { JwtService } from '../services/jwt.service'
 import { GameState, Ping } from '../model/model'
 import { environment } from '../../environments/environment'
 
-const pickTimeout = 600
-const buzzTimeout = 600
-const defaultAnsTimeout = 600
-const dailyDoubleAnsTimeout = 600
-const finalJeopardyAnsTimeout = 600
-const voteTimeout = 600
-const dailyDoubleWagerTimeout = 600
-const finalJeopardyWagerTimeout = 600
+const pickTimeout = 10
+const buzzTimeout = 60
+const defaultAnsTimeout = 60
+const dailyDoubleAnsTimeout = 60
+const finalJeopardyAnsTimeout = 60
+const voteTimeout = 60
+const dailyDoubleWagerTimeout = 60
+const finalJeopardyWagerTimeout = 60
 const buzzDelay = 0
 
 // const pickTimeout = 5
@@ -37,6 +37,7 @@ export class GameComponent implements OnInit {
 	private countdownInterval: NodeJS.Timeout
 	protected gameLink: string
 	protected countdownSeconds: number
+	protected countdownBoxes: any[] = []
 	protected gameMessage: string
 	protected questionAnswer: string
 	protected wagerAmt: string
@@ -170,10 +171,25 @@ export class GameComponent implements OnInit {
 
 	startCountdownTimer(seconds: number): void {
 		clearInterval(this.countdownInterval)
+		this.countdownBoxes = []
+		for (let i = 0; i < 2 * seconds; i++) {
+			this.countdownBoxes.push(i)
+		}
+		let start = 0 
+		let end = this.countdownBoxes.length - 1
+
 		this.countdownSeconds = seconds
 		this.countdownInterval = setInterval(() => {
+			document.getElementById(`countdown-${start}`)!.style.backgroundColor = 'white'
+			document.getElementById(`countdown-${end}`)!.style.backgroundColor = 'white'
+			start += 1
+			end -= 1
 			this.countdownSeconds -= 1
 			if (this.countdownSeconds <= 0) {
+				let boxes = document.getElementsByClassName('countdown-box') as HTMLCollectionOf<HTMLElement>
+				for (let i = 0; i < boxes.length; i++) {
+					boxes[i].style.backgroundColor = 'red'
+				}
 				clearInterval(this.countdownInterval)
 			}
 		}, 1000)

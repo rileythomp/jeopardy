@@ -26,6 +26,38 @@
     width: calc(100% - var(--players-container-width));
     display: flex;
     justify-content: center;
+
+    #game-state {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+
+        #countdown-bar {
+            border: 1px solid black;
+            height: 20px;
+            width: 100%;
+            gap: 1px;
+
+            .countdown-box {
+                height: 100%;
+                background-color: red;
+                color: black;
+                border: 1px solid black;
+            }
+        }
+
+        // #timeout {
+        //     .timeout-bar {
+        //         height: 20px;
+        //         border: 2px solid black;
+    
+        //         .ticker {
+        //             height: 100%;
+        //             background-color: red;
+        //         }
+        //     }
+        // }
+    }
 }
 
 #jeopardy-music {
