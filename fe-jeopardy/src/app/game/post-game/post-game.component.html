@@ -1,10 +1,13 @@
 <div>
-    <p class='question-category'>{{ game.CurCategory() }} </p>
-    <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
-    <div class='question-box'>
-        {{ game.CurQuestion() }}
+    <div id='question-container'>
+        <p class='question-category'>{{ game.CurCategory() }} </p>
+        <p *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
+        <div class='question-box'>
+            {{ game.CurQuestion() }}
+        </div>
+        <p>Final Jeopardy Answer: <b>{{ game.FinalAnswer() }}</b></p>
     </div>
-    <p>Final Jeopardy Answer: <b>{{ game.FinalAnswer() }}</b></p>
+    
 
     <p *ngIf="this.game.HighestScorers().length == 1">The winner is <b>{{ this.game.HighestScorers()[0] }}</b></p>
     <p *ngIf="this.game.HighestScorers().length == 2">The winners are {{ this.game.HighestScorers()[0] }} and {{ this.game.HighestScorers()[1] }}</p>

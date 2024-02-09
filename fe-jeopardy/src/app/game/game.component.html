@@ -1,12 +1,25 @@
 <div id='players-container' class='flex-column'>
 	<div class='player-box flex-column' *ngFor="let p of game.Players()">
-		<p [ngStyle]="{'color': p.score < 0 ? 'red' : 'black'}">{{ p.score < 0 ? '-' : '' }}${{ abs(p.score) }} </p>
-		<p [ngStyle]="{'font-weight': p.id == player.Id() ? 'bold' : 'normal'}">{{ p.conn ? p.name : 'Waiting for player to join' }}</p>
+		<div class='player-score' [ngStyle]="{'color': p.score < 0 ? 'red' : 'black'}">
+			{{ p.score < 0 ? '-' : '' }}${{ abs(p.score) }}
+		</div>
+		<div class='player-name'>
+			<div>
+				<ion-icon *ngIf="p.id == player.Id()" name="person-outline"></ion-icon>
+			</div>
+			<div>
+				{{ p.conn ? p.name : 'Waiting for player to join' }}
+			</div>
+		</div>
+		<div>
+			<ion-icon *ngIf="!game.BoardIntro() && (p.canPick || p.canBuzz || p.canAnswer || p.canVote || p.canWager)" name="timer-outline"></ion-icon>
+		</div>
 	</div>
 </div>
 
 <div id='game-container'>
 	<div id='game-state'>
+		<app-board-intro *ngIf="game.BoardIntro()"></app-board-intro>
 		<app-pre-game *ngIf="game.PreGame()" [gameName]="game.Name()"></app-pre-game>
 		<app-recv-pick *ngIf="game.RecvPick()"></app-recv-pick>
 		<app-recv-buzz *ngIf="game.RecvBuzz()"></app-recv-buzz>

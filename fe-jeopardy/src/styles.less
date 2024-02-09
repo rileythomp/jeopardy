@@ -3,6 +3,8 @@
     --jeopardy-yellow: #ffcc00;
     --header-height: 60px;
     --players-container-width: 120px;
+    --question-box-width: 450px;
+    --question-box-padding: 30px;
 }
 
 input, button {
@@ -43,8 +45,8 @@ button:hover {
 }
 
 .question-box {
-    width: 450px;
-    padding: 30px;
+    width: var(--question-box-width);
+    padding: var(--question-box-padding);
     background-color: var(--jeopardy-blue);
     color: white;
     text-align: center;
@@ -58,4 +60,47 @@ button:hover {
     font-size: 1.5em;
     margin: 15px 0;
     overflow-wrap: break-word;
+}
+
+#question-container {
+    width: calc(var(var(--question-box-width)) + 2*var(--question-box-padding));
+}
+
+.question-board {
+    width: 900px;
+
+    table {
+        border-collapse: collapse;
+
+        td {
+            border: 5px solid black;
+            padding: 10px;
+            text-align: center;
+            background-color: var(--jeopardy-blue);
+            font-weight: bold;
+    
+            .question-board-box {
+                width: 125px;
+                text-align: center;
+                vertical-align: middle;
+                user-select: none;
+            }
+        }
+
+        .category-title {
+            color: white;
+            min-height: 40px;
+        }
+
+        .question-value {
+            color: var(--jeopardy-yellow);
+            line-height: 30px;
+            height: 40px;
+    
+            span {
+                font-weight: bolder;
+                font-size: 2em;
+            }
+        }
+    }
 }

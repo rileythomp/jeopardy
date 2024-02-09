@@ -1,0 +1,25 @@
+.question-board {
+    p {
+        margin: 30px 0;
+    }
+
+    table {
+        .category-title {
+            color: var(--jeopardy-blue);
+        }
+    
+        .question-value {
+            color: var(--jeopardy-blue);
+        }
+
+        @keyframes toWhite {
+            to {
+                color: white;
+            }
+        }
+
+        .fade-in {
+            animation: toWhite 1s forwards;
+        }
+    }
+}

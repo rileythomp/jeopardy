@@ -150,7 +150,11 @@ func PlayGame(playerId string, conn SafeConn) error {
 
 	msg := "Waiting for more players"
 	if game.allPlayersReady() {
-		game.startGame()
+		if game.Paused {
+			game.startGame()
+		} else {
+			game.setState(BoardIntro, game.Players[0])
+		}
 		msg = "We are ready to play"
 	}
 

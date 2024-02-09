@@ -112,6 +112,10 @@ export class GameStateService {
 		return this.game.state == GameState.PreGame
 	}
 
+	BoardIntro(): boolean {
+		return this.game.state == GameState.BoardIntro
+	}
+
 	RecvPick(): boolean {
 		return this.game.state == GameState.RecvPick
 	}

@@ -1,4 +1,4 @@
-<div id='pick-container'>
+<div class='question-board'>
     <p [ngStyle]="{'visibility': game.PreviousQuestion() != '' ? 'visible' : 'hidden'}">Previous question: {{ game.PreviousQuestion() }} </p>
     <p [ngStyle]="{'visibility': game.PreviousAnswer() != '' ? 'visible' : 'hidden'}">Previous answer: <b>{{ game.PreviousAnswer() }}</b></p>
     <table>

@@ -54,6 +54,7 @@ export type Question = {
 
 export enum GameState {
     PreGame,
+    BoardIntro,
     RecvPick,
     RecvBuzz,
     RecvWager,

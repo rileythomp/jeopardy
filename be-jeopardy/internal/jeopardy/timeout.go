@@ -8,14 +8,15 @@ import (
 )
 
 const (
-	pickTimeout               = 10 * time.Second
-	buzzTimeout               = 10 * time.Second
-	defaultAnsTimeout         = 10 * time.Second
-	dailyDoubleAnsTimeout     = 10 * time.Second
-	finalJeopardyAnsTimeout   = 10 * time.Second
-	voteTimeout               = 10 * time.Second
-	dailyDoubleWagerTimeout   = 10 * time.Second
-	finalJeopardyWagerTimeout = 10 * time.Second
+	boardIntroTimeout         = 25 * time.Second
+	pickTimeout               = 30 * time.Second
+	buzzTimeout               = 30 * time.Second
+	defaultAnsTimeout         = 30 * time.Second
+	dailyDoubleAnsTimeout     = 30 * time.Second
+	finalJeopardyAnsTimeout   = 30 * time.Second
+	voteTimeout               = 30 * time.Second
+	dailyDoubleWagerTimeout   = 30 * time.Second
+	finalJeopardyWagerTimeout = 30 * time.Second
 )
 
 func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *Player, processTimeout func(player *Player) error) {
@@ -32,6 +33,17 @@ func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *
 			return
 		}
 	}()
+}
+
+func (g *Game) startBoardIntroTimeout(player *Player) {
+	ctx, cancel := context.WithCancel(context.Background())
+	g.cancelBoardIntroTimeout = cancel
+	g.startTimeout(ctx, boardIntroTimeout, &Player{}, func(_ *Player) error {
+		g.startGame()
+		g.messageAllPlayers("We are ready to play")
+		return nil
+	})
+
 }
 
 func (g *Game) startPickTimeout(player *Player) {

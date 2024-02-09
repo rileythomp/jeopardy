@@ -50,6 +50,10 @@ func (q *Question) equal(q0 Question) bool {
 }
 
 func (g *Game) setQuestions() error {
+	g.FirstRound = []Category{}
+	g.SecondRound = []Category{}
+	g.FinalQuestion = Question{}
+	g.CurQuestion = Question{}
 	questions, err := g.questionDB.GetQuestions()
 	if err != nil {
 		return err
