@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component } from '@angular/core';
 import { GameStateService } from '../../services/game-state.service';
 import { PlayerService } from '../../services/player.service';
 import { WebsocketService } from '../../services/websocket.service';
@@ -9,7 +9,6 @@ import { WebsocketService } from '../../services/websocket.service';
     styleUrls: ['./recv-wager.component.less']
 })
 export class RecvWagerComponent {
-    @Input() countdownSeconds: number
     wagerAmt: string
 
     constructor(

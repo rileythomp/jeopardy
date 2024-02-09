@@ -10,7 +10,6 @@ import { GameStateService } from 'src/app/services/game-state.service';
 	styleUrls: ['./recv-pick.component.less']
 })
 export class RecvPickComponent {
-	// @Input() countdownSeconds: number;
 	categories: string[];
 	questionRows: Question[][];
 
