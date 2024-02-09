@@ -5,16 +5,15 @@ import { WebsocketService } from '../services/websocket.service'
 import { PlayerService } from '../services/player.service'
 import { JwtService } from '../services/jwt.service'
 import { GameState, Ping } from '../model/model'
-import { environment } from '../../environments/environment'
 
-const pickTimeout = 10
-const buzzTimeout = 10
-const defaultAnsTimeout = 10
-const dailyDoubleAnsTimeout = 10
-const finalJeopardyAnsTimeout = 10
-const voteTimeout = 10
-const dailyDoubleWagerTimeout = 10
-const finalJeopardyWagerTimeout = 10
+const pickTimeout = 30
+const buzzTimeout = 30
+const defaultAnsTimeout = 30
+const dailyDoubleAnsTimeout = 30
+const finalJeopardyAnsTimeout = 30
+const voteTimeout = 30
+const dailyDoubleWagerTimeout = 30
+const finalJeopardyWagerTimeout = 30
 const buzzDelay = 0
 
 @Component({
@@ -109,6 +108,7 @@ export class GameComponent implements OnInit {
 			switch (this.game.State()) {
 				case GameState.PreGame:
 				case GameState.PostGame:
+				case GameState.BoardIntro:
 					break
 				case GameState.RecvPick:
 					this.startCountdownTimer(pickTimeout)
@@ -163,7 +163,7 @@ export class GameComponent implements OnInit {
 			let countdownBox = document.createElement('div')
 			countdownBox.id = `countdown-${i}`
 			countdownBox.style.backgroundColor = 'red'
-			countdownBar!.appendChild(countdownBox)
+			countdownBar?.appendChild(countdownBox)
 		}
 		let start = 0 
 		let end = countdownBar!.children.length - 1
@@ -178,8 +178,8 @@ export class GameComponent implements OnInit {
 	cancelCountdown(): void {
 		clearInterval(this.countdownInterval)
 		let countdownBar = document.getElementById('countdown-bar')
-		while (countdownBar!.firstChild) {
-			countdownBar!.removeChild(countdownBar!.firstChild)
+		while (countdownBar?.firstChild) {
+			countdownBar.removeChild(countdownBar.firstChild)
 		}
 	}
 

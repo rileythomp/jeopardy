@@ -1,0 +1,17 @@
+<div class='question-board'>
+    <p>{{ game.PickingPlayer() }} will select a category first</p>
+    <table>
+        <tr>
+            <td class='category-title' *ngFor="let title of categories">
+                <div class='question-board-box'>{{ title }}</div>
+            </td>
+        </tr>
+        <tr *ngFor="let row of questionRows; let valIdx = index">
+            <td class='question-value' *ngFor="let q of row; let catIdx = index">
+                <div class='question-board-box'>
+                    <span>{{ q.canChoose ? '$'+q.value : '' }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>

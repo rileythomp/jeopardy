@@ -39,9 +39,10 @@ type (
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
 		StartFinalWagerCountdown  bool `json:"startFinalWagerCountdown"`
 
-		cancelPickTimeout context.CancelFunc
-		cancelBuzzTimeout context.CancelFunc
-		cancelVoteTimeout context.CancelFunc
+		cancelBoardIntroTimeout context.CancelFunc
+		cancelPickTimeout       context.CancelFunc
+		cancelBuzzTimeout       context.CancelFunc
+		cancelVoteTimeout       context.CancelFunc
 
 		msgChan     chan Message
 		pauseChan   chan *Player
@@ -104,6 +105,7 @@ type GameState int
 
 const (
 	PreGame GameState = iota
+	BoardIntro
 	RecvPick
 	RecvBuzz
 	RecvWager
@@ -124,18 +126,19 @@ const numPlayers = 3
 
 func NewGame(db QuestionDB) (*Game, error) {
 	game := &Game{
-		State:             PreGame,
-		Players:           []*Player{},
-		Round:             FirstRound,
-		Name:              genGameCode(),
-		cancelPickTimeout: func() {},
-		cancelBuzzTimeout: func() {},
-		cancelVoteTimeout: func() {},
-		msgChan:           make(chan Message),
-		pauseChan:         make(chan *Player),
-		restartChan:       make(chan bool),
-		chatChan:          make(chan ChatMessage),
-		questionDB:        db,
+		State:                   PreGame,
+		Players:                 []*Player{},
+		Round:                   FirstRound,
+		Name:                    genGameCode(),
+		cancelBoardIntroTimeout: func() {},
+		cancelPickTimeout:       func() {},
+		cancelBuzzTimeout:       func() {},
+		cancelVoteTimeout:       func() {},
+		msgChan:                 make(chan Message),
+		pauseChan:               make(chan *Player),
+		restartChan:             make(chan bool),
+		chatChan:                make(chan ChatMessage),
+		questionDB:              db,
 	}
 	if err := game.setQuestions(); err != nil {
 		return nil, err
@@ -169,6 +172,8 @@ func (g *Game) restartGame() {
 	g.Round = FirstRound
 	g.LastToPick = &Player{}
 	g.LastToAnswer = &Player{}
+	g.PreviousQuestion = ""
+	g.PreviousAnswer = ""
 	g.LastAnswer = ""
 	g.AnsCorrectness = false
 	g.GuessedWrong = []string{}
@@ -182,7 +187,7 @@ func (g *Game) restartGame() {
 	for _, p := range g.Players {
 		p.resetPlayer()
 	}
-	g.startGame()
+	g.setState(BoardIntro, g.Players[0])
 	g.messageAllPlayers("We are ready to play")
 }
 
@@ -192,6 +197,7 @@ func (g *Game) pauseGame(player *Player) {
 	if g.State != PostGame {
 		g.State = PreGame
 	}
+	g.cancelBoardIntroTimeout()
 	g.cancelPickTimeout()
 	g.cancelBuzzTimeout()
 	g.cancelVoteTimeout()
@@ -456,6 +462,11 @@ func (g *Game) processFinalRoundAns(player *Player, isCorrect bool, answer strin
 
 func (g *Game) setState(state GameState, player *Player) {
 	switch state {
+	case BoardIntro:
+		for _, p := range g.Players {
+			p.updateActions(p.Id == player.Id, false, false, false, false)
+		}
+		g.startBoardIntroTimeout(player)
 	case RecvPick:
 		for _, p := range g.Players {
 			p.updateActions(p.Id == player.Id, false, false, false, false)
@@ -513,7 +524,7 @@ func (g *Game) startGame() {
 	}
 	g.Paused = false
 	state, player := g.State, &Player{}
-	if state == PreGame {
+	if state == PreGame || state == BoardIntro {
 		state, player = RecvPick, g.Players[0]
 	} else if state == RecvWager && g.Round != FinalRound {
 		player = g.LastToPick

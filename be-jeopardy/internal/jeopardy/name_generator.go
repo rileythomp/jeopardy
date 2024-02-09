@@ -1660,7 +1660,6 @@ var (
 		"howler monkey",
 		"hummingbird",
 		"hyena",
-		"i",
 		"ibis",
 		"iguana",
 		"jackal",

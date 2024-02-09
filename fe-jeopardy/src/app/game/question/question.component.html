@@ -1,7 +1,9 @@
-<p>{{ game.CurCategory() }}</p>
-<p id='question-comments' *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
-<p *ngIf="!game.FinalRound()">${{ game.CurValue() }}</p>
-<p *ngIf="game.FinalRound() && player.CanAnswer()">Wager: ${{ player.FinalWager() }}</p>
-<div class='question-box'>
-    {{ game.CurQuestion() }}
+<div id='question-container'>
+    <p>{{ game.CurCategory() }}</p>
+    <p id='question-comments' *ngIf="game.CurComments() != ''">Comments: {{ game.CurComments() }}</p>
+    <p *ngIf="!game.FinalRound()">${{ game.CurValue() }}</p>
+    <p *ngIf="game.FinalRound() && player.CanAnswer()">Wager: ${{ player.FinalWager() }}</p>
+    <div class='question-box'>
+        {{ game.CurQuestion() }}
+    </div>
 </div>
