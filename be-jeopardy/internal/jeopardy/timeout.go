@@ -9,22 +9,13 @@ import (
 
 const (
 	pickTimeout               = 10 * time.Second
-	buzzTimeout               = 60 * time.Second
-	defaultAnsTimeout         = 60 * time.Second
-	dailyDoubleAnsTimeout     = 60 * time.Second
-	finalJeopardyAnsTimeout   = 60 * time.Second
-	voteTimeout               = 60 * time.Second
-	dailyDoubleWagerTimeout   = 60 * time.Second
-	finalJeopardyWagerTimeout = 60 * time.Second
-
-	// pickTimeout               = 5 * time.Second
-	// buzzTimeout               = 5 * time.Second
-	// defaultAnsTimeout         = 10 * time.Second
-	// dailyDoubleAnsTimeout     = 10 * time.Second
-	// finalJeopardyAnsTimeout   = 10 * time.Second
-	// voteTimeout               = 5 * time.Second
-	// dailyDoubleWagerTimeout   = 10 * time.Second
-	// finalJeopardyWagerTimeout = 10 * time.Second
+	buzzTimeout               = 10 * time.Second
+	defaultAnsTimeout         = 10 * time.Second
+	dailyDoubleAnsTimeout     = 10 * time.Second
+	finalJeopardyAnsTimeout   = 10 * time.Second
+	voteTimeout               = 10 * time.Second
+	dailyDoubleWagerTimeout   = 10 * time.Second
+	finalJeopardyWagerTimeout = 10 * time.Second
 )
 
 func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player *Player, processTimeout func(player *Player) error) {

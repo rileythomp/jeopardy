@@ -8,24 +8,14 @@ import { GameState, Ping } from '../model/model'
 import { environment } from '../../environments/environment'
 
 const pickTimeout = 10
-const buzzTimeout = 20
-const defaultAnsTimeout = 20
-const dailyDoubleAnsTimeout = 20
-const finalJeopardyAnsTimeout = 20
-const voteTimeout = 20
-const dailyDoubleWagerTimeout = 20
-const finalJeopardyWagerTimeout = 20
+const buzzTimeout = 10
+const defaultAnsTimeout = 10
+const dailyDoubleAnsTimeout = 10
+const finalJeopardyAnsTimeout = 10
+const voteTimeout = 10
+const dailyDoubleWagerTimeout = 10
+const finalJeopardyWagerTimeout = 10
 const buzzDelay = 0
-
-// const pickTimeout = 5
-// const buzzTimeout = 5
-// const defaultAnsTimeout = 10
-// const dailyDoubleAnsTimeout = 10
-// const finalJeopardyAnsTimeout = 10
-// const voteTimeout = 5
-// const dailyDoubleWagerTimeout = 10
-// const finalJeopardyWagerTimeout = 10
-// const buzzDelay = 2000 / 2
 
 @Component({
 	selector: 'app-game',
@@ -110,7 +100,7 @@ export class GameComponent implements OnInit {
 			}
 
 			if (this.game.IsPaused()) {
-				clearInterval(this.countdownInterval)
+				this.cancelCountdown()
 				// TODO: REPLACE WITH MODAL
 				alert(`${resp.message}, will resume when 3 players are ready`)
 				return
@@ -167,11 +157,8 @@ export class GameComponent implements OnInit {
 	}
 
 	startCountdownTimer(seconds: number): void {
-		clearInterval(this.countdownInterval)
+		this.cancelCountdown()
 		let countdownBar = document.getElementById('countdown-bar')
-		while (countdownBar!.firstChild) {
-			countdownBar!.removeChild(countdownBar!.firstChild)
-		}
 		for (let i = 0; i < 2 * (seconds - 1); i++) {
 			let countdownBox = document.createElement('div')
 			countdownBox.id = `countdown-${i}`
@@ -186,6 +173,14 @@ export class GameComponent implements OnInit {
 			start += 1
 			end -= 1
 		}, 1000)
+	}
+
+	cancelCountdown(): void {
+		clearInterval(this.countdownInterval)
+		let countdownBar = document.getElementById('countdown-bar')
+		while (countdownBar!.firstChild) {
+			countdownBar!.removeChild(countdownBar!.firstChild)
+		}
 	}
 
 	startMusic(): void {
