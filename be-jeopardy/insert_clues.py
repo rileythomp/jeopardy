@@ -1,3 +1,5 @@
+# NOTE: Run remove_slashes.sql manually after this script.
+
 import csv
 import psycopg2
 import os
