@@ -54,6 +54,7 @@ type (
 
 	QuestionDB interface {
 		GetQuestions() ([]db.Question, error)
+		AddAlternative(alternative, question string) error
 		Close() error
 	}
 
@@ -365,6 +366,11 @@ func (g *Game) processVote(player *Player, confirm bool) error {
 	}
 	g.cancelVoteTimeout()
 	isCorrect := (g.AnsCorrectness && len(g.Confirmers) == 2) || (!g.AnsCorrectness && len(g.Challengers) == 2)
+	if !g.AnsCorrectness && len(g.Challengers) == 2 {
+		if err := g.questionDB.AddAlternative(g.LastAnswer, g.CurQuestion.Answer); err != nil {
+			log.Errorf("Error adding alternative: %s", err.Error())
+		}
+	}
 	g.nextQuestion(g.LastToAnswer, isCorrect)
 	return nil
 }

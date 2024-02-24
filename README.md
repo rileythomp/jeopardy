@@ -1,6 +1,7 @@
 # Jeopardy
 
-Real-time multi-player Jeopardy game.
+Real-time multi-player Jeopardy game with over 40,000 questions.
+Supports public or private games, and includes an in-game chat feature.
 
 ## Server
 
@@ -21,6 +22,10 @@ $ ng serve
 
 ### TODO
 
-- Improve answer marking
+- AI opponents
 
-- Play against AI
+- Accounts with user stats
+
+- Leaderboards
+
+- Tournament play
