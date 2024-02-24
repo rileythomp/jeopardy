@@ -98,7 +98,7 @@ var (
 
 	upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
-			log.Infof("Origin: %s", r.Header.Get("Origin"))
+			log.Debugf(r.Header.Get("Origin"), os.Getenv("ALLOW_ORIGIN"))
 			return r.Header.Get("Origin") == os.Getenv("ALLOW_ORIGIN")
 		},
 	}

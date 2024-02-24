@@ -158,7 +158,7 @@ export class GameComponent implements OnInit {
 		clearTimeout(this.modalTimeout)
 		this.modalMessage = message
 		this.showModal = true
-		setTimeout(() => {
+		this.modalTimeout = setTimeout(() => {
 			this.showModal = false
 		}, 10000)
 	}

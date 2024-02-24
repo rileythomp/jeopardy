@@ -42,7 +42,7 @@ export class LinkJoinComponent {
         clearTimeout(this.modalTimeout)
         this.modalMessage = err.status != 0 ? err.error.message : ServerUnavailableMessage;
         this.showModal = true;
-        setTimeout(() => {
+        this.modalTimeout = setTimeout(() => {
             this.showModal = false
         }, 10000)
     }
