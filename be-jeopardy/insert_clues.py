@@ -1,4 +1,5 @@
 # NOTE: Run remove_slashes.sql manually after this script.
+# NOTE: Run add_alternatives.py after remove_slashes.sql
 
 import csv
 import psycopg2
@@ -86,3 +87,6 @@ print(
 conn.commit()
 db.close()
 conn.close()
+
+# NOTE: Run remove_slashes.sql manually after this script.
+# NOTE: Run add_alternative.py after remove_slashes.sql

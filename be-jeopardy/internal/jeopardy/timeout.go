@@ -14,7 +14,7 @@ const (
 	defaultAnsTimeout         = 30 * time.Second
 	dailyDoubleAnsTimeout     = 30 * time.Second
 	finalJeopardyAnsTimeout   = 30 * time.Second
-	voteTimeout               = 30 * time.Second
+	voteTimeout               = 10 * time.Second
 	dailyDoubleWagerTimeout   = 30 * time.Second
 	finalJeopardyWagerTimeout = 30 * time.Second
 )
