@@ -109,6 +109,7 @@ export class GameComponent implements OnInit {
 				case GameState.PreGame:
 				case GameState.PostGame:
 				case GameState.BoardIntro:
+					this.cancelCountdown()
 					break
 				case GameState.RecvPick:
 					this.startCountdownTimer(pickTimeout)
