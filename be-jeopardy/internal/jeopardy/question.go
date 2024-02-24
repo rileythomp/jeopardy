@@ -27,22 +27,24 @@ type (
 )
 
 func (q *Question) checkAnswer(ans string) bool {
-	ans = strings.ToLower(ans)
-	corrAns := strings.ToLower(q.Answer)
-	if len(ans) < 5 {
-		return ans == corrAns
-	} else if len(corrAns) < 7 {
-		return levenshtein.ComputeDistance(ans, corrAns) < 2
-	} else if len(corrAns) < 9 {
-		return levenshtein.ComputeDistance(ans, corrAns) < 3
-	} else if len(corrAns) < 11 {
-		return levenshtein.ComputeDistance(ans, corrAns) < 4
-	} else if len(corrAns) < 13 {
-		return levenshtein.ComputeDistance(ans, corrAns) < 5
-	} else if len(corrAns) < 15 {
-		return levenshtein.ComputeDistance(ans, corrAns) < 6
+	for _, corr := range q.Alternatives {
+		ans, corr = strings.ToLower(ans), strings.ToLower(corr)
+		dist := levenshtein.ComputeDistance(ans, corr)
+		if len(corr) <= 5 && dist <= 0 {
+			return true
+		} else if len(corr) <= 7 && dist <= 1 {
+			return true
+		} else if len(corr) <= 9 && dist <= 2 {
+			return true
+		} else if len(corr) <= 12 && dist <= 3 {
+			return true
+		} else if len(corr) <= 15 && dist <= 4 {
+			return true
+		} else if len(corr) > 15 && dist <= 5 {
+			return true
+		}
 	}
-	return levenshtein.ComputeDistance(ans, corrAns) < 7
+	return false
 }
 
 func (q *Question) equal(q0 Question) bool {
