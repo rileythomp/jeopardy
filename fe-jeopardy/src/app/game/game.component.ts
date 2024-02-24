@@ -33,13 +33,17 @@ export class GameComponent implements OnInit {
 	protected playMusic: boolean = false
 	protected showMusicInfo: boolean = false
 
+	protected showModal: boolean = false
+	protected modalMessage: string
+	private modalTimeout: NodeJS.Timeout
+
 	constructor(
 		private router: Router,
 		private websocketService: WebsocketService,
 		private jwtService: JwtService,
 		protected game: GameStateService,
 		protected player: PlayerService,
-	) {}
+	) { }
 
 	ngOnInit(): void {
 		this.jwtService.jwt$.subscribe(jwt => {
@@ -68,17 +72,14 @@ export class GameComponent implements OnInit {
 			let resp = JSON.parse(event.data)
 
 			if (resp.code >= 4400) {
-				// TODO: REPLACE WITH MODAL
-				console.log(resp.message)
 				switch (resp.code) {
 					case 4401:
 					case 4500:
-						// alert(resp.message)
-						console.log(resp.message)
-						this.router.navigate(['/join'])
+						this.showMessage(resp.message)
 						break
 					case 4400:
-						alert(resp.message)
+						this.showMessage(resp.message)
+						break
 				}
 				return
 			}
@@ -94,14 +95,13 @@ export class GameComponent implements OnInit {
 			this.gameMessage = resp.message
 
 			if (resp.code == 4100) {
-				alert(resp.message)
+				this.showMessage(resp.message)
 				return
 			}
 
 			if (this.game.IsPaused()) {
 				this.cancelCountdown()
-				// TODO: REPLACE WITH MODAL
-				alert(`${resp.message}, will resume when 3 players are ready`)
+				this.showMessage(`${resp.message}, will resume when 3 players are ready`)
 				return
 			}
 
@@ -148,12 +148,19 @@ export class GameComponent implements OnInit {
 					}
 					break
 				default:
-					// TODO: REPLACE WITH MODAL
-					alert('Unable to update game, redirecting to home page')
-					this.router.navigate(['/join'])
+					this.showMessage('Error while updating game')
 					break
 			}
 		})
+	}
+
+	showMessage(message: string): void {
+		clearTimeout(this.modalTimeout)
+		this.modalMessage = message
+		this.showModal = true
+		setTimeout(() => {
+			this.showModal = false
+		}, 10000)
 	}
 
 	startCountdownTimer(seconds: number): void {
@@ -165,7 +172,7 @@ export class GameComponent implements OnInit {
 			countdownBox.style.backgroundColor = 'red'
 			countdownBar?.appendChild(countdownBox)
 		}
-		let start = 0 
+		let start = 0
 		let end = countdownBar!.children.length - 1
 		this.countdownInterval = setInterval(() => {
 			document.getElementById(`countdown-${start}`)!.style.backgroundColor = 'white'

@@ -39,9 +39,12 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 			let resp = JSON.parse(event.data)
 
 			if (resp.code >= 4400) {
-				// TODO: HANDLE THIS BETTER
-				// alert(resp.message)
 				console.log(resp.message)
+				this.messages.push({
+					username: 'Jeopardy System',
+					message: resp.message,
+					timestamp: resp.timeStamp,
+				})
 				return
 			}
 

@@ -638,7 +638,7 @@ func (g *Game) getPlayerById(id string) (*Player, error) {
 			return p, nil
 		}
 	}
-	return &Player{}, fmt.Errorf("player not found in game %s", g.Name)
+	return &Player{}, fmt.Errorf("Player not found in game %s", g.Name)
 }
 
 func (g *Game) allPlayersReady() bool {

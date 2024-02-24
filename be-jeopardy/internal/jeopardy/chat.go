@@ -26,7 +26,7 @@ func JoinGameChat(playerId string, conn SafeConn) error {
 		return err
 	}
 	if player.ChatConn != nil {
-		return fmt.Errorf("player already in chat")
+		return fmt.Errorf("Player already in chat")
 	}
 	player.ChatConn = conn
 

@@ -19,6 +19,7 @@ import { ChatComponent } from './game/chat/chat.component';
 import { QuestionComponent } from './game/question/question.component';
 import { BoardIntroComponent } from './game/board-intro/board-intro.component';
 import { WarningComponent } from './warning/warning.component';
+import { ModalComponent } from './modal/modal.component';
 
 @NgModule({
   declarations: [
@@ -37,6 +38,7 @@ import { WarningComponent } from './warning/warning.component';
     QuestionComponent,
     BoardIntroComponent,
     WarningComponent,
+    ModalComponent,
   ],
   imports: [
     BrowserModule,

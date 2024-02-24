@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
-	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 )
 
@@ -31,20 +30,25 @@ func GetPlayerGames() map[string]string {
 	return playerGameNames
 }
 
-func CreatePrivateGame(playerName string) (*Game, string, error) {
-	if len(playerName) < 1 || len(playerName) > 20 {
-		return &Game{}, "", fmt.Errorf("player name must be between 1 and 20 characters")
+func validateName(name string) error {
+	if len(name) < 1 || len(name) > 20 {
+		return fmt.Errorf("Player name must be between 1 and 20 characters")
+	}
+	return nil
+}
+
+func CreatePrivateGame(playerName string) (*Game, string, error, int) {
+	if err := validateName(playerName); err != nil {
+		return &Game{}, "", err, socket.BadRequest
 	}
 
 	questionDB, err := db.NewQuestionDB()
 	if err != nil {
-		log.Errorf("Error connecting to database: %s", err.Error())
-		return &Game{}, "", fmt.Errorf("Unexpected error creating private game")
+		return &Game{}, "", err, socket.ServerError
 	}
 	game, err := NewGame(questionDB)
 	if err != nil {
-		log.Errorf("Error creating game: %s", err.Error())
-		return &Game{}, "", err
+		return &Game{}, "", err, socket.ServerError
 	}
 	privateGames[game.Name] = game
 
@@ -52,12 +56,12 @@ func CreatePrivateGame(playerName string) (*Game, string, error) {
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
 
-	return game, player.Id, nil
+	return game, player.Id, nil, 0
 }
 
-func JoinPublicGame(playerName string) (*Game, string, error) {
-	if len(playerName) < 1 || len(playerName) > 20 {
-		return &Game{}, "", fmt.Errorf("player name must be between 1 and 20 characters")
+func JoinPublicGame(playerName string) (*Game, string, error, int) {
+	if err := validateName(playerName); err != nil {
+		return &Game{}, "", err, socket.BadRequest
 	}
 
 	var game *Game
@@ -70,13 +74,11 @@ func JoinPublicGame(playerName string) (*Game, string, error) {
 	if game == nil {
 		questionDB, err := db.NewQuestionDB()
 		if err != nil {
-			log.Errorf("Error connecting to database: %s", err.Error())
-			return &Game{}, "", fmt.Errorf("Unexpected error creating private game")
+			return &Game{}, "", err, socket.ServerError
 		}
 		game, err = NewGame(questionDB)
 		if err != nil {
-			log.Errorf("Error creating game: %s", err.Error())
-			return &Game{}, "", err
+			return &Game{}, "", err, socket.ServerError
 		}
 		publicGames[game.Name] = game
 	}
@@ -85,19 +87,18 @@ func JoinPublicGame(playerName string) (*Game, string, error) {
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
 
-	return game, player.Id, nil
+	return game, player.Id, nil, socket.Ok
 }
 
 func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
-	if len(playerName) < 1 || len(playerName) > 20 {
-		return &Game{}, "", fmt.Errorf("player name must be between 1 and 20 characters")
+	if err := validateName(playerName); err != nil {
+		return &Game{}, "", err
 	}
 
 	game, ok := publicGames[gameCode]
 	if !ok {
 		game, ok = privateGames[gameCode]
 		if !ok {
-			log.Errorf("Game %s not found", gameCode)
 			return &Game{}, "", fmt.Errorf("Game %s not found", gameCode)
 		}
 	}
@@ -118,7 +119,7 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 		}
 	}
 	if player == nil {
-		return &Game{}, "", fmt.Errorf("game %s is full", gameCode)
+		return &Game{}, "", fmt.Errorf("Game %s is full", gameCode)
 	}
 	playerGames[player.Id] = game
 
@@ -128,7 +129,7 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 func GetPlayerGame(playerId string) (*Game, error) {
 	game, ok := playerGames[playerId]
 	if !ok {
-		return nil, fmt.Errorf("no game found for player with id %s", playerId)
+		return nil, fmt.Errorf("No game found for player with id %s", playerId)
 	}
 	return game, nil
 }
@@ -144,7 +145,7 @@ func PlayGame(playerId string, conn SafeConn) error {
 		return err
 	}
 	if player.Conn != nil {
-		return fmt.Errorf("player already playing")
+		return fmt.Errorf("Player already playing")
 	}
 	player.Conn = conn
 
@@ -162,6 +163,7 @@ func PlayGame(playerId string, conn SafeConn) error {
 	player.processMessages(game.msgChan, game.pauseChan)
 
 	game.messageAllPlayers(msg)
+
 	return nil
 }
 

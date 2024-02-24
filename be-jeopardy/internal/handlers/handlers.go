@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -97,11 +98,16 @@ var (
 
 	upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
-			return true
-			// TODO: SET THIS PROPERLY
-			// return r.Header.Get("Origin") == "http://localhost:4200"
+			log.Infof("Origin: %s", r.Header.Get("Origin"))
+			return r.Header.Get("Origin") == os.Getenv("ALLOW_ORIGIN")
 		},
 	}
+)
+
+const (
+	UnexpectedServerErrMsg = "Sorry, there was an unexpected error. Please try again in a few moments. If the issue persists, please file an issue."
+	ErrGeneratingJWTMsg    = "Error generating JWT: %s"
+	ErrGettingPlayerIdMsg  = "Error getting playerId from token: %s"
 )
 
 func GetPlayerGame(c *gin.Context) {
@@ -110,14 +116,15 @@ func GetPlayerGame(c *gin.Context) {
 	token := c.Request.Header.Get("Access-Token")
 	playerId, err := auth.GetJWTSubject(token)
 	if err != nil {
-		log.Errorf("Error getting playerId from token: %s", err.Error())
-		respondWithError(c, http.StatusForbidden, "Error getting playerId from token")
+		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
+		respondWithError(c, http.StatusForbidden, "Unable to rejoin game: invalid authentication credentials")
 		return
 	}
 
 	game, err := jeopardy.GetPlayerGame(playerId)
 	if err != nil {
-		respondWithError(c, http.StatusInternalServerError, "Error getting player game: %s", err.Error())
+		log.Errorf("Error getting player game: %s", err.Error())
+		respondWithError(c, http.StatusBadRequest, "Unable to rejoin game: no game found for player")
 		return
 	}
 
@@ -134,20 +141,25 @@ func CreatePrivateGame(c *gin.Context) {
 	var req GameRequest
 	if err := parseBody(c.Request.Body, &req); err != nil {
 		log.Errorf("Error parsing create request: %s", err.Error())
-		respondWithError(c, http.StatusBadRequest, "Error parsing create request")
+		respondWithError(c, http.StatusBadRequest, "Unable to create private game: Malformed request")
 		return
 	}
 
-	game, playerId, err := jeopardy.CreatePrivateGame(req.PlayerName)
+	game, playerId, err, code := jeopardy.CreatePrivateGame(req.PlayerName)
 	if err != nil {
-		respondWithError(c, http.StatusInternalServerError, "Error creating game: %s", err.Error())
+		log.Errorf("Error creating private game: %s", err.Error())
+		if code == socket.BadRequest {
+			respondWithError(c, http.StatusBadRequest, "Unable to create private game: %s", err.Error())
+		} else {
+			respondWithError(c, http.StatusInternalServerError, UnexpectedServerErrMsg)
+		}
 		return
 	}
 
 	jwt, err := auth.GenerateJWT(playerId)
 	if err != nil {
-		log.Errorf("Error generating JWT: %s", err.Error())
-		respondWithError(c, http.StatusInternalServerError, "Error generating JWT")
+		log.Errorf(ErrGeneratingJWTMsg, err.Error())
+		respondWithError(c, http.StatusInternalServerError, UnexpectedServerErrMsg)
 		return
 	}
 
@@ -165,20 +177,21 @@ func JoinGameByCode(c *gin.Context) {
 	var req GameRequest
 	if err := parseBody(c.Request.Body, &req); err != nil {
 		log.Errorf("Error parsing join request: %s", err.Error())
-		respondWithError(c, http.StatusBadRequest, "Error parsing join request")
+		respondWithError(c, http.StatusBadRequest, "Unable to join game: Malformed request")
 		return
 	}
 
 	game, playerId, err := jeopardy.JoinGameByCode(req.PlayerName, req.GameCode)
 	if err != nil {
-		respondWithError(c, http.StatusInternalServerError, "Error joining game: %s", err.Error())
+		log.Errorf("Error joining game by code: %s", err.Error())
+		respondWithError(c, http.StatusBadRequest, "Unable to join game: %s", err.Error())
 		return
 	}
 
 	jwt, err := auth.GenerateJWT(playerId)
 	if err != nil {
-		log.Errorf("Error generating JWT: %s", err.Error())
-		respondWithError(c, http.StatusInternalServerError, "Error generating JWT")
+		log.Errorf(ErrGeneratingJWTMsg, err.Error())
+		respondWithError(c, http.StatusInternalServerError, UnexpectedServerErrMsg)
 		return
 	}
 
@@ -196,20 +209,25 @@ func JoinPublicGame(c *gin.Context) {
 	var req GameRequest
 	if err := parseBody(c.Request.Body, &req); err != nil {
 		log.Errorf("Error parsing join request: %s", err.Error())
-		respondWithError(c, http.StatusBadRequest, "Error parsing join request")
+		respondWithError(c, http.StatusBadRequest, "Unable to join game: Malformed request")
 		return
 	}
 
-	game, playerId, err := jeopardy.JoinPublicGame(req.PlayerName)
+	game, playerId, err, code := jeopardy.JoinPublicGame(req.PlayerName)
 	if err != nil {
-		respondWithError(c, http.StatusInternalServerError, "Error joining game: %s", err.Error())
+		log.Errorf("Error joining public game: %s", err.Error())
+		if code == socket.BadRequest {
+			respondWithError(c, http.StatusBadRequest, "Unable to join game: %s", err.Error())
+		} else {
+			respondWithError(c, http.StatusInternalServerError, UnexpectedServerErrMsg)
+		}
 		return
 	}
 
 	jwt, err := auth.GenerateJWT(playerId)
 	if err != nil {
-		log.Errorf("Error generating JWT: %s", err.Error())
-		respondWithError(c, http.StatusInternalServerError, "Error generating JWT")
+		log.Errorf(ErrGeneratingJWTMsg, err.Error())
+		respondWithError(c, http.StatusInternalServerError, UnexpectedServerErrMsg)
 		return
 	}
 
@@ -234,29 +252,29 @@ func JoinGameChat(c *gin.Context) {
 	_, msg, err := ws.ReadMessage()
 	if err != nil {
 		log.Errorf("Error reading message from WebSocket: %s", err.Error())
-		closeConnWithMsg(ws, socket.ServerError, "Error reading message from WebSocket")
+		closeConnWithMsg(ws, socket.ServerError, "Error joining chat")
 		return
 	}
 
 	var req TokenRequest
 	if err := json.Unmarshal(msg, &req); err != nil {
 		log.Errorf("Error parsing chat request: %s", err.Error())
-		closeConnWithMsg(ws, socket.BadRequest, "Error parsing chat request")
+		closeConnWithMsg(ws, socket.BadRequest, "Unable to join chat: Malformed request")
 		return
 	}
 
 	playerId, err := auth.GetJWTSubject(req.Token)
 	if err != nil {
-		log.Errorf("Error getting playerId from token: %s", err.Error())
-		closeConnWithMsg(ws, socket.Unauthorized, "Error getting playerId from token")
+		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
+		closeConnWithMsg(ws, socket.Unauthorized, "Unable to join chat: invalid authentication credentials")
 		return
 	}
 
 	conn := socket.NewSafeConn(ws)
 	err = jeopardy.JoinGameChat(playerId, conn)
 	if err != nil {
-		log.Errorf("Error during chat: %s", err.Error())
-		closeConnWithMsg(ws, socket.ServerError, "Error during chat: %s", err.Error())
+		log.Errorf("Error joining chat: %s", err.Error())
+		closeConnWithMsg(ws, socket.BadRequest, "Unable to join chat: %s", err.Error())
 		return
 	}
 }
@@ -274,29 +292,29 @@ func PlayGame(c *gin.Context) {
 	_, msg, err := ws.ReadMessage()
 	if err != nil {
 		log.Errorf("Error reading message from WebSocket: %s", err.Error())
-		closeConnWithMsg(ws, socket.ServerError, "Error reading message from WebSocket")
+		closeConnWithMsg(ws, socket.ServerError, "Error playing game")
 		return
 	}
 
 	var req TokenRequest
 	if err := json.Unmarshal(msg, &req); err != nil {
 		log.Errorf("Error parsing play request: %s", err.Error())
-		closeConnWithMsg(ws, socket.BadRequest, "Error parsing play request")
+		closeConnWithMsg(ws, socket.BadRequest, "Unable to play game: Malformed request")
 		return
 	}
 
 	playerId, err := auth.GetJWTSubject(req.Token)
 	if err != nil {
-		log.Errorf("Error getting playerId from token: %s", err.Error())
-		closeConnWithMsg(ws, socket.Unauthorized, "Error getting playerId from token")
+		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
+		closeConnWithMsg(ws, socket.Unauthorized, "Unable to play game: invalid authentication credentials")
 		return
 	}
 
 	conn := socket.NewSafeConn(ws)
 	err = jeopardy.PlayGame(playerId, conn)
 	if err != nil {
-		log.Errorf("Error during game: %s", err.Error())
-		closeConnWithMsg(ws, socket.ServerError, "Error during game: %s", err.Error())
+		log.Errorf("Error playing game: %s", err.Error())
+		closeConnWithMsg(ws, socket.BadRequest, "Error playing game: %s", err.Error())
 		return
 	}
 }
@@ -307,13 +325,14 @@ func PlayAgain(c *gin.Context) {
 	token := c.Request.Header.Get("Access-Token")
 	playerId, err := auth.GetJWTSubject(token)
 	if err != nil {
-		log.Errorf("Error getting playerId from token: %s", err.Error())
-		respondWithError(c, http.StatusForbidden, "Error getting playerId from token")
+		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
+		respondWithError(c, http.StatusForbidden, "Unable to play again: invalid authentication credentials")
 		return
 	}
 
 	if err = jeopardy.PlayAgain(playerId); err != nil {
-		respondWithError(c, http.StatusInternalServerError, "Error playing again: %s", err.Error())
+		log.Errorf("Error playing again: %s", err.Error())
+		respondWithError(c, socket.BadRequest, "Error playing again: %s", err.Error())
 		return
 	}
 
@@ -329,13 +348,13 @@ func LeaveGame(c *gin.Context) {
 	token := c.Request.Header.Get("Access-Token")
 	playerId, err := auth.GetJWTSubject(token)
 	if err != nil {
-		log.Errorf("Error getting playerId from token: %s", err.Error())
-		respondWithError(c, http.StatusForbidden, "Error getting playerId from token")
+		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
+		respondWithError(c, http.StatusForbidden, "Unable to play again: invalid authentication credentials")
 		return
 	}
 
 	if err = jeopardy.LeaveGame(playerId); err != nil {
-		respondWithError(c, http.StatusInternalServerError, "Error leaving game: %s", err.Error())
+		respondWithError(c, socket.BadRequest, "Error leaving game: %s", err.Error())
 		return
 	}
 

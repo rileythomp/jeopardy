@@ -4,3 +4,6 @@
         <button (click)="joinGame(playerName, gameCode)">Join game</button>
     </div>
 </div>
+
+<app-modal *ngIf="showModal" (closeModal)="showModal = false" [message]='modalMessage'></app-modal>
+```
