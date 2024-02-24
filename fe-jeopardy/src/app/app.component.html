@@ -1,8 +1,15 @@
 <div class='toolbar flex-row' role="banner">
-	<h2>Jeopardy!</h2>
+	<div>
+		<h2>Jeopardy!</h2>
+	</div>
+	<div>
+		<ion-icon (click)="modalComponent.showJeopardyInfo()" name="information-circle-outline"></ion-icon>
+	</div>
 </div>
 
 
 <div role="main">
 	<router-outlet></router-outlet>
 </div>
+
+<app-modal></app-modal>

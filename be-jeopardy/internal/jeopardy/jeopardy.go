@@ -129,7 +129,7 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 func GetPlayerGame(playerId string) (*Game, error) {
 	game, ok := playerGames[playerId]
 	if !ok {
-		return nil, fmt.Errorf("No game found for player with id %s", playerId)
+		return nil, fmt.Errorf("No game found for player")
 	}
 	return game, nil
 }

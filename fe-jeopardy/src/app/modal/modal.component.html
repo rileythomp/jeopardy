@@ -1,9 +1,50 @@
-<div id='modal-container'>
-    <div id='modal-message'>
+<div *ngIf='showModal' class='modal-container'>
+    <div class='modal-message'>
         <p>{{message}}</p>
     </div>
     <div>
-        <button (click)="closeModal.emit(true)">
+        <button (click)="showModal = false">
+            Continue  
+        </button>
+    </div>
+</div>
+
+<div *ngIf='showInfo' class='modal-container'>
+    <div class='modal-message'>
+        <h3>Jeopardy Info</h3>
+        <p>It seems like this is your first time playing!
+            This is a multiplayer Jeopardy game.
+            It should be familiar to anyone who has seen it on TV, but there are a few differences to make it playable online. 
+            Please take a moment to carefully ready the info below, paying close attention to the <b>bolded</b> sections.
+            If you ever need to refer to this info again, you can click the <ion-icon name="information-circle-outline"></ion-icon>
+            icon in the top right corner of the page. 
+        </p>
+        <p>
+            Picking: Players have 30 seconds to pick a question. If no question is picked, the lowest value question will be chosen.
+        </p>
+        <p>
+            Buzzing: Players have 30 seconds to read the question and buzz in. If all 3 players pass, the question will be skipped.
+        </p>
+        <p>
+            <b>Answering</b>: Players have 30 seconds to type in an answer after buzzing in. <b>Do not</b> phrase your answer 
+            in the form of a question like on TV. For example, answer "This city is the capital of Germany" with "Berlin" rather than "What is Berlin?"
+        </p>
+        <p>
+            <b>Voting</b>: We cannot guarantee that the computer will always judge an answer correctly. So after each answer, 
+            players have 10 seconds to challenge the computer's judgement. If 2/3 players
+            challenge the computer's judgement, then it is overturned and the player's score will be adjusted accordingly.
+        </p>
+        <p>
+            Wagering: Players have 30 seconds to wager during Double and Final Jeopardy. If no wager is given, the lowest 
+            allowed wager will be chosen. 
+        </p>
+        <p>
+            <b>Note</b>: This game is still in development. If you encounter any issues or have any suggestions, please 
+            <a href='https://github.com/rileythomp/jeopardy/issues/new' target='blank'>file an issue</a>!
+        </p>
+    </div>
+    <div>
+        <button (click)="showInfo = false">
             Continue  
         </button>
     </div>

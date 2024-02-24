@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
     selector: 'app-modal',
@@ -6,6 +6,21 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
     styleUrls: ['./modal.component.less']
 })
 export class ModalComponent {
-    @Input() message: string;
-    @Output() closeModal = new EventEmitter<boolean>();
+    protected showInfo: boolean = false
+    protected showModal: boolean = false
+    protected message: string
+    private modalTimeout: NodeJS.Timeout
+
+    showMessage(msg: string) {
+        clearTimeout(this.modalTimeout)
+        this.message = msg
+        this.showModal = true
+        this.modalTimeout = setTimeout(() => {
+            this.showModal = false
+        }, 10000)
+    }
+
+    showJeopardyInfo() {
+        this.showInfo = true
+    }
 }

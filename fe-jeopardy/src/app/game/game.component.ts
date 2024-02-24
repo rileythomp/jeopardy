@@ -5,6 +5,7 @@ import { WebsocketService } from '../services/websocket.service'
 import { PlayerService } from '../services/player.service'
 import { JwtService } from '../services/jwt.service'
 import { GameState, Ping } from '../model/model'
+import { ModalComponent } from '../modal/modal.component'
 
 const pickTimeout = 30
 const buzzTimeout = 30
@@ -33,9 +34,7 @@ export class GameComponent implements OnInit {
 	protected playMusic: boolean = false
 	protected showMusicInfo: boolean = false
 
-	protected showModal: boolean = false
-	protected modalMessage: string
-	private modalTimeout: NodeJS.Timeout
+	@ViewChild(ModalComponent) private modal: ModalComponent
 
 	constructor(
 		private router: Router,
@@ -75,10 +74,10 @@ export class GameComponent implements OnInit {
 				switch (resp.code) {
 					case 4401:
 					case 4500:
-						this.showMessage(resp.message)
+						this.modal.showMessage(resp.message)
 						break
 					case 4400:
-						this.showMessage(resp.message)
+						this.modal.showMessage(resp.message)
 						break
 				}
 				return
@@ -95,13 +94,13 @@ export class GameComponent implements OnInit {
 			this.gameMessage = resp.message
 
 			if (resp.code == 4100) {
-				this.showMessage(resp.message)
+				this.modal.showMessage(resp.message)
 				return
 			}
 
 			if (this.game.IsPaused()) {
 				this.cancelCountdown()
-				this.showMessage(`${resp.message}, will resume when 3 players are ready`)
+				this.modal.showMessage(`${resp.message}, will resume when 3 players are ready`)
 				return
 			}
 
@@ -149,19 +148,10 @@ export class GameComponent implements OnInit {
 					}
 					break
 				default:
-					this.showMessage('Error while updating game')
+					this.modal.showMessage('Error while updating game')
 					break
 			}
 		})
-	}
-
-	showMessage(message: string): void {
-		clearTimeout(this.modalTimeout)
-		this.modalMessage = message
-		this.showModal = true
-		this.modalTimeout = setTimeout(() => {
-			this.showModal = false
-		}, 10000)
 	}
 
 	startCountdownTimer(seconds: number): void {

@@ -1,1 +1,1 @@
-export let ServerUnavailableMessage = 'Sorry, Jeopardy is not available right now. Please try again later.'
+export let ServerUnavailableMsg = 'Sorry, Jeopardy is not available right now. Please try again later.'

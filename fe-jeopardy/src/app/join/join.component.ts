@@ -1,9 +1,10 @@
-import { Component } from '@angular/core'
+import { Component, ViewChild } from '@angular/core'
 import { Router } from '@angular/router'
 import { JwtService } from '../services/jwt.service'
 import { ApiService } from '../services/api.service'
 import { Observer } from 'rxjs'
-import { ServerUnavailableMessage } from '../constants'
+import { ServerUnavailableMsg } from '../constants'
+import { ModalComponent } from '../modal/modal.component'
 
 @Component({
 	selector: 'app-join',
@@ -15,16 +16,13 @@ export class JoinComponent {
 	protected gameCode: string = ''
 	protected showGameCodeInput: boolean = false
 
-	protected showModal: boolean = false
-	protected modalMessage: string;
-	private modalTimeout: NodeJS.Timeout
+	@ViewChild(ModalComponent) private modal: ModalComponent
 
 	constructor(
 		private router: Router,
 		private jwtService: JwtService,
 		private apiService: ApiService,
 	) { }
-
 
 	private joinResp(): Partial<Observer<any>> {
 		return {
@@ -33,18 +31,10 @@ export class JoinComponent {
 				this.router.navigate([`/game/${resp.game.name}`])
 			},
 			error: (err: any) => {
-				this.showMessage(err)
+				let msg = err.status != 0 ? err.error.message : ServerUnavailableMsg;
+				this.modal.showMessage(msg)
 			}
 		}
-	}
-
-	showMessage(err: any) {
-		clearTimeout(this.modalTimeout)
-		this.modalMessage = err.status != 0 ? err.error.message : ServerUnavailableMessage
-		this.showModal = true
-		this.modalTimeout = setTimeout(() => {
-			this.showModal = false
-		}, 10000)
 	}
 
 	createPrivateGame(playerName: string) {
@@ -65,7 +55,8 @@ export class JoinComponent {
 				this.router.navigate([`/game/${resp.game.name}`])
 			},
 			error: (err: any) => {
-				this.showMessage(err)
+				let msg = err.status != 0 ? err.error.message : ServerUnavailableMsg
+				this.modal.showMessage(msg)
 			},
 		})
 	}

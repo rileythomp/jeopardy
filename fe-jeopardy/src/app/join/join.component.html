@@ -3,7 +3,7 @@
         <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
 
         <div id='join-buttons' class='flex-row'>
-            <button (click)="joinPublicGame(playerName)">Join any game</button>
+            <button (click)="joinPublicGame(playerName)">Join public game</button>
             <button (click)="createPrivateGame(playerName)">Create a private game</button>
             <button (click)="toggleGameCodeInput()">Join game by code</button>
         </div>
@@ -16,4 +16,4 @@
     <button (click)="rejoin()">Disconnected? Click to rejoin</button>
 </div>
 
-<app-modal *ngIf="showModal" (closeModal)="showModal = false" [message]='modalMessage'></app-modal>
+<app-modal></app-modal>
