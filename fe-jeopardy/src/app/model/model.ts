@@ -35,7 +35,6 @@ export type Player = {
     canVote: boolean;
     playAgain: boolean;
     conn: any;
-    isBot: boolean;
 };
 
 type Category = {

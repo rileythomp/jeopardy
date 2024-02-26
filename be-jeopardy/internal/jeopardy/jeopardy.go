@@ -160,21 +160,9 @@ func AddBot(playerId string) error {
 	game.Players = append(game.Players, bot)
 	bot.processMessages()
 
-	msg := "Waiting for more players"
-	if game.allPlayersReady() {
-		if game.Paused {
-			game.startGame()
-		} else {
-			// game.setState(BoardIntro, game.Players[0])
-			game.setState(RecvPick, game.Players[0]) // todo: remove this
-		}
-		msg = "We are ready to play"
-	}
-
-	game.messageAllPlayers(msg)
+	game.handlePlayerJoined(bot)
 
 	return nil
-
 }
 
 func PlayGame(playerId string, conn SafeConn) error {
@@ -191,24 +179,27 @@ func PlayGame(playerId string, conn SafeConn) error {
 		return fmt.Errorf("Player already playing")
 	}
 	player.setConn(conn)
+	player.sendPings()
+	player.readMessages(game.msgChan, game.pauseChan)
 
+	game.handlePlayerJoined(player)
+
+	return nil
+}
+
+func (g *Game) handlePlayerJoined(player JeopardyPlayer) {
 	msg := "Waiting for more players"
-	if game.allPlayersReady() {
-		if game.Paused {
-			game.startGame()
+	if g.allPlayersReady() {
+		if g.Paused {
+			g.startGame()
 		} else {
 			// game.setState(BoardIntro, game.Players[0])
-			game.setState(RecvPick, game.Players[0]) // todo: remove this
+			g.setState(RecvPick, g.Players[0]) // todo: remove this
 		}
 		msg = "We are ready to play"
 	}
 
-	player.sendPings()
-	player.readMessages(game.msgChan, game.pauseChan)
-
-	game.messageAllPlayers(msg)
-
-	return nil
+	g.messageAllPlayers(msg)
 }
 
 func LeaveGame(playerId string) error {

@@ -26,7 +26,7 @@ func (p *Bot) sendMessage(msg Response) error {
 	return nil
 }
 
-func (p *Bot) processMessages() (Response, error) {
+func (p *Bot) processMessages() {
 	go func() {
 		ctx, cancel := context.WithCancel(context.Background())
 		for {
@@ -38,7 +38,6 @@ func (p *Bot) processMessages() (Response, error) {
 			}
 		}
 	}()
-	return Response{}, nil
 }
 
 // TODO: Improve bot logic
