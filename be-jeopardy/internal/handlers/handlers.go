@@ -50,6 +50,11 @@ var (
 			Handler: JoinGameByCode,
 		},
 		{
+			Method:  http.MethodPut,
+			Path:    "/jeopardy/games/bot",
+			Handler: AddBot,
+		},
+		{
 			Method:  http.MethodGet,
 			Path:    "/jeopardy/play",
 			Handler: PlayGame,
@@ -272,6 +277,25 @@ func JoinGameChat(c *gin.Context) {
 	if err != nil {
 		log.Errorf("Error joining chat: %s", err.Error())
 		closeConnWithMsg(ws, socket.BadRequest, "Unable to join chat: %s", err.Error())
+		return
+	}
+}
+
+func AddBot(c *gin.Context) {
+	log.Infof("Received add bot request")
+
+	token := c.Request.Header.Get("Access-Token")
+	playerId, err := auth.GetJWTSubject(token)
+	if err != nil {
+		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
+		respondWithError(c, http.StatusForbidden, ErrInvalidAuthCredMsg)
+		return
+	}
+
+	err = jeopardy.AddBot(playerId)
+	if err != nil {
+		log.Errorf("Error adding bot to game: %s", err.Error())
+		respondWithError(c, http.StatusBadRequest, "Unable to add bot to game: %s", err.Error())
 		return
 	}
 }

@@ -146,6 +146,37 @@ func GetPlayerGame(playerId string) (*Game, error) {
 	return game, nil
 }
 
+func AddBot(playerId string) error {
+	game, err := GetPlayerGame(playerId)
+	if err != nil {
+		return err
+	}
+
+	if len(game.Players) >= numPlayers {
+		return fmt.Errorf("Game is full")
+	}
+
+	bot := NewBot(genGameCode())
+	game.Players = append(game.Players, bot)
+	bot.processMessages()
+
+	msg := "Waiting for more players"
+	if game.allPlayersReady() {
+		if game.Paused {
+			game.startGame()
+		} else {
+			// game.setState(BoardIntro, game.Players[0])
+			game.setState(RecvPick, game.Players[0]) // todo: remove this
+		}
+		msg = "We are ready to play"
+	}
+
+	game.messageAllPlayers(msg)
+
+	return nil
+
+}
+
 func PlayGame(playerId string, conn SafeConn) error {
 	game, err := GetPlayerGame(playerId)
 	if err != nil {
