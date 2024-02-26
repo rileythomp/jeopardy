@@ -190,20 +190,13 @@ func PlayGame(playerId string, conn SafeConn) error {
 	}
 	player.setConn(conn)
 
-	if game.BotGame {
-		game.setState(RecvPick, player)
-		player.sendPings()
-		player.processMessages(game.msgChan, game.pauseChan)
-		game.messageAllPlayers("We are ready to play")
-		return nil
-	}
-
 	msg := "Waiting for more players"
 	if game.allPlayersReady() {
 		if game.Paused {
 			game.startGame()
 		} else {
-			game.setState(BoardIntro, game.Players[0])
+			// game.setState(BoardIntro, game.Players[0])
+			game.setState(RecvPick, game.Players[0]) // todo: remove this
 		}
 		msg = "We are ready to play"
 	}
