@@ -33,14 +33,12 @@ type Player struct {
 	FinalCorrect    bool            `json:"finalCorrect"`
 	FinalProtestors map[string]bool `json:"finalProtestors"`
 	PlayAgain       bool            `json:"playAgain"`
-	IsBot           bool            `json:"isBot"`
-	botChan         chan Response
 
 	Conn     SafeConn `json:"conn"`
 	ChatConn SafeConn `json:"chatConn"`
 
-	cancelAnswerTimeout context.CancelFunc
-	cancelWagerTimeout  context.CancelFunc
+	CancelAnswerTimeout context.CancelFunc `json:"-"`
+	CancelWagerTimeout  context.CancelFunc `json:"-"`
 
 	sendGamePing *time.Ticker
 	sendChatPing *time.Ticker
@@ -62,20 +60,14 @@ func NewPlayer(name string) *Player {
 		CanWager:            false,
 		CanVote:             false,
 		FinalProtestors:     map[string]bool{},
-		cancelAnswerTimeout: func() {},
-		cancelWagerTimeout:  func() {},
+		CancelAnswerTimeout: func() {},
+		CancelWagerTimeout:  func() {},
 		sendGamePing:        time.NewTicker(pingFrequency),
 		sendChatPing:        time.NewTicker(pingFrequency),
 	}
 }
 
-func NewBot(name string) *Player {
-	bot := NewPlayer(name)
-	bot.IsBot = true
-	return bot
-}
-
-func (p *Player) processMessages(msgChan chan Message, pauseChan chan *Player) {
+func (p *Player) processMessages(msgChan chan Message, pauseChan chan JeopardyPlayer) {
 	go func() {
 		log.Infof("Starting to process messages for player %s", p.Name)
 		for {
@@ -130,8 +122,8 @@ func (p *Player) sendPings() {
 }
 
 func (p *Player) pausePlayer() {
-	p.cancelAnswerTimeout()
-	p.cancelWagerTimeout()
+	p.CancelAnswerTimeout()
+	p.CancelWagerTimeout()
 }
 
 func (p *Player) resetPlayer() {
@@ -162,23 +154,137 @@ func (p *Player) updateScore(val int, isCorrect bool, round RoundState) {
 	p.Score += val
 }
 
-func (p *Player) canBuzz(guessedWrong, passed []string) bool {
-	return !p.inLists(guessedWrong, passed)
+func (p *Player) id() string {
+	return p.Id
 }
 
-func (p *Player) canVote(confirmers, challengers []string) bool {
-	return !p.inLists(confirmers, challengers)
+func (p *Player) name() string {
+	return p.Name
 }
 
-func (p *Player) inLists(lists ...[]string) bool {
-	for _, list := range lists {
-		for _, id := range list {
-			if id == p.Id {
-				return true
-			}
-		}
-	}
-	return false
+func (p *Player) conn() SafeConn {
+	return p.Conn
+}
+
+func (p *Player) chatConn() SafeConn {
+	return p.ChatConn
+}
+
+func (p *Player) score() int {
+	return p.Score
+}
+
+func (p *Player) canPick() bool {
+	return p.CanPick
+}
+
+func (p *Player) canBuzz() bool {
+	return p.CanBuzz
+}
+
+func (p *Player) canAnswer() bool {
+	return p.CanAnswer
+}
+
+func (p *Player) canVote() bool {
+	return p.CanVote
+}
+
+func (p *Player) canWager() bool {
+	return p.CanWager
+}
+
+func (p *Player) finalWager() int {
+	return p.FinalWager
+}
+
+func (p *Player) finalCorrect() bool {
+	return p.FinalCorrect
+}
+
+func (p *Player) finalProtestors() map[string]bool {
+	return p.FinalProtestors
+}
+
+func (p *Player) playAgain() bool {
+	return p.PlayAgain
+}
+
+func (p *Player) setId(id string) {
+	p.Id = id
+}
+
+func (p *Player) setName(name string) {
+	p.Name = name
+}
+
+func (p *Player) setConn(conn SafeConn) {
+	p.Conn = conn
+}
+
+func (p *Player) setChatConn(conn SafeConn) {
+	p.ChatConn = conn
+}
+
+func (p *Player) setCanBuzz(canBuzz bool) {
+	p.CanBuzz = canBuzz
+}
+
+func (p *Player) setCanAnswer(canAnswer bool) {
+	p.CanAnswer = canAnswer
+}
+
+func (p *Player) setCanVote(canVote bool) {
+	p.CanVote = canVote
+}
+
+func (p *Player) setCanWager(canWager bool) {
+	p.CanWager = canWager
+}
+
+func (p *Player) setFinalWager(wager int) {
+	p.FinalWager = wager
+}
+
+func (p *Player) setFinalAnswer(answer string) {
+	p.FinalAnswer = answer
+}
+
+func (p *Player) setFinalCorrect(correct bool) {
+	p.FinalCorrect = correct
+}
+
+func (p *Player) setPlayAgain(playAgain bool) {
+	p.PlayAgain = playAgain
+}
+
+func (p *Player) addFinalProtestor(playerId string) {
+	p.FinalProtestors[playerId] = true
+}
+
+func (p *Player) addToScore(points int) {
+	p.Score += points
+}
+
+func (p *Player) endConnections() {
+	p.Conn = nil
+	p.ChatConn = nil
+}
+
+func (p *Player) setCancelWagerTimeout(cancel context.CancelFunc) {
+	p.CancelWagerTimeout = cancel
+}
+
+func (p *Player) setCancelAnswerTimeout(cancel context.CancelFunc) {
+	p.CancelAnswerTimeout = cancel
+}
+
+func (p *Player) cancelAnswerTimeout() {
+	p.CancelAnswerTimeout()
+}
+
+func (p *Player) cancelWagerTimeout() {
+	p.CancelWagerTimeout()
 }
 
 func (p *Player) readMessage() ([]byte, error) {
@@ -194,10 +300,7 @@ func (p *Player) readMessage() ([]byte, error) {
 }
 
 func (p *Player) sendMessage(msg Response) error {
-	if p.IsBot {
-		p.botChan <- msg
-		return nil
-	}
+	fmt.Println("SENDING MESSAGE TO HUMAN")
 	if p.Conn == nil {
 		log.Errorf("Error sending message to player %s because connection is nil", p.Name)
 		return fmt.Errorf("player has no connection")
@@ -207,128 +310,4 @@ func (p *Player) sendMessage(msg Response) error {
 		return fmt.Errorf("error sending message to player")
 	}
 	return nil
-}
-
-func (p *Player) processMessage(ctx context.Context, msg Response) {
-	if p.Name != msg.CurPlayer.Name {
-		panic(fmt.Sprintf("bot %s received wrong message for player %s", p.Name, msg.CurPlayer.Name))
-	}
-	g := msg.Game
-	if g.Paused {
-		fmt.Printf("Bot %s says the game is paused\n", p.Name)
-		return
-	}
-	switch g.State {
-	case RecvPick:
-		fmt.Printf("Bot %s says it's time to pick\n", p.Name)
-		if !p.CanPick {
-			break
-		}
-		fmt.Printf("Bot %s will wait a few seconds to pick\n", p.Name)
-		select {
-		case <-ctx.Done():
-			fmt.Printf("an action occurred in the game that is causing bot %s to stop picking\n", p.Name)
-			break
-		case <-time.After(5 * time.Second):
-			fmt.Printf("Bot %s is done waiting to pick\n", p.Name)
-			c, v := g.firstAvailableQuestion()
-			resp := Message{
-				Player: p,
-				PickMessage: PickMessage{
-					CatIdx: c,
-					ValIdx: v,
-				},
-			}
-			fmt.Printf("Bot %s is picking category %d and value %d\n", p.Name, c, v)
-			g.msgChan <- resp
-		}
-	case RecvBuzz:
-		fmt.Printf("Bot %s says it's time to buzz\n", p.Name)
-		if !p.CanBuzz {
-			break
-		}
-		fmt.Printf("Bot %s will wait a few seconds to buzz\n", p.Name)
-		select {
-		case <-ctx.Done():
-			fmt.Printf("an action occurred in the game that is causing bot %s to stop buzzing\n", p.Name)
-			break
-		case <-time.After(5 * time.Second):
-			fmt.Printf("Bot %s is done waiting to buzz\n", p.Name)
-			resp := Message{
-				Player: p,
-				BuzzMessage: BuzzMessage{
-					IsPass: false,
-				},
-			}
-			fmt.Printf("Bot %s is answering\n", p.Name)
-			g.msgChan <- resp
-		}
-	case RecvAns:
-		fmt.Printf("Bot %s says it's time to answer\n", p.Name)
-		if !p.CanAnswer {
-			break
-		}
-		fmt.Printf("Bot %s will wait a few seconds to answer\n", p.Name)
-		select {
-		case <-ctx.Done():
-			fmt.Printf("an action occurred in the game that is causing bot %s to stop answering\n", p.Name)
-			break
-		case <-time.After(5 * time.Second):
-			fmt.Printf("Bot %s is done waiting to answer\n", p.Name)
-			resp := Message{
-				Player: p,
-				AnswerMessage: AnswerMessage{
-					Answer: g.CurQuestion.Answer,
-				},
-			}
-			fmt.Printf("Bot %s is answering %s\n", p.Name, g.CurQuestion.Answer)
-			g.msgChan <- resp
-		}
-	case RecvVote:
-		fmt.Printf("Bot %s says it's time to vote\n", p.Name)
-		if !p.CanVote {
-			break
-		}
-		fmt.Printf("Bot %s will wait a few seconds to vote\n", p.Name)
-		select {
-		case <-ctx.Done():
-			fmt.Printf("an action occurred in the game that is causing bot %s to stop voting\n", p.Name)
-			break
-		case <-time.After(5 * time.Second):
-			fmt.Printf("Bot %s is done waiting to vote\n", p.Name)
-			resp := Message{
-				Player: p,
-				VoteMessage: VoteMessage{
-					Confirm: true,
-				},
-			}
-			fmt.Printf("Bot %s is voting to confirm\n", p.Name)
-			g.msgChan <- resp
-		}
-	case RecvWager:
-		fmt.Printf("Bot %s says it's time to wager\n", p.Name)
-		if !p.CanWager {
-			break
-		}
-		fmt.Printf("Bot %s will wait a few seconds to wager\n", p.Name)
-		select {
-		case <-ctx.Done():
-			fmt.Printf("an action occurred in the game that is causing bot %s to stop wagering\n", p.Name)
-			break
-		case <-time.After(5 * time.Second):
-			fmt.Printf("Bot %s is done waiting to wager\n", p.Name)
-			resp := Message{
-				Player: p,
-				WagerMessage: WagerMessage{
-					Wager: 10,
-				},
-			}
-			fmt.Printf("Bot %s is wagering 10\n", p.Name)
-			g.msgChan <- resp
-		}
-	case PostGame:
-		fmt.Printf("Bot %s says it is post game\n", p.Name)
-	case PreGame:
-		fmt.Printf("Bot %s says it is pre game\n", p.Name)
-	}
 }

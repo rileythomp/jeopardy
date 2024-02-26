@@ -10,34 +10,81 @@ import (
 )
 
 type (
-	Player interface {
+	JeopardyPlayer interface {
+		id() string
+		name() string
+		conn() SafeConn
+		chatConn() SafeConn
+		score() int
+		canPick() bool
+		canBuzz() bool
+		canAnswer() bool
+		canVote() bool
+		canWager() bool
+		finalWager() int
+		finalCorrect() bool
+		finalProtestors() map[string]bool
+		playAgain() bool
+
+		setId(string)
+		setName(string)
+		setConn(SafeConn)
+		setChatConn(SafeConn)
+		setCanBuzz(bool)
+		setCanAnswer(bool)
+		setCanVote(bool)
+		setCanWager(bool)
+		setFinalWager(int)
+		setFinalAnswer(string)
+		setFinalCorrect(bool)
+		setPlayAgain(bool)
+
+		processMessages(msgChan chan Message, pauseChan chan JeopardyPlayer)
+		processChatMessages(chan ChatMessage)
+		sendPings()
+		sendChatPings()
+
+		sendMessage(Response) error
+		sendChatMessage(ChatMessage) error
+		updateActions(pick, buzz, answer, wager, vote bool)
+		updateScore(val int, isCorrect bool, round RoundState)
+		addFinalProtestor(string)
+		addToScore(int)
+		resetPlayer()
+		pausePlayer()
+		endConnections()
+
+		setCancelAnswerTimeout(context.CancelFunc)
+		setCancelWagerTimeout(context.CancelFunc)
+		cancelAnswerTimeout()
+		cancelWagerTimeout()
 	}
 
 	Game struct {
-		Name             string     `json:"name"`
-		State            GameState  `json:"state"`
-		Round            RoundState `json:"round"`
-		FirstRound       []Category `json:"firstRound"`
-		SecondRound      []Category `json:"secondRound"`
-		FinalQuestion    Question   `json:"finalQuestion"`
-		CurQuestion      Question   `json:"curQuestion"`
-		Players          []*Player  `json:"players"`
-		LastToPick       *Player    `json:"lastToPick"`
-		LastToAnswer     *Player    `json:"lastToAnswer"`
-		PreviousQuestion string     `json:"previousQuestion"`
-		PreviousAnswer   string     `json:"previousAnswer"`
-		LastAnswer       string     `json:"lastAnswer"`
-		AnsCorrectness   bool       `json:"ansCorrectness"`
-		GuessedWrong     []string   `json:"guessedWrong"`
-		Passed           []string   `json:"passed"`
-		Confirmers       []string   `json:"confirmations"`
-		Challengers      []string   `json:"challenges"`
-		NumFinalWagers   int        `json:"numFinalWagers"`
-		FinalWagers      []string   `json:"finalWagers"`
-		FinalAnswers     []string   `json:"finalAnswers"`
-		Paused           bool       `json:"paused"`
-		PausedState      GameState  `json:"pausedState"`
-		BotGame          bool       `json:"botGame"`
+		Name             string           `json:"name"`
+		State            GameState        `json:"state"`
+		Round            RoundState       `json:"round"`
+		FirstRound       []Category       `json:"firstRound"`
+		SecondRound      []Category       `json:"secondRound"`
+		FinalQuestion    Question         `json:"finalQuestion"`
+		CurQuestion      Question         `json:"curQuestion"`
+		Players          []JeopardyPlayer `json:"players"`
+		LastToPick       JeopardyPlayer   `json:"lastToPick"`
+		LastToAnswer     JeopardyPlayer   `json:"lastToAnswer"`
+		PreviousQuestion string           `json:"previousQuestion"`
+		PreviousAnswer   string           `json:"previousAnswer"`
+		LastAnswer       string           `json:"lastAnswer"`
+		AnsCorrectness   bool             `json:"ansCorrectness"`
+		GuessedWrong     []string         `json:"guessedWrong"`
+		Passed           []string         `json:"passed"`
+		Confirmers       []string         `json:"confirmations"`
+		Challengers      []string         `json:"challenges"`
+		NumFinalWagers   int              `json:"numFinalWagers"`
+		FinalWagers      []string         `json:"finalWagers"`
+		FinalAnswers     []string         `json:"finalAnswers"`
+		Paused           bool             `json:"paused"`
+		PausedState      GameState        `json:"pausedState"`
+		BotGame          bool             `json:"botGame"`
 
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
@@ -49,7 +96,7 @@ type (
 		cancelVoteTimeout       context.CancelFunc
 
 		msgChan     chan Message
-		pauseChan   chan *Player
+		pauseChan   chan JeopardyPlayer
 		restartChan chan bool
 		chatChan    chan ChatMessage
 
@@ -63,7 +110,7 @@ type (
 	}
 
 	Message struct {
-		Player *Player
+		Player JeopardyPlayer
 		PickMessage
 		BuzzMessage
 		AnswerMessage
@@ -98,11 +145,11 @@ type (
 	}
 
 	Response struct {
-		Code      int     `json:"code"`
-		Token     string  `json:"token,omitempty"`
-		Message   string  `json:"message"`
-		Game      *Game   `json:"game,omitempty"`
-		CurPlayer *Player `json:"curPlayer,omitempty"`
+		Code      int            `json:"code"`
+		Token     string         `json:"token,omitempty"`
+		Message   string         `json:"message"`
+		Game      *Game          `json:"game,omitempty"`
+		CurPlayer JeopardyPlayer `json:"curPlayer,omitempty"`
 	}
 )
 
@@ -132,7 +179,7 @@ const numPlayers = 3
 func NewGame(db QuestionDB) (*Game, error) {
 	game := &Game{
 		State:                   PreGame,
-		Players:                 []*Player{},
+		Players:                 []JeopardyPlayer{},
 		Round:                   FirstRound,
 		Name:                    genGameCode(),
 		cancelBoardIntroTimeout: func() {},
@@ -140,7 +187,7 @@ func NewGame(db QuestionDB) (*Game, error) {
 		cancelBuzzTimeout:       func() {},
 		cancelVoteTimeout:       func() {},
 		msgChan:                 make(chan Message),
-		pauseChan:               make(chan *Player),
+		pauseChan:               make(chan JeopardyPlayer),
 		restartChan:             make(chan bool),
 		chatChan:                make(chan ChatMessage),
 		questionDB:              db,
@@ -196,7 +243,7 @@ func (g *Game) restartGame() {
 	g.messageAllPlayers("We are ready to play")
 }
 
-func (g *Game) pauseGame(player *Player) {
+func (g *Game) pauseGame(player JeopardyPlayer) {
 	g.Paused = true
 	g.PausedState = g.State
 	if g.State != PostGame {
@@ -206,16 +253,15 @@ func (g *Game) pauseGame(player *Player) {
 	g.cancelPickTimeout()
 	g.cancelBuzzTimeout()
 	g.cancelVoteTimeout()
-	player.Conn = nil
-	player.ChatConn = nil
-	player.PlayAgain = false
+	player.endConnections()
+	player.setPlayAgain(false)
 	for _, p := range g.Players {
 		p.pausePlayer()
 	}
-	g.messageAllPlayers(fmt.Sprintf("Player %s left the game", player.Name))
+	g.messageAllPlayers(fmt.Sprintf("Player %s left the game", player.name()))
 	endGame := true
 	for _, p := range g.Players {
-		if p.Conn != nil {
+		if p.conn() != nil {
 			endGame = false
 		}
 	}
@@ -227,7 +273,7 @@ func (g *Game) pauseGame(player *Player) {
 		delete(publicGames, g.Name)
 		delete(privateGames, g.Name)
 		for _, p := range g.Players {
-			delete(playerGames, p.Id)
+			delete(playerGames, p.id())
 		}
 	}
 
@@ -236,36 +282,36 @@ func (g *Game) pauseGame(player *Player) {
 func (g *Game) processMsg(msg Message) error {
 	player := msg.Player
 	if g.Paused {
-		log.Infof("Ignoring message from player %s because game is paused\n", player.Name)
+		log.Infof("Ignoring message from player %s because game is paused\n", player.name())
 		return nil
 	}
 	var err error
 	switch g.State {
 	case RecvPick:
-		log.Infof("Player %s picked\n", player.Name)
+		log.Infof("Player %s picked\n", player.name())
 		err = g.processPick(player, msg.CatIdx, msg.ValIdx)
 	case RecvBuzz:
 		action := "buzzed"
 		if msg.IsPass {
 			action = "passed"
 		}
-		log.Infof("Player %s %s\n", player.Name, action)
+		log.Infof("Player %s %s\n", player.name(), action)
 		err = g.processBuzz(player, msg.IsPass)
 	case RecvAns:
-		log.Infof("Player %s answered\n", player.Name)
+		log.Infof("Player %s answered\n", player.name())
 		err = g.processAnswer(player, msg.Answer)
 	case RecvVote:
 		action := "accepted"
 		if !msg.Confirm {
 			action = "challenged"
 		}
-		log.Infof("Player %s %s\n", player.Name, action)
+		log.Infof("Player %s %s\n", player.name(), action)
 		err = g.processVote(player, msg.Confirm)
 	case RecvWager:
-		log.Infof("Player %s wagered\n", player.Name)
+		log.Infof("Player %s wagered\n", player.name())
 		err = g.processWager(player, msg.Wager)
 	case PostGame:
-		log.Infof("Player %s protested\n", player.Name)
+		log.Infof("Player %s protested\n", player.name())
 		err = g.processProtest(player, msg.ProtestFor)
 	case PreGame:
 		err = fmt.Errorf("received unexpected message")
@@ -273,8 +319,8 @@ func (g *Game) processMsg(msg Message) error {
 	return err
 }
 
-func (g *Game) processPick(player *Player, catIdx, valIdx int) error {
-	if !player.CanPick {
+func (g *Game) processPick(player JeopardyPlayer, catIdx, valIdx int) error {
+	if !player.canPick() {
 		return fmt.Errorf("player cannot pick")
 	}
 	if catIdx < 0 || valIdx < 0 || catIdx >= numCategories || valIdx >= numQuestions {
@@ -305,13 +351,13 @@ func (g *Game) processPick(player *Player, catIdx, valIdx int) error {
 	return nil
 }
 
-func (g *Game) processBuzz(player *Player, isPass bool) error {
-	if !player.CanBuzz {
+func (g *Game) processBuzz(player JeopardyPlayer, isPass bool) error {
+	if !player.canBuzz() {
 		return fmt.Errorf("player cannot buzz")
 	}
 	if isPass {
-		g.Passed = append(g.Passed, player.Id)
-		player.CanBuzz = false
+		g.Passed = append(g.Passed, player.id())
+		player.setCanBuzz(false)
 		if g.noPlayerCanBuzz() {
 			g.cancelBuzzTimeout()
 			g.skipQuestion()
@@ -332,8 +378,8 @@ func (g *Game) processBuzz(player *Player, isPass bool) error {
 	return nil
 }
 
-func (g *Game) processAnswer(player *Player, answer string) error {
-	if !player.CanAnswer {
+func (g *Game) processAnswer(player JeopardyPlayer, answer string) error {
+	if !player.canAnswer() {
 		return fmt.Errorf("player cannot answer")
 	}
 	player.cancelAnswerTimeout()
@@ -349,15 +395,15 @@ func (g *Game) processAnswer(player *Player, answer string) error {
 	return nil
 }
 
-func (g *Game) processVote(player *Player, confirm bool) error {
-	if !player.CanVote {
+func (g *Game) processVote(player JeopardyPlayer, confirm bool) error {
+	if !player.canVote() {
 		return fmt.Errorf("player cannot vote")
 	}
-	player.CanVote = false
+	player.setCanVote(false)
 	if confirm {
-		g.Confirmers = append(g.Confirmers, player.Id)
+		g.Confirmers = append(g.Confirmers, player.id())
 	} else {
-		g.Challengers = append(g.Challengers, player.Id)
+		g.Challengers = append(g.Challengers, player.id())
 	}
 	if len(g.Confirmers) != 2 && len(g.Challengers) != 2 {
 		_ = player.sendMessage(Response{
@@ -379,12 +425,12 @@ func (g *Game) processVote(player *Player, confirm bool) error {
 	return nil
 }
 
-func (g *Game) processWager(player *Player, wager int) error {
-	if !player.CanWager {
+func (g *Game) processWager(player JeopardyPlayer, wager int) error {
+	if !player.canWager() {
 		return fmt.Errorf("player cannot wager")
 	}
 	player.cancelWagerTimeout()
-	if min, max, ok := g.validWager(wager, player.Score); !ok {
+	if min, max, ok := g.validWager(wager, player.score()); !ok {
 		g.startWagerTimeout(player)
 		_ = player.sendMessage(Response{
 			Code:      socket.BadRequest,
@@ -396,9 +442,9 @@ func (g *Game) processWager(player *Player, wager int) error {
 	}
 	var msg string
 	if g.Round == FinalRound {
-		player.FinalWager = wager
-		player.CanWager = false
-		g.FinalWagers = append(g.FinalWagers, player.Id)
+		player.setFinalWager(wager)
+		player.setCanWager(false)
+		g.FinalWagers = append(g.FinalWagers, player.id())
 		if len(g.FinalWagers) != g.NumFinalWagers {
 			g.StartFinalWagerCountdown = false
 			_ = player.sendMessage(Response{
@@ -421,41 +467,41 @@ func (g *Game) processWager(player *Player, wager int) error {
 	return nil
 }
 
-func (g *Game) processProtest(protestByPlayer *Player, protestFor string) error {
+func (g *Game) processProtest(protestByPlayer JeopardyPlayer, protestFor string) error {
 	protestForPlayer, err := g.getPlayerById(protestFor)
 	if err != nil {
 		return err
 	}
-	if _, ok := protestForPlayer.FinalProtestors[protestByPlayer.Id]; ok {
+	if _, ok := protestForPlayer.finalProtestors()[protestByPlayer.id()]; ok {
 		return nil
 	}
-	protestForPlayer.FinalProtestors[protestByPlayer.Id] = true
-	if len(protestForPlayer.FinalProtestors) != numPlayers/2+1 {
+	protestForPlayer.addFinalProtestor(protestByPlayer.id())
+	if len(protestForPlayer.finalProtestors()) != numPlayers/2+1 {
 		_ = protestByPlayer.sendMessage(Response{
 			Code:      socket.Ok,
-			Message:   "You protested for " + protestForPlayer.Name,
+			Message:   "You protested for " + protestForPlayer.name(),
 			Game:      g,
 			CurPlayer: protestByPlayer,
 		})
 		return nil
 	}
-	if protestForPlayer.FinalCorrect {
-		protestForPlayer.Score -= 2 * protestForPlayer.FinalWager
+	if protestForPlayer.finalCorrect() {
+		protestForPlayer.addToScore(-2 * protestForPlayer.finalWager())
 	} else {
-		protestForPlayer.Score += 2 * protestForPlayer.FinalWager
+		protestForPlayer.addToScore(2 * protestForPlayer.finalWager())
 	}
-	protestForPlayer.FinalCorrect = !protestForPlayer.FinalCorrect
+	protestForPlayer.setFinalCorrect(!protestForPlayer.finalCorrect())
 	g.setState(PostGame, &Player{})
 	g.messageAllPlayers("Final Jeopardy result changed")
 	return nil
 }
 
-func (g *Game) processFinalRoundAns(player *Player, isCorrect bool, answer string) error {
+func (g *Game) processFinalRoundAns(player JeopardyPlayer, isCorrect bool, answer string) error {
 	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
-	g.FinalAnswers = append(g.FinalAnswers, player.Id)
-	player.CanAnswer = false
-	player.FinalAnswer = answer
-	player.FinalCorrect = isCorrect
+	g.FinalAnswers = append(g.FinalAnswers, player.id())
+	player.setCanAnswer(false)
+	player.setFinalAnswer(answer)
+	player.setFinalCorrect(isCorrect)
 	if g.roundEnded() {
 		g.setState(PostGame, &Player{})
 		g.messageAllPlayers("Final round ended")
@@ -471,52 +517,52 @@ func (g *Game) processFinalRoundAns(player *Player, isCorrect bool, answer strin
 	return nil
 }
 
-func (g *Game) setState(state GameState, player *Player) {
+func (g *Game) setState(state GameState, player JeopardyPlayer) {
 	switch state {
 	case BoardIntro:
 		for _, p := range g.Players {
-			p.updateActions(p.Id == player.Id, false, false, false, false)
+			p.updateActions(p.id() == player.id(), false, false, false, false)
 		}
 		g.startBoardIntroTimeout(player)
 	case RecvPick:
 		for _, p := range g.Players {
-			p.updateActions(p.Id == player.Id, false, false, false, false)
+			p.updateActions(p.id() == player.id(), false, false, false, false)
 		}
 		g.startPickTimeout(player)
 	case RecvBuzz:
 		for _, p := range g.Players {
-			p.updateActions(false, p.canBuzz(g.GuessedWrong, g.Passed), false, false, false)
+			p.updateActions(false, !inLists(p.id(), g.GuessedWrong, g.Passed), false, false, false)
 		}
 		g.startBuzzTimeout(player)
 	case RecvAns:
 		for _, p := range g.Players {
-			canAnswer := p.Id == player.Id
+			canAnswer := p.id() == player.id()
 			if g.Round == FinalRound {
-				canAnswer = p.Score > 0 && !p.inLists(g.FinalAnswers)
+				canAnswer = p.score() > 0 && !inLists(p.id(), g.FinalAnswers)
 			}
 			p.updateActions(false, false, canAnswer, false, false)
 		}
 		for _, p := range g.Players {
-			if !p.CanAnswer {
+			if !p.canAnswer() {
 				continue
 			}
 			g.startAnswerTimeout(p)
 		}
 	case RecvVote:
 		for _, p := range g.Players {
-			p.updateActions(false, false, false, false, p.canVote(g.Confirmers, g.Challengers))
+			p.updateActions(false, false, false, false, !inLists(p.id(), g.Confirmers, g.Challengers))
 		}
 		g.startVoteTimeout(player)
 	case RecvWager:
 		for _, p := range g.Players {
-			canWager := p.Id == player.Id
+			canWager := p.id() == player.id()
 			if g.Round == FinalRound {
-				canWager = p.Score > 0 && !p.inLists(g.FinalWagers)
+				canWager = p.score() > 0 && !inLists(p.id(), g.FinalWagers)
 			}
 			p.updateActions(false, false, false, canWager, false)
 		}
 		for _, p := range g.Players {
-			if !p.CanWager {
+			if !p.canWager() {
 				continue
 			}
 			g.startWagerTimeout(p)
@@ -534,20 +580,21 @@ func (g *Game) startGame() {
 		g.State = g.PausedState
 	}
 	g.Paused = false
-	state, player := g.State, &Player{}
+	state := g.State
+	var player JeopardyPlayer
 	if state == PreGame || state == BoardIntro {
 		state, player = RecvPick, g.Players[0]
 	} else if state == RecvWager && g.Round != FinalRound {
 		player = g.LastToPick
 	} else if state == RecvPick {
 		for _, p := range g.Players {
-			if p.CanPick {
+			if p.canPick() {
 				player = p
 			}
 		}
 	} else if state == RecvAns && g.Round != FinalRound {
 		for _, p := range g.Players {
-			if p.CanAnswer {
+			if p.canAnswer() {
 				player = p
 			}
 		}
@@ -573,10 +620,10 @@ func (g *Game) startFinalRound() {
 	}
 }
 
-func (g *Game) nextQuestion(player *Player, isCorrect bool) {
+func (g *Game) nextQuestion(player JeopardyPlayer, isCorrect bool) {
 	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
 	if !isCorrect {
-		g.GuessedWrong = append(g.GuessedWrong, player.Id)
+		g.GuessedWrong = append(g.GuessedWrong, player.id())
 	}
 	if isCorrect || g.CurQuestion.DailyDouble || g.noPlayerCanBuzz() {
 		g.disableQuestion()
@@ -642,9 +689,9 @@ func (g *Game) messageAllPlayers(msg string) {
 	}
 }
 
-func (g *Game) getPlayerById(id string) (*Player, error) {
+func (g *Game) getPlayerById(id string) (JeopardyPlayer, error) {
 	for _, p := range g.Players {
-		if p.Id == id {
+		if p.id() == id {
 			return p, nil
 		}
 	}
@@ -654,7 +701,7 @@ func (g *Game) getPlayerById(id string) (*Player, error) {
 func (g *Game) allPlayersReady() bool {
 	ready := 0
 	for _, p := range g.Players {
-		if p.Conn != nil {
+		if p.conn() != nil {
 			ready++
 		}
 	}
@@ -683,10 +730,10 @@ func (g *Game) roundEnded() bool {
 	return true
 }
 
-func (g *Game) lowestPlayer() *Player {
+func (g *Game) lowestPlayer() JeopardyPlayer {
 	lowest := g.Players[0]
 	for _, p := range g.Players {
-		if p.Score < lowest.Score {
+		if p.score() < lowest.score() {
 			lowest = p
 		}
 	}
@@ -696,7 +743,7 @@ func (g *Game) lowestPlayer() *Player {
 func (g *Game) numFinalWagers() int {
 	numWagers := 0
 	for _, p := range g.Players {
-		if p.Score > 0 {
+		if p.score() > 0 {
 			numWagers++
 		}
 	}
@@ -722,4 +769,15 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func inLists(playerId string, lists ...[]string) bool {
+	for _, list := range lists {
+		for _, id := range list {
+			if id == playerId {
+				return true
+			}
+		}
+	}
+	return false
 }

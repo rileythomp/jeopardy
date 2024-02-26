@@ -62,10 +62,7 @@ func CreateBotGame(playerName string) (*Game, string, error, int) {
 	for _, name := range []string{"Bot A", "Bot B"} {
 		bot := NewBot(name)
 		game.Players = append(game.Players, bot)
-
-		bot.botChan = make(chan Response)
-
-		go func(bot *Player) {
+		go func(bot *Bot) {
 			ctx, cancel := context.WithCancel(context.Background())
 			for {
 				select {
@@ -147,17 +144,17 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 		}
 	}
 
-	var player *Player
+	var player JeopardyPlayer
 	if len(game.Players) < numPlayers {
 		player = NewPlayer(playerName)
 		game.Players = append(game.Players, player)
 	} else {
 		for _, p := range game.Players {
-			if p.Conn == nil {
-				delete(playerGames, p.Id)
+			if p.conn() == nil {
+				delete(playerGames, p.id())
 				player = p
-				player.Id = uuid.New().String()
-				player.Name = playerName
+				player.setId(uuid.New().String())
+				player.setName(playerName)
 				break
 			}
 		}
@@ -165,9 +162,9 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 	if player == nil {
 		return &Game{}, "", fmt.Errorf("Game %s is full", gameCode)
 	}
-	playerGames[player.Id] = game
+	playerGames[player.id()] = game
 
-	return game, player.Id, nil
+	return game, player.id(), nil
 }
 
 func GetPlayerGame(playerId string) (*Game, error) {
@@ -188,10 +185,10 @@ func PlayGame(playerId string, conn SafeConn) error {
 	if err != nil {
 		return err
 	}
-	if player.Conn != nil {
+	if player.conn() != nil {
 		return fmt.Errorf("Player already playing")
 	}
-	player.Conn = conn
+	player.setConn(conn)
 
 	if game.BotGame {
 		game.setState(RecvPick, player)
@@ -246,11 +243,11 @@ func PlayAgain(playerId string) error {
 		return err
 	}
 
-	player.PlayAgain = true
+	player.setPlayAgain(true)
 
 	restartGame := true
 	for _, p := range game.Players {
-		if !p.PlayAgain || p.Conn == nil {
+		if !p.playAgain() || p.conn() == nil {
 			restartGame = false
 		}
 	}
@@ -260,8 +257,8 @@ func PlayAgain(playerId string) error {
 	}
 
 	for _, p := range game.Players {
-		msg := fmt.Sprintf("%s wants to play again", player.Name)
-		if p.Id == player.Id {
+		msg := fmt.Sprintf("%s wants to play again", player.name())
+		if p.id() == player.id() {
 			msg = "Waiting for all other players to play again"
 		}
 		_ = p.sendMessage(Response{

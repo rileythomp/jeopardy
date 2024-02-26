@@ -25,10 +25,10 @@ func JoinGameChat(playerId string, conn SafeConn) error {
 	if err != nil {
 		return err
 	}
-	if player.ChatConn != nil {
+	if player.chatConn() != nil {
 		return fmt.Errorf("Player already in chat")
 	}
-	player.ChatConn = conn
+	player.setChatConn(conn)
 
 	player.sendChatPings()
 	player.processChatMessages(game.chatChan)
