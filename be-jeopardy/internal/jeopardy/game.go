@@ -39,7 +39,7 @@ type (
 		setFinalCorrect(bool)
 		setPlayAgain(bool)
 
-		processMessages(msgChan chan Message, pauseChan chan JeopardyPlayer)
+		readMessages(msgChan chan Message, pauseChan chan JeopardyPlayer)
 		processChatMessages(chan ChatMessage)
 		sendPings()
 		sendChatPings()

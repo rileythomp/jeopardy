@@ -22,11 +22,6 @@ type (
 		Handler gin.HandlerFunc
 	}
 
-	GameRequest struct {
-		PlayerName string `json:"playerName"`
-		GameCode   string `json:"gameCode"`
-	}
-
 	TokenRequest struct {
 		Token string `json:"token,omitempty"`
 	}
@@ -38,11 +33,6 @@ var (
 			Method:  http.MethodGet,
 			Path:    "/jeopardy/health",
 			Handler: CheckHealth,
-		},
-		{
-			Method:  http.MethodPost,
-			Path:    "/jeopardy/bot",
-			Handler: CreateBotGame,
 		},
 		{
 			Method:  http.MethodPost,
@@ -142,53 +132,17 @@ func GetPlayerGame(c *gin.Context) {
 	})
 }
 
-func CreateBotGame(c *gin.Context) {
-	log.Infof("Received create bot game request")
-
-	var req GameRequest
-	if err := parseBody(c.Request.Body, &req); err != nil {
-		log.Errorf("Error parsing create request: %s", err.Error())
-		respondWithError(c, http.StatusBadRequest, ErrMalformedReqMsg)
-		return
-	}
-
-	game, playerId, err, code := jeopardy.CreateBotGame(req.PlayerName)
-	if err != nil {
-		log.Errorf("Error creating bot game: %s", err.Error())
-		if code == socket.BadRequest {
-			respondWithError(c, http.StatusBadRequest, "Unable to create bot game: %s", err.Error())
-		} else {
-			respondWithError(c, http.StatusInternalServerError, UnexpectedServerErrMsg)
-		}
-		return
-	}
-
-	jwt, err := auth.GenerateJWT(playerId)
-	if err != nil {
-		log.Errorf(ErrGeneratingJWTMsg, err.Error())
-		respondWithError(c, http.StatusInternalServerError, UnexpectedServerErrMsg)
-		return
-	}
-
-	c.JSON(http.StatusOK, jeopardy.Response{
-		Code:    http.StatusOK,
-		Token:   jwt,
-		Message: "Authorized to create bot game",
-		Game:    game,
-	})
-}
-
 func CreatePrivateGame(c *gin.Context) {
 	log.Infof("Received create game request")
 
-	var req GameRequest
+	var req jeopardy.GameRequest
 	if err := parseBody(c.Request.Body, &req); err != nil {
 		log.Errorf("Error parsing create request: %s", err.Error())
 		respondWithError(c, http.StatusBadRequest, ErrMalformedReqMsg)
 		return
 	}
 
-	game, playerId, err, code := jeopardy.CreatePrivateGame(req.PlayerName)
+	game, playerId, err, code := jeopardy.CreatePrivateGame(req)
 	if err != nil {
 		log.Errorf("Error creating private game: %s", err.Error())
 		if code == socket.BadRequest {
@@ -217,7 +171,7 @@ func CreatePrivateGame(c *gin.Context) {
 func JoinGameByCode(c *gin.Context) {
 	log.Infof("Received private join game request")
 
-	var req GameRequest
+	var req jeopardy.GameRequest
 	if err := parseBody(c.Request.Body, &req); err != nil {
 		log.Errorf("Error parsing join request: %s", err.Error())
 		respondWithError(c, http.StatusBadRequest, ErrMalformedReqMsg)
@@ -249,7 +203,7 @@ func JoinGameByCode(c *gin.Context) {
 func JoinPublicGame(c *gin.Context) {
 	log.Infof("Received public join game request")
 
-	var req GameRequest
+	var req jeopardy.GameRequest
 	if err := parseBody(c.Request.Body, &req); err != nil {
 		log.Errorf("Error parsing join request: %s", err.Error())
 		respondWithError(c, http.StatusBadRequest, ErrMalformedReqMsg)

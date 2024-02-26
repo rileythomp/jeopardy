@@ -1,13 +1,18 @@
 package jeopardy
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 )
+
+type GameRequest struct {
+	PlayerName string `json:"playerName"`
+	GameCode   string `json:"gameCode"`
+	Bots       int    `json:"bots"`
+}
 
 var (
 	privateGames = map[string]*Game{}
@@ -38,8 +43,8 @@ func validateName(name string) error {
 	return nil
 }
 
-func CreateBotGame(playerName string) (*Game, string, error, int) {
-	if err := validateName(playerName); err != nil {
+func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
+	if err := validateName(req.PlayerName); err != nil {
 		return &Game{}, "", err, socket.BadRequest
 	}
 
@@ -51,51 +56,17 @@ func CreateBotGame(playerName string) (*Game, string, error, int) {
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
-	game.BotGame = true
-
 	privateGames[game.Name] = game
 
-	player := NewPlayer(playerName)
+	player := NewPlayer(req.PlayerName)
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
 
-	for _, name := range []string{"Bot A", "Bot B"} {
-		bot := NewBot(name)
+	for i := 0; i < req.Bots; i++ {
+		bot := NewBot(genGameCode())
 		game.Players = append(game.Players, bot)
-		go func(bot *Bot) {
-			ctx, cancel := context.WithCancel(context.Background())
-			for {
-				select {
-				case msg := <-bot.botChan:
-					cancel()
-					ctx, cancel = context.WithCancel(context.Background())
-					go bot.processMessage(ctx, msg)
-				}
-			}
-		}(bot)
+		bot.processMessages()
 	}
-
-	return game, player.Id, nil, 0
-}
-
-func CreatePrivateGame(playerName string) (*Game, string, error, int) {
-	if err := validateName(playerName); err != nil {
-		return &Game{}, "", err, socket.BadRequest
-	}
-
-	questionDB, err := db.NewQuestionDB()
-	if err != nil {
-		return &Game{}, "", err, socket.ServerError
-	}
-	game, err := NewGame(questionDB)
-	if err != nil {
-		return &Game{}, "", err, socket.ServerError
-	}
-	privateGames[game.Name] = game
-
-	player := NewPlayer(playerName)
-	game.Players = append(game.Players, player)
-	playerGames[player.Id] = game
 
 	return game, player.Id, nil, 0
 }
@@ -202,7 +173,7 @@ func PlayGame(playerId string, conn SafeConn) error {
 	}
 
 	player.sendPings()
-	player.processMessages(game.msgChan, game.pauseChan)
+	player.readMessages(game.msgChan, game.pauseChan)
 
 	game.messageAllPlayers(msg)
 

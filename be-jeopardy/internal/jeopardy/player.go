@@ -67,9 +67,9 @@ func NewPlayer(name string) *Player {
 	}
 }
 
-func (p *Player) processMessages(msgChan chan Message, pauseChan chan JeopardyPlayer) {
+func (p *Player) readMessages(msgChan chan Message, pauseChan chan JeopardyPlayer) {
 	go func() {
-		log.Infof("Starting to process messages for player %s", p.Name)
+		log.Infof("Starting to read messages from player %s", p.Name)
 		for {
 			message, err := p.readMessage()
 			if err != nil {
@@ -82,7 +82,7 @@ func (p *Player) processMessages(msgChan chan Message, pauseChan chan JeopardyPl
 			}
 			var msg Message
 			if err := json.Unmarshal(message, &msg); err != nil {
-				log.Errorf("Error parsing message: %s", err.Error())
+				log.Errorf("Error parsing message from player: %s", err.Error())
 			}
 			msg.Player = p
 			msgChan <- msg

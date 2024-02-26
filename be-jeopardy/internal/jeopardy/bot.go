@@ -17,13 +17,28 @@ func NewBot(name string) *Bot {
 		Player:  NewPlayer(name),
 		botChan: make(chan Response),
 	}
-	bot.Conn = socket.NewSafeConn(nil) // so bot is treated as connected by front-
+	bot.Conn = socket.NewSafeConn(nil) // so bot is treated as connected by front-end
 	return bot
 }
 
 func (p *Bot) sendMessage(msg Response) error {
 	p.botChan <- msg
 	return nil
+}
+
+func (p *Bot) processMessages() (Response, error) {
+	go func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		for {
+			select {
+			case msg := <-p.botChan:
+				cancel()
+				ctx, cancel = context.WithCancel(context.Background())
+				go p.processMessage(ctx, msg)
+			}
+		}
+	}()
+	return Response{}, nil
 }
 
 // TODO: Improve bot logic
