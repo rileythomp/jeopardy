@@ -2,6 +2,11 @@
     <div id='join-inputs' class='flex-column'>
         <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
 
+        <hr>
+
+        <button (click)="botGame(playerName)">Up for a challenge? Try playing against the Jeopardy bots</button>
+
+
         <div id='join-buttons' class='flex-row'>
             <button (click)="joinPublicGame(playerName)">Join public game</button>
             <button (click)="createPrivateGame(playerName)">Create a private game</button>

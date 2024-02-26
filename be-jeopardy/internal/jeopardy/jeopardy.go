@@ -1,6 +1,7 @@
 package jeopardy
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -35,6 +36,49 @@ func validateName(name string) error {
 		return fmt.Errorf("Player name must be between 1 and 20 characters")
 	}
 	return nil
+}
+
+func CreateBotGame(playerName string) (*Game, string, error, int) {
+	if err := validateName(playerName); err != nil {
+		return &Game{}, "", err, socket.BadRequest
+	}
+
+	questionDB, err := db.NewQuestionDB()
+	if err != nil {
+		return &Game{}, "", err, socket.ServerError
+	}
+	game, err := NewGame(questionDB)
+	if err != nil {
+		return &Game{}, "", err, socket.ServerError
+	}
+	game.BotGame = true
+
+	privateGames[game.Name] = game
+
+	player := NewPlayer(playerName)
+	game.Players = append(game.Players, player)
+	playerGames[player.Id] = game
+
+	for _, name := range []string{"Bot A", "Bot B"} {
+		bot := NewBot(name)
+		game.Players = append(game.Players, bot)
+
+		bot.botChan = make(chan Response)
+
+		go func(bot *Player) {
+			ctx, cancel := context.WithCancel(context.Background())
+			for {
+				select {
+				case msg := <-bot.botChan:
+					cancel()
+					ctx, cancel = context.WithCancel(context.Background())
+					go bot.processMessage(ctx, msg)
+				}
+			}
+		}(bot)
+	}
+
+	return game, player.Id, nil, 0
 }
 
 func CreatePrivateGame(playerName string) (*Game, string, error, int) {
@@ -148,6 +192,14 @@ func PlayGame(playerId string, conn SafeConn) error {
 		return fmt.Errorf("Player already playing")
 	}
 	player.Conn = conn
+
+	if game.BotGame {
+		game.setState(RecvPick, player)
+		player.sendPings()
+		player.processMessages(game.msgChan, game.pauseChan)
+		game.messageAllPlayers("We are ready to play")
+		return nil
+	}
 
 	msg := "Waiting for more players"
 	if game.allPlayersReady() {

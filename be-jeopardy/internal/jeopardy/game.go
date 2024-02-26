@@ -10,6 +10,9 @@ import (
 )
 
 type (
+	Player interface {
+	}
+
 	Game struct {
 		Name             string     `json:"name"`
 		State            GameState  `json:"state"`
@@ -34,6 +37,7 @@ type (
 		FinalAnswers     []string   `json:"finalAnswers"`
 		Paused           bool       `json:"paused"`
 		PausedState      GameState  `json:"pausedState"`
+		BotGame          bool       `json:"botGame"`
 
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`

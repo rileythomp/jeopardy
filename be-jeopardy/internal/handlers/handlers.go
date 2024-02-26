@@ -41,6 +41,11 @@ var (
 		},
 		{
 			Method:  http.MethodPost,
+			Path:    "/jeopardy/bot",
+			Handler: CreateBotGame,
+		},
+		{
+			Method:  http.MethodPost,
 			Path:    "/jeopardy/games",
 			Handler: CreatePrivateGame,
 		},
@@ -133,6 +138,42 @@ func GetPlayerGame(c *gin.Context) {
 	c.JSON(http.StatusOK, jeopardy.Response{
 		Code:    http.StatusOK,
 		Message: "Authorized to get player game",
+		Game:    game,
+	})
+}
+
+func CreateBotGame(c *gin.Context) {
+	log.Infof("Received create bot game request")
+
+	var req GameRequest
+	if err := parseBody(c.Request.Body, &req); err != nil {
+		log.Errorf("Error parsing create request: %s", err.Error())
+		respondWithError(c, http.StatusBadRequest, ErrMalformedReqMsg)
+		return
+	}
+
+	game, playerId, err, code := jeopardy.CreateBotGame(req.PlayerName)
+	if err != nil {
+		log.Errorf("Error creating bot game: %s", err.Error())
+		if code == socket.BadRequest {
+			respondWithError(c, http.StatusBadRequest, "Unable to create bot game: %s", err.Error())
+		} else {
+			respondWithError(c, http.StatusInternalServerError, UnexpectedServerErrMsg)
+		}
+		return
+	}
+
+	jwt, err := auth.GenerateJWT(playerId)
+	if err != nil {
+		log.Errorf(ErrGeneratingJWTMsg, err.Error())
+		respondWithError(c, http.StatusInternalServerError, UnexpectedServerErrMsg)
+		return
+	}
+
+	c.JSON(http.StatusOK, jeopardy.Response{
+		Code:    http.StatusOK,
+		Token:   jwt,
+		Message: "Authorized to create bot game",
 		Game:    game,
 	})
 }

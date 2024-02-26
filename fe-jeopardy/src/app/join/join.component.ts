@@ -41,6 +41,10 @@ export class JoinComponent {
 		this.apiService.CreatePrivateGame(playerName).subscribe(this.joinResp())
 	}
 
+	botGame(playerName: string) {
+		this.apiService.BotGame(playerName).subscribe(this.joinResp())
+	}
+
 	joinGameByCode(playerName: string, gameCode: string) {
 		this.apiService.JoinGameByCode(playerName, gameCode).subscribe(this.joinResp())
 	}

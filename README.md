@@ -22,6 +22,8 @@ $ ng serve
 
 ### TODO
 
+- Consider cancelling all timeouts upon processing a game message
+
 - AI opponents
 
 - Accounts with user stats

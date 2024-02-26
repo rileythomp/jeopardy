@@ -8,7 +8,7 @@
 				<ion-icon *ngIf="p.id == player.Id()" name="person-outline"></ion-icon>
 			</div>
 			<div>
-				{{ p.conn ? p.name : 'Waiting for player to join' }}
+				{{ p.conn || p.isBot ? p.name : 'Waiting for player to join' }}
 			</div>
 		</div>
 		<div>

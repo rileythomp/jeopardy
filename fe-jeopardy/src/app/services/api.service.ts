@@ -30,6 +30,12 @@ export class ApiService {
         })
     }
 
+    BotGame(playerName: string): Observable<any> {
+        return this.post('bot', {
+            playerName: playerName,
+        })
+    }
+
     JoinGameByCode(playerName: string, gameCode: string): Observable<any> {
         return this.put(`games/${gameCode}`, {
             playerName: playerName,

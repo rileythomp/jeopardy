@@ -33,6 +33,8 @@ type Player struct {
 	FinalCorrect    bool            `json:"finalCorrect"`
 	FinalProtestors map[string]bool `json:"finalProtestors"`
 	PlayAgain       bool            `json:"playAgain"`
+	IsBot           bool            `json:"isBot"`
+	botChan         chan Response
 
 	Conn     SafeConn `json:"conn"`
 	ChatConn SafeConn `json:"chatConn"`
@@ -65,6 +67,12 @@ func NewPlayer(name string) *Player {
 		sendGamePing:        time.NewTicker(pingFrequency),
 		sendChatPing:        time.NewTicker(pingFrequency),
 	}
+}
+
+func NewBot(name string) *Player {
+	bot := NewPlayer(name)
+	bot.IsBot = true
+	return bot
 }
 
 func (p *Player) processMessages(msgChan chan Message, pauseChan chan *Player) {
@@ -186,6 +194,10 @@ func (p *Player) readMessage() ([]byte, error) {
 }
 
 func (p *Player) sendMessage(msg Response) error {
+	if p.IsBot {
+		p.botChan <- msg
+		return nil
+	}
 	if p.Conn == nil {
 		log.Errorf("Error sending message to player %s because connection is nil", p.Name)
 		return fmt.Errorf("player has no connection")
@@ -195,4 +207,128 @@ func (p *Player) sendMessage(msg Response) error {
 		return fmt.Errorf("error sending message to player")
 	}
 	return nil
+}
+
+func (p *Player) processMessage(ctx context.Context, msg Response) {
+	if p.Name != msg.CurPlayer.Name {
+		panic(fmt.Sprintf("bot %s received wrong message for player %s", p.Name, msg.CurPlayer.Name))
+	}
+	g := msg.Game
+	if g.Paused {
+		fmt.Printf("Bot %s says the game is paused\n", p.Name)
+		return
+	}
+	switch g.State {
+	case RecvPick:
+		fmt.Printf("Bot %s says it's time to pick\n", p.Name)
+		if !p.CanPick {
+			break
+		}
+		fmt.Printf("Bot %s will wait a few seconds to pick\n", p.Name)
+		select {
+		case <-ctx.Done():
+			fmt.Printf("an action occurred in the game that is causing bot %s to stop picking\n", p.Name)
+			break
+		case <-time.After(5 * time.Second):
+			fmt.Printf("Bot %s is done waiting to pick\n", p.Name)
+			c, v := g.firstAvailableQuestion()
+			resp := Message{
+				Player: p,
+				PickMessage: PickMessage{
+					CatIdx: c,
+					ValIdx: v,
+				},
+			}
+			fmt.Printf("Bot %s is picking category %d and value %d\n", p.Name, c, v)
+			g.msgChan <- resp
+		}
+	case RecvBuzz:
+		fmt.Printf("Bot %s says it's time to buzz\n", p.Name)
+		if !p.CanBuzz {
+			break
+		}
+		fmt.Printf("Bot %s will wait a few seconds to buzz\n", p.Name)
+		select {
+		case <-ctx.Done():
+			fmt.Printf("an action occurred in the game that is causing bot %s to stop buzzing\n", p.Name)
+			break
+		case <-time.After(5 * time.Second):
+			fmt.Printf("Bot %s is done waiting to buzz\n", p.Name)
+			resp := Message{
+				Player: p,
+				BuzzMessage: BuzzMessage{
+					IsPass: false,
+				},
+			}
+			fmt.Printf("Bot %s is answering\n", p.Name)
+			g.msgChan <- resp
+		}
+	case RecvAns:
+		fmt.Printf("Bot %s says it's time to answer\n", p.Name)
+		if !p.CanAnswer {
+			break
+		}
+		fmt.Printf("Bot %s will wait a few seconds to answer\n", p.Name)
+		select {
+		case <-ctx.Done():
+			fmt.Printf("an action occurred in the game that is causing bot %s to stop answering\n", p.Name)
+			break
+		case <-time.After(5 * time.Second):
+			fmt.Printf("Bot %s is done waiting to answer\n", p.Name)
+			resp := Message{
+				Player: p,
+				AnswerMessage: AnswerMessage{
+					Answer: g.CurQuestion.Answer,
+				},
+			}
+			fmt.Printf("Bot %s is answering %s\n", p.Name, g.CurQuestion.Answer)
+			g.msgChan <- resp
+		}
+	case RecvVote:
+		fmt.Printf("Bot %s says it's time to vote\n", p.Name)
+		if !p.CanVote {
+			break
+		}
+		fmt.Printf("Bot %s will wait a few seconds to vote\n", p.Name)
+		select {
+		case <-ctx.Done():
+			fmt.Printf("an action occurred in the game that is causing bot %s to stop voting\n", p.Name)
+			break
+		case <-time.After(5 * time.Second):
+			fmt.Printf("Bot %s is done waiting to vote\n", p.Name)
+			resp := Message{
+				Player: p,
+				VoteMessage: VoteMessage{
+					Confirm: true,
+				},
+			}
+			fmt.Printf("Bot %s is voting to confirm\n", p.Name)
+			g.msgChan <- resp
+		}
+	case RecvWager:
+		fmt.Printf("Bot %s says it's time to wager\n", p.Name)
+		if !p.CanWager {
+			break
+		}
+		fmt.Printf("Bot %s will wait a few seconds to wager\n", p.Name)
+		select {
+		case <-ctx.Done():
+			fmt.Printf("an action occurred in the game that is causing bot %s to stop wagering\n", p.Name)
+			break
+		case <-time.After(5 * time.Second):
+			fmt.Printf("Bot %s is done waiting to wager\n", p.Name)
+			resp := Message{
+				Player: p,
+				WagerMessage: WagerMessage{
+					Wager: 10,
+				},
+			}
+			fmt.Printf("Bot %s is wagering 10\n", p.Name)
+			g.msgChan <- resp
+		}
+	case PostGame:
+		fmt.Printf("Bot %s says it is post game\n", p.Name)
+	case PreGame:
+		fmt.Printf("Bot %s says it is pre game\n", p.Name)
+	}
 }
