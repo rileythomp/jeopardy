@@ -115,7 +115,7 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 		}
 	}
 
-	var player JeopardyPlayer
+	var player GamePlayer
 	if len(game.Players) < numPlayers {
 		player = NewPlayer(playerName)
 		game.Players = append(game.Players, player)
@@ -187,7 +187,7 @@ func PlayGame(playerId string, conn SafeConn) error {
 	return nil
 }
 
-func (g *Game) handlePlayerJoined(player JeopardyPlayer) {
+func (g *Game) handlePlayerJoined(player GamePlayer) {
 	msg := "Waiting for more players"
 	if g.allPlayersReady() {
 		if g.Paused {

@@ -19,7 +19,7 @@ const (
 	finalJeopardyWagerTimeout = 30 * time.Second
 )
 
-func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player JeopardyPlayer, processTimeout func(player JeopardyPlayer) error) {
+func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player GamePlayer, processTimeout func(player GamePlayer) error) {
 	go func() {
 		timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), timeout)
 		defer timeoutCancel()
@@ -35,10 +35,10 @@ func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player J
 	}()
 }
 
-func (g *Game) startBoardIntroTimeout(player JeopardyPlayer) {
+func (g *Game) startBoardIntroTimeout(player GamePlayer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelBoardIntroTimeout = cancel
-	g.startTimeout(ctx, boardIntroTimeout, &Player{}, func(_ JeopardyPlayer) error {
+	g.startTimeout(ctx, boardIntroTimeout, &Player{}, func(_ GamePlayer) error {
 		g.startGame()
 		g.messageAllPlayers("We are ready to play")
 		return nil
@@ -46,26 +46,26 @@ func (g *Game) startBoardIntroTimeout(player JeopardyPlayer) {
 
 }
 
-func (g *Game) startPickTimeout(player JeopardyPlayer) {
+func (g *Game) startPickTimeout(player GamePlayer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelPickTimeout = cancel
-	g.startTimeout(ctx, pickTimeout, &Player{}, func(_ JeopardyPlayer) error {
+	g.startTimeout(ctx, pickTimeout, &Player{}, func(_ GamePlayer) error {
 		catIdx, valIdx := g.firstAvailableQuestion()
 		return g.processPick(player, catIdx, valIdx)
 	})
 }
 
-func (g *Game) startBuzzTimeout(player JeopardyPlayer) {
+func (g *Game) startBuzzTimeout(player GamePlayer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.StartBuzzCountdown = true
 	g.cancelBuzzTimeout = cancel
-	g.startTimeout(ctx, buzzTimeout, &Player{}, func(_ JeopardyPlayer) error {
+	g.startTimeout(ctx, buzzTimeout, &Player{}, func(_ GamePlayer) error {
 		g.skipQuestion()
 		return nil
 	})
 }
 
-func (g *Game) startAnswerTimeout(player JeopardyPlayer) {
+func (g *Game) startAnswerTimeout(player GamePlayer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	player.setCancelAnswerTimeout(cancel)
 	answerTimeout := defaultAnsTimeout
@@ -75,7 +75,7 @@ func (g *Game) startAnswerTimeout(player JeopardyPlayer) {
 		answerTimeout = finalJeopardyAnsTimeout
 		g.StartFinalAnswerCountdown = true
 	}
-	go g.startTimeout(ctx, answerTimeout, player, func(player JeopardyPlayer) error {
+	go g.startTimeout(ctx, answerTimeout, player, func(player GamePlayer) error {
 		if g.Round == FinalRound {
 			return g.processFinalRoundAns(player, false, "answer-timeout")
 		}
@@ -84,16 +84,16 @@ func (g *Game) startAnswerTimeout(player JeopardyPlayer) {
 	})
 }
 
-func (g *Game) startVoteTimeout(player JeopardyPlayer) {
+func (g *Game) startVoteTimeout(player GamePlayer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelVoteTimeout = cancel
-	g.startTimeout(ctx, voteTimeout, &Player{}, func(_ JeopardyPlayer) error {
+	g.startTimeout(ctx, voteTimeout, &Player{}, func(_ GamePlayer) error {
 		g.nextQuestion(g.LastToAnswer, g.AnsCorrectness)
 		return nil
 	})
 }
 
-func (g *Game) startWagerTimeout(player JeopardyPlayer) {
+func (g *Game) startWagerTimeout(player GamePlayer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	player.setCancelWagerTimeout(cancel)
 	wagerTimeout := dailyDoubleWagerTimeout
@@ -101,7 +101,7 @@ func (g *Game) startWagerTimeout(player JeopardyPlayer) {
 		wagerTimeout = finalJeopardyWagerTimeout
 		g.StartFinalWagerCountdown = true
 	}
-	g.startTimeout(ctx, wagerTimeout, player, func(player JeopardyPlayer) error {
+	g.startTimeout(ctx, wagerTimeout, player, func(player GamePlayer) error {
 		wager := 5
 		if g.Round == FinalRound {
 			wager = 0

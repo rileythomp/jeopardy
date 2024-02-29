@@ -2,6 +2,7 @@ package jeopardy
 
 import (
 	"context"
+	"sort"
 	"time"
 
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
@@ -40,49 +41,106 @@ func (p *Bot) processMessages() {
 	}()
 }
 
+func sendMessageAfter(ctx context.Context, g *Game, msg Message, delay time.Duration) {
+	select {
+	case <-ctx.Done():
+		return
+	case <-time.After(delay):
+		g.msgChan <- msg
+	}
+}
+
+func sendBuzzAfter(ctx context.Context, g *Game, msg Message, passDelay, buzzDelay time.Duration) {
+	ticker := time.NewTicker(1 * time.Second)
+	passedTicks := 0
+	passDelayTimeout := time.After(passDelay)
+	buzzDelayTimeout := time.After(buzzDelay)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-passDelayTimeout:
+			if msg.IsPass {
+				g.msgChan <- msg
+				return
+			}
+		case <-buzzDelayTimeout:
+			g.msgChan <- msg
+			return
+		case <-ticker.C:
+			passes := 0
+			for _, player := range g.Players {
+				if !player.canBuzz() {
+					passes++
+				}
+			}
+			if passes > 1 {
+				passedTicks++
+			}
+			if passedTicks > 3 {
+				g.msgChan <- msg
+				return
+			}
+		}
+	}
+}
+
 // TODO: Improve bot logic
 func (p *Bot) processMessage(ctx context.Context, resp Response) {
 	g := resp.Game
 	if g.Paused {
 		return
 	}
-
 	msg := Message{Player: p}
 	switch g.State {
 	case RecvPick:
 		if !p.canPick() {
 			return
 		}
-		msg.CatIdx, msg.ValIdx = g.firstAvailableQuestion()
+		msg.CatIdx, msg.ValIdx = g.nextQuestionInCategory()
+		sendMessageAfter(ctx, g, msg, 5*time.Second)
 	case RecvBuzz:
 		if !p.canBuzz() {
 			return
 		}
-		msg.IsPass = false
+		scores := sortScores(g.Players)
+		msg.IsPass = p.score() != scores[2]
+		sendBuzzAfter(ctx, g, msg, 5*time.Second, 20*time.Second)
 	case RecvAns:
 		if !p.canAnswer() {
 			return
 		}
 		msg.Answer = g.CurQuestion.Answer
+		sendMessageAfter(ctx, g, msg, 5*time.Second)
 	case RecvVote:
 		if !p.canVote() {
 			return
 		}
 		msg.Confirm = true
+		sendMessageAfter(ctx, g, msg, 5*time.Second)
 	case RecvWager:
 		if !p.canWager() {
 			return
 		}
-		msg.Wager = 10
+		msg.Wager = p.pickWager(g.Players, g.roundMax())
+		sendMessageAfter(ctx, g, msg, 5*time.Second)
 	case PreGame, PostGame:
 		return
 	}
+}
 
-	select {
-	case <-ctx.Done():
-		return
-	case <-time.After(5 * time.Second):
-		g.msgChan <- msg
+func (p *Bot) pickWager(players []GamePlayer, roundMax int) int {
+	scores := sortScores(players)
+	if p.score() == scores[0] {
+		return max(p.score()-max(scores[1], 0), roundMax)
 	}
+	return max(min(scores[0]-p.score(), p.score()), roundMax)
+}
 
+func sortScores(players []GamePlayer) []int {
+	scores := []int{players[0].score(), players[1].score(), players[2].score()}
+	sort.Slice(scores, func(i, j int) bool {
+		return scores[i] > scores[j]
+	})
+	return scores
 }

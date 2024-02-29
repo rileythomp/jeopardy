@@ -142,6 +142,23 @@ func (g *Game) firstAvailableQuestion() (int, int) {
 	return -1, -1
 }
 
+func (g *Game) nextQuestionInCategory() (int, int) {
+	curRound := g.FirstRound
+	if g.Round == SecondRound {
+		curRound = g.SecondRound
+	}
+	for catIdx, category := range curRound {
+		if category.Title == g.CurQuestion.Category {
+			for valIdx, question := range category.Questions {
+				if question.CanChoose {
+					return catIdx, valIdx
+				}
+			}
+		}
+	}
+	return g.firstAvailableQuestion()
+}
+
 func (g *Game) disableQuestion() {
 	for i, category := range g.FirstRound {
 		for j, q := range category.Questions {

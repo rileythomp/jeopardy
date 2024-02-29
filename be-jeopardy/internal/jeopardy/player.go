@@ -67,7 +67,7 @@ func NewPlayer(name string) *Player {
 	}
 }
 
-func (p *Player) readMessages(msgChan chan Message, pauseChan chan JeopardyPlayer) {
+func (p *Player) readMessages(msgChan chan Message, pauseChan chan GamePlayer) {
 	go func() {
 		log.Infof("Starting to read messages from player %s", p.Name)
 		for {

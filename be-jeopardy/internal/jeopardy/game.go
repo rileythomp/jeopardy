@@ -10,7 +10,7 @@ import (
 )
 
 type (
-	JeopardyPlayer interface {
+	GamePlayer interface {
 		id() string
 		name() string
 		conn() SafeConn
@@ -39,7 +39,7 @@ type (
 		setFinalCorrect(bool)
 		setPlayAgain(bool)
 
-		readMessages(msgChan chan Message, pauseChan chan JeopardyPlayer)
+		readMessages(msgChan chan Message, pauseChan chan GamePlayer)
 		processChatMessages(chan ChatMessage)
 		sendPings()
 		sendChatPings()
@@ -61,30 +61,29 @@ type (
 	}
 
 	Game struct {
-		Name             string           `json:"name"`
-		State            GameState        `json:"state"`
-		Round            RoundState       `json:"round"`
-		FirstRound       []Category       `json:"firstRound"`
-		SecondRound      []Category       `json:"secondRound"`
-		FinalQuestion    Question         `json:"finalQuestion"`
-		CurQuestion      Question         `json:"curQuestion"`
-		Players          []JeopardyPlayer `json:"players"`
-		LastToPick       JeopardyPlayer   `json:"lastToPick"`
-		LastToAnswer     JeopardyPlayer   `json:"lastToAnswer"`
-		PreviousQuestion string           `json:"previousQuestion"`
-		PreviousAnswer   string           `json:"previousAnswer"`
-		LastAnswer       string           `json:"lastAnswer"`
-		AnsCorrectness   bool             `json:"ansCorrectness"`
-		GuessedWrong     []string         `json:"guessedWrong"`
-		Passed           []string         `json:"passed"`
-		Confirmers       []string         `json:"confirmations"`
-		Challengers      []string         `json:"challenges"`
-		NumFinalWagers   int              `json:"numFinalWagers"`
-		FinalWagers      []string         `json:"finalWagers"`
-		FinalAnswers     []string         `json:"finalAnswers"`
-		Paused           bool             `json:"paused"`
-		PausedState      GameState        `json:"pausedState"`
-		BotGame          bool             `json:"botGame"`
+		Name             string       `json:"name"`
+		State            GameState    `json:"state"`
+		Round            RoundState   `json:"round"`
+		FirstRound       []Category   `json:"firstRound"`
+		SecondRound      []Category   `json:"secondRound"`
+		FinalQuestion    Question     `json:"finalQuestion"`
+		CurQuestion      Question     `json:"curQuestion"`
+		Players          []GamePlayer `json:"players"`
+		LastToPick       GamePlayer   `json:"lastToPick"`
+		LastToAnswer     GamePlayer   `json:"lastToAnswer"`
+		PreviousQuestion string       `json:"previousQuestion"`
+		PreviousAnswer   string       `json:"previousAnswer"`
+		LastAnswer       string       `json:"lastAnswer"`
+		AnsCorrectness   bool         `json:"ansCorrectness"`
+		GuessedWrong     []string     `json:"guessedWrong"`
+		Passed           []string     `json:"passed"`
+		Confirmers       []string     `json:"confirmations"`
+		Challengers      []string     `json:"challenges"`
+		NumFinalWagers   int          `json:"numFinalWagers"`
+		FinalWagers      []string     `json:"finalWagers"`
+		FinalAnswers     []string     `json:"finalAnswers"`
+		Paused           bool         `json:"paused"`
+		PausedState      GameState    `json:"pausedState"`
 
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
@@ -96,7 +95,7 @@ type (
 		cancelVoteTimeout       context.CancelFunc
 
 		msgChan     chan Message
-		pauseChan   chan JeopardyPlayer
+		pauseChan   chan GamePlayer
 		restartChan chan bool
 		chatChan    chan ChatMessage
 
@@ -110,7 +109,7 @@ type (
 	}
 
 	Message struct {
-		Player JeopardyPlayer
+		Player GamePlayer
 		PickMessage
 		BuzzMessage
 		AnswerMessage
@@ -145,11 +144,11 @@ type (
 	}
 
 	Response struct {
-		Code      int            `json:"code"`
-		Token     string         `json:"token,omitempty"`
-		Message   string         `json:"message"`
-		Game      *Game          `json:"game,omitempty"`
-		CurPlayer JeopardyPlayer `json:"curPlayer,omitempty"`
+		Code      int        `json:"code"`
+		Token     string     `json:"token,omitempty"`
+		Message   string     `json:"message"`
+		Game      *Game      `json:"game,omitempty"`
+		CurPlayer GamePlayer `json:"curPlayer,omitempty"`
 	}
 )
 
@@ -179,7 +178,7 @@ const numPlayers = 3
 func NewGame(db QuestionDB) (*Game, error) {
 	game := &Game{
 		State:                   PreGame,
-		Players:                 []JeopardyPlayer{},
+		Players:                 []GamePlayer{},
 		Round:                   FirstRound,
 		Name:                    genGameCode(),
 		cancelBoardIntroTimeout: func() {},
@@ -187,7 +186,7 @@ func NewGame(db QuestionDB) (*Game, error) {
 		cancelBuzzTimeout:       func() {},
 		cancelVoteTimeout:       func() {},
 		msgChan:                 make(chan Message),
-		pauseChan:               make(chan JeopardyPlayer),
+		pauseChan:               make(chan GamePlayer),
 		restartChan:             make(chan bool),
 		chatChan:                make(chan ChatMessage),
 		questionDB:              db,
@@ -243,7 +242,7 @@ func (g *Game) restartGame() {
 	g.messageAllPlayers("We are ready to play")
 }
 
-func (g *Game) pauseGame(player JeopardyPlayer) {
+func (g *Game) pauseGame(player GamePlayer) {
 	g.Paused = true
 	g.PausedState = g.State
 	if g.State != PostGame {
@@ -319,7 +318,7 @@ func (g *Game) processMsg(msg Message) error {
 	return err
 }
 
-func (g *Game) processPick(player JeopardyPlayer, catIdx, valIdx int) error {
+func (g *Game) processPick(player GamePlayer, catIdx, valIdx int) error {
 	if !player.canPick() {
 		return fmt.Errorf("player cannot pick")
 	}
@@ -351,7 +350,7 @@ func (g *Game) processPick(player JeopardyPlayer, catIdx, valIdx int) error {
 	return nil
 }
 
-func (g *Game) processBuzz(player JeopardyPlayer, isPass bool) error {
+func (g *Game) processBuzz(player GamePlayer, isPass bool) error {
 	if !player.canBuzz() {
 		return fmt.Errorf("player cannot buzz")
 	}
@@ -378,7 +377,7 @@ func (g *Game) processBuzz(player JeopardyPlayer, isPass bool) error {
 	return nil
 }
 
-func (g *Game) processAnswer(player JeopardyPlayer, answer string) error {
+func (g *Game) processAnswer(player GamePlayer, answer string) error {
 	if !player.canAnswer() {
 		return fmt.Errorf("player cannot answer")
 	}
@@ -395,7 +394,7 @@ func (g *Game) processAnswer(player JeopardyPlayer, answer string) error {
 	return nil
 }
 
-func (g *Game) processVote(player JeopardyPlayer, confirm bool) error {
+func (g *Game) processVote(player GamePlayer, confirm bool) error {
 	if !player.canVote() {
 		return fmt.Errorf("player cannot vote")
 	}
@@ -425,7 +424,7 @@ func (g *Game) processVote(player JeopardyPlayer, confirm bool) error {
 	return nil
 }
 
-func (g *Game) processWager(player JeopardyPlayer, wager int) error {
+func (g *Game) processWager(player GamePlayer, wager int) error {
 	if !player.canWager() {
 		return fmt.Errorf("player cannot wager")
 	}
@@ -467,7 +466,7 @@ func (g *Game) processWager(player JeopardyPlayer, wager int) error {
 	return nil
 }
 
-func (g *Game) processProtest(protestByPlayer JeopardyPlayer, protestFor string) error {
+func (g *Game) processProtest(protestByPlayer GamePlayer, protestFor string) error {
 	protestForPlayer, err := g.getPlayerById(protestFor)
 	if err != nil {
 		return err
@@ -496,7 +495,7 @@ func (g *Game) processProtest(protestByPlayer JeopardyPlayer, protestFor string)
 	return nil
 }
 
-func (g *Game) processFinalRoundAns(player JeopardyPlayer, isCorrect bool, answer string) error {
+func (g *Game) processFinalRoundAns(player GamePlayer, isCorrect bool, answer string) error {
 	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
 	g.FinalAnswers = append(g.FinalAnswers, player.id())
 	player.setCanAnswer(false)
@@ -517,7 +516,7 @@ func (g *Game) processFinalRoundAns(player JeopardyPlayer, isCorrect bool, answe
 	return nil
 }
 
-func (g *Game) setState(state GameState, player JeopardyPlayer) {
+func (g *Game) setState(state GameState, player GamePlayer) {
 	switch state {
 	case BoardIntro:
 		for _, p := range g.Players {
@@ -581,7 +580,7 @@ func (g *Game) startGame() {
 	}
 	g.Paused = false
 	state := g.State
-	var player JeopardyPlayer
+	var player GamePlayer
 	if state == PreGame || state == BoardIntro {
 		state, player = RecvPick, g.Players[0]
 	} else if state == RecvWager && g.Round != FinalRound {
@@ -620,7 +619,7 @@ func (g *Game) startFinalRound() {
 	}
 }
 
-func (g *Game) nextQuestion(player JeopardyPlayer, isCorrect bool) {
+func (g *Game) nextQuestion(player GamePlayer, isCorrect bool) {
 	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
 	if !isCorrect {
 		g.GuessedWrong = append(g.GuessedWrong, player.id())
@@ -689,7 +688,7 @@ func (g *Game) messageAllPlayers(msg string) {
 	}
 }
 
-func (g *Game) getPlayerById(id string) (JeopardyPlayer, error) {
+func (g *Game) getPlayerById(id string) (GamePlayer, error) {
 	for _, p := range g.Players {
 		if p.id() == id {
 			return p, nil
@@ -730,7 +729,7 @@ func (g *Game) roundEnded() bool {
 	return true
 }
 
-func (g *Game) lowestPlayer() JeopardyPlayer {
+func (g *Game) lowestPlayer() GamePlayer {
 	lowest := g.Players[0]
 	for _, p := range g.Players {
 		if p.score() < lowest.score() {
@@ -750,25 +749,22 @@ func (g *Game) numFinalWagers() int {
 	return numWagers
 }
 
+func (g *Game) roundMax() int {
+	switch g.Round {
+	case FirstRound:
+		return 1000
+	case SecondRound:
+		return 2000
+	}
+	return 0
+}
+
 func (g *Game) validWager(wager, score int) (int, int, bool) {
 	minWager := 5
 	if g.Round == FinalRound {
 		minWager = 0
 	}
-	roundMax := 0
-	if g.Round == FirstRound {
-		roundMax = 1000
-	} else if g.Round == SecondRound {
-		roundMax = 2000
-	}
-	return minWager, max(score, roundMax), wager >= minWager && wager <= max(score, roundMax)
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
+	return minWager, max(score, g.roundMax()), wager >= minWager && wager <= max(score, g.roundMax())
 }
 
 func inLists(playerId string, lists ...[]string) bool {
