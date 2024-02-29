@@ -602,7 +602,7 @@ func (g *Game) startGame() {
 func (g *Game) startSecondRound() {
 	g.Round = SecondRound
 	g.resetGuesses()
-	g.setState(RecvPick, g.lowestPlayer())
+	g.setState(BoardIntro, g.lowestPlayer())
 }
 
 func (g *Game) startFinalRound() {

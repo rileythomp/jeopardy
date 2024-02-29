@@ -195,8 +195,8 @@ func (g *Game) handlePlayerJoined(player GamePlayer) {
 		if g.Paused {
 			g.startGame()
 		} else {
-			// game.setState(BoardIntro, game.Players[0])
-			g.setState(RecvPick, g.Players[0]) // todo: remove this
+			g.setState(BoardIntro, g.Players[0])
+			// g.setState(RecvPick, g.Players[0])
 		}
 		msg = "We are ready to play"
 	}

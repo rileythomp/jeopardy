@@ -85,7 +85,6 @@ func sendMessageAfter(ctx context.Context, g *Game, msg Message, delay time.Dura
 	}
 }
 
-// TODO: Improve bot logic
 func (p *Bot) processMessage(ctx context.Context, resp Response) {
 	g := resp.Game
 	if g.Paused {
@@ -128,7 +127,7 @@ func (p *Bot) processMessage(ctx context.Context, resp Response) {
 		}
 		msg.Wager = p.pickWager(g.Players, g.roundMax())
 		sendMessageAfter(ctx, g, msg, 5*time.Second)
-	case PreGame, PostGame:
+	case PreGame, PostGame, BoardIntro:
 		return
 	}
 }

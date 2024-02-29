@@ -39,7 +39,11 @@ func (g *Game) startBoardIntroTimeout(player GamePlayer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelBoardIntroTimeout = cancel
 	g.startTimeout(ctx, boardIntroTimeout, &Player{}, func(_ GamePlayer) error {
-		g.startGame()
+		if g.Round == FirstRound {
+			g.startGame()
+		} else {
+			g.setState(RecvPick, g.lowestPlayer())
+		}
 		g.messageAllPlayers("We are ready to play")
 		return nil
 	})
