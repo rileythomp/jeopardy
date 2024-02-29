@@ -2,9 +2,11 @@ package jeopardy
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 )
 
@@ -255,4 +257,31 @@ func PlayAgain(playerId string) error {
 		})
 	}
 	return nil
+}
+
+func CleanUpGames() {
+	log.Infof("Performing game cleanup")
+	for _, game := range publicGames {
+		if game.Paused && time.Since(game.PausedAt) > time.Hour {
+			log.Infof("Game %s has been paused for over an hour, removing it", game.Name)
+			removeGame(game)
+		}
+	}
+	for _, game := range privateGames {
+		if game.Paused && time.Since(game.PausedAt) > time.Hour {
+			log.Infof("Game %s has been paused for over an hour, removing it", game.Name)
+			removeGame(game)
+		}
+	}
+}
+
+func removeGame(g *Game) {
+	if err := g.questionDB.Close(); err != nil {
+		log.Errorf("Error closing question db: %s", err.Error())
+	}
+	delete(publicGames, g.Name)
+	delete(privateGames, g.Name)
+	for _, p := range g.Players {
+		delete(playerGames, p.id())
+	}
 }

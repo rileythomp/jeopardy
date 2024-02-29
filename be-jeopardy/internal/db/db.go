@@ -15,8 +15,8 @@ type (
 		Category     string   `json:"category"`
 		Comments     string   `json:"comments"`
 		Clue         string   `json:"question"`
-		Answer       string   `json:"answer"`
-		Alternatives []string `json:"alternatives"`
+		Answer       string   `json:"-"`
+		Alternatives []string `json:"-"`
 	}
 
 	QuestionDB struct {

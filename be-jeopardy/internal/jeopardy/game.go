@@ -3,6 +3,7 @@ package jeopardy
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
@@ -84,6 +85,7 @@ type (
 		FinalAnswers     []string     `json:"finalAnswers"`
 		Paused           bool         `json:"paused"`
 		PausedState      GameState    `json:"pausedState"`
+		PausedAt         time.Time    `json:"pausedAt"`
 
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
@@ -243,6 +245,7 @@ func (g *Game) restartGame() {
 }
 
 func (g *Game) pauseGame(player GamePlayer) {
+	g.PausedAt = time.Now()
 	g.Paused = true
 	g.PausedState = g.State
 	if g.State != PostGame {
@@ -266,14 +269,7 @@ func (g *Game) pauseGame(player GamePlayer) {
 	}
 	if endGame {
 		log.Infof("All players disconnected, removing game %s\n", g.Name)
-		if err := g.questionDB.Close(); err != nil {
-			log.Errorf("Error closing question db: %s\n", err.Error())
-		}
-		delete(publicGames, g.Name)
-		delete(privateGames, g.Name)
-		for _, p := range g.Players {
-			delete(playerGames, p.id())
-		}
+		removeGame(g)
 	}
 
 }
@@ -502,6 +498,8 @@ func (g *Game) processFinalRoundAns(player GamePlayer, isCorrect bool, answer st
 	player.setFinalAnswer(answer)
 	player.setFinalCorrect(isCorrect)
 	if g.roundEnded() {
+		g.PreviousQuestion = g.CurQuestion.Clue
+		g.PreviousAnswer = g.CurQuestion.Answer
 		g.setState(PostGame, &Player{})
 		g.messageAllPlayers("Final round ended")
 		return nil

@@ -18,7 +18,7 @@ func NewBot(name string) *Bot {
 		Player:  NewPlayer(name),
 		botChan: make(chan Response),
 	}
-	bot.Conn = socket.NewSafeConn(nil) // so bot is treated as connected by front-end
+	bot.Conn = socket.NewSafeConn(nil) // so bot is treated as connected by frontend
 	return bot
 }
 
@@ -39,15 +39,6 @@ func (p *Bot) processMessages() {
 			}
 		}
 	}()
-}
-
-func sendMessageAfter(ctx context.Context, g *Game, msg Message, delay time.Duration) {
-	select {
-	case <-ctx.Done():
-		return
-	case <-time.After(delay):
-		g.msgChan <- msg
-	}
 }
 
 func sendBuzzAfter(ctx context.Context, g *Game, msg Message, passDelay, buzzDelay time.Duration) {
@@ -85,6 +76,15 @@ func sendBuzzAfter(ctx context.Context, g *Game, msg Message, passDelay, buzzDel
 	}
 }
 
+func sendMessageAfter(ctx context.Context, g *Game, msg Message, delay time.Duration) {
+	select {
+	case <-ctx.Done():
+		return
+	case <-time.After(delay):
+		g.msgChan <- msg
+	}
+}
+
 // TODO: Improve bot logic
 func (p *Bot) processMessage(ctx context.Context, resp Response) {
 	g := resp.Game
@@ -111,7 +111,11 @@ func (p *Bot) processMessage(ctx context.Context, resp Response) {
 			return
 		}
 		msg.Answer = g.CurQuestion.Answer
-		sendMessageAfter(ctx, g, msg, 5*time.Second)
+		delay := 5 * time.Second
+		if g.CurQuestion.DailyDouble {
+			delay = 10 * time.Second
+		}
+		sendMessageAfter(ctx, g, msg, delay)
 	case RecvVote:
 		if !p.canVote() {
 			return
