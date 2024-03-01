@@ -18,6 +18,19 @@ export class AppComponent implements OnInit, AfterViewInit {
 		if (window.innerHeight < 600 || window.innerWidth < 1140) {
 			this.router.navigate(['/warning'], { state: { message: 'Your screen is to small to play this game. Please try on a larger screen.' } })
 		}
+		let jeopardy =
+			`   ___                                _       
+  |_  |                              | |      
+    | | ___  ___  _ __   __ _ _ __ __| |_   _ 
+	| |/ _ \\/ _ \\|  _ \\ / _  |  __/ _  | | | |
+/\\__/ /  __/ (_) | |_) | (_| | | | (_| | |_| |
+\\____/ \\___|\\___/|  __/ \\____|_|  \\____|\\___ |
+			     | |                     __/ |
+			     |_|                    |___/ 		
+
+Please report any issues at https://github.com/rileythomp/jeopardy/issues/new
+`
+		console.log(jeopardy)
 	}
 
 	ngAfterViewInit() {

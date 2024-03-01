@@ -85,8 +85,6 @@ export class GameComponent implements OnInit {
 				return
 			}
 
-			console.log(resp)
-
 			this.game.updateGameState(resp.game)
 			this.player.updatePlayer(resp.curPlayer)
 			this.gameMessage = resp.message
