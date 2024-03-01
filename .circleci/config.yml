@@ -1,66 +1,56 @@
-# This config was automatically generated from your source code
-# Stacks detected: artifact:go-executable:,deps:go:be-jeopardy,deps:node:fe-jeopardy
+# .circleci/config.yml
+
 version: 2.1
-orbs:
-  node: circleci/node@5
+
 jobs:
-  test-go:
-    # Install go modules and run tests
+  # This build job just tests that the binary can build. If your project is a
+  # library, not a binary, you don't need this build job. In other words, omit
+  # this job if you don't have a func main() in your project.
+  build:
     docker:
-      - image: cimg/go:1.20
-    working_directory: ~/project/be-jeopardy
-    steps:
-      - checkout:
-          path: ~/project/be-jeopardy
-      - restore_cache:
-          key: go-mod-{{ checksum "go.sum" }}
-      - run:
-          name: Download Go modules
-          command: go mod download
-      - run:
-          name: Print go mod help instructions
-          command: "echo \"go mod download will fail if you have private repositories \nOne way to fix this for private go modules that are hosted in github:\n  1. Add a GITHUB_TOKEN and GITHUB_USER to an org context. Please refer to https://circleci.com/docs/contexts/ for more informaiton on how to use contexts.\n  2. Add a .circleci/config.yml to your repository or use this config.yml as a starting template\n  3. Configure the jobs to use the newly created context which includes GITHUB_TOKEN and GITHUB_USER  \n  4. Before downloading the modules you will need to add a step to execute \\\"go env -w GOPRIVATE=github.com/<OrgNameHere>\\\". \n\tThis allows go mod to install private repos under OrgNameHere.\n  5. You will also need to run \\\"git config --global url.\\\"https://$GITHUB_USER:$GITHUB_TOKEN@github.com/<OrgNameHere>/\\\".insteadOf \\\"https://github.com/<OrgNameHere>/\\\"\\\"\n  6. Finally include the \\\"go mod download\\\" it should be able to fetch your private libraries now. \nFor gitlab private go modules, follow the same instructions as above but include your GITLAB_TOKEN and GITLAB_USER.\nThen use gitlab.com instead of github.com in steps 4 and 5.\nSee https://go.dev/ref/mod#private-modules for more details.\""
-          when: on_fail
-      - save_cache:
-          key: go-mod-{{ checksum "go.sum" }}
-          paths:
-            - /home/circleci/go/pkg/mod
-      - run:
-          name: Run tests
-          command: go test ./...
-  build-go-executables:
-    # Build go executables and store them as artifacts
+      - image: golang:1.22-alpine
+    working_directory: /go/src/jeopardy/be-jeopardy
+      - checkout
+      # github.com/foo/bar/cmd/baz is the import path to your main module. Your
+      # func main() should be in a file in the cmd/<binary name>/ directory. The
+      # import path should be <module name>/cmd/<binary name>
+      #
+      # If you are planning to publish this binary as a release artifact, you
+      # should do the following:
+      # 1. Set CGO_ENABLED: '0' in the environment block. Put the '0' in single
+      #    quotes. This will produce a statically linked binary (no runtime
+      #    dependencies). Since this is an alpine container, it will statically
+      #    link musl libc into the binary. musl is smaller and more secure than
+      #    glibc, but if you have any problems, change the container from
+      #    golang:1.15-alpine to golang:1.15. Then glibc will be statically
+      #    linked instead.
+      # 2. go install -ldflags '-s -w' github.com/foo/bar/cmd/baz 
+      #    -ldflags '-s -w' means strip the debug symbols from the binary. This
+      #    significantly shrinks the binary size and is a security best practice.
+      - go install github.com/rileythomp/jeopardy/be-jeopardy
+
+  # golangci-lint runs dozens of linters in parallel on your project. It is the
+  # best Go linter.
+  lint:
     docker:
-      - image: cimg/go:1.20
+      - image: golangci/golangci-lint:v1.37-alpine
     steps:
-      - checkout:
-          path: ~/project/be-jeopardy
-      - restore_cache:
-          key: go-mod-{{ checksum "go.sum" }}
-      - run:
-          name: Download Go modules
-          command: go mod download
-      - run:
-          name: Print go mod help instructions
-          command: "echo \"go mod download will fail if you have private repositories \nOne way to fix this for private go modules that are hosted in github:\n  1. Add a GITHUB_TOKEN and GITHUB_USER to an org context. Please refer to https://circleci.com/docs/contexts/ for more informaiton on how to use contexts.\n  2. Add a .circleci/config.yml to your repository or use this config.yml as a starting template\n  3. Configure the jobs to use the newly created context which includes GITHUB_TOKEN and GITHUB_USER  \n  4. Before downloading the modules you will need to add a step to execute \\\"go env -w GOPRIVATE=github.com/<OrgNameHere>\\\". \n\tThis allows go mod to install private repos under OrgNameHere.\n  5. You will also need to run \\\"git config --global url.\\\"https://$GITHUB_USER:$GITHUB_TOKEN@github.com/<OrgNameHere>/\\\".insteadOf \\\"https://github.com/<OrgNameHere>/\\\"\\\"\n  6. Finally include the \\\"go mod download\\\" it should be able to fetch your private libraries now. \nFor gitlab private go modules, follow the same instructions as above but include your GITLAB_TOKEN and GITLAB_USER.\nThen use gitlab.com instead of github.com in steps 4 and 5.\nSee https://go.dev/ref/mod#private-modules for more details.\""
-          when: on_fail
-      - save_cache:
-          key: go-mod-{{ checksum "go.sum" }}
-          paths:
-            - /home/circleci/go/pkg/mod
-      - run:
-          name: Create the ~/artifacts directory if it doesn't exist
-          command: mkdir -p ~/artifacts
-      - run:
-          name: Build executables
-          command: go build -o ~/artifacts ./...
-      - store_artifacts:
-          path: ~/artifacts
-          destination: executables
+      - checkout
+      - run: golangci-lint run
+  test:
+    docker:
+      # We use golang:1.16 instead of golang:1.16-alpine because we want to run
+      # tests with the race detector enabled. The race detector requires glibc,
+      # which is only present in the Debian-based containers.
+      - image: golang:1.22
+    working_directory: /go/src/jeopardy/be-jeopardy
+    steps:
+      - checkout
+      - run: go test -v -race ./...
+
 workflows:
-  build-and-test:
+  build_lint_test:
     jobs:
-      - test-go
-      - build-go-executables:
-          requires:
-            - test-go
+      - build
+      - lint
+      - test
