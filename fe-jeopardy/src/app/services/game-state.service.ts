@@ -192,4 +192,8 @@ export class GameStateService {
 	BuzzBlocked(): boolean {
 		return this.game.buzzBlocked
 	}
+
+	BuzzDelay(): number {
+		return Math.floor(this.game.curQuestion.question.split(' ').length / 5)
+	}
 }

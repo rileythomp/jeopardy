@@ -90,14 +90,17 @@ func (p *Bot) processMessage(ctx context.Context, resp Response) {
 	if g.Paused {
 		return
 	}
-	msg := Message{Player: p}
+	msg := Message{
+		Player: p,
+		State:  g.State,
+	}
 	switch g.State {
 	case RecvPick:
 		if !p.canPick() {
 			return
 		}
 		msg.CatIdx, msg.ValIdx = g.nextQuestionInCategory()
-		sendMessageAfter(ctx, g, msg, 5*time.Second)
+		sendMessageAfter(ctx, g, msg, 3*time.Second)
 	case RecvBuzz:
 		if !p.canBuzz() {
 			return

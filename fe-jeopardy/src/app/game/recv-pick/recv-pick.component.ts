@@ -32,6 +32,7 @@ export class RecvPickComponent {
 		if (this.player.CanPick() && this.game.QuestionCanBePicked(catIdx, valIdx)) {
 			document.body.style.cursor = 'default'
 			this.websocketService.Send({
+				state: this.game.State(),
 				catIdx: catIdx,
 				valIdx: valIdx,
 			})

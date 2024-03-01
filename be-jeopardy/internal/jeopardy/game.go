@@ -112,6 +112,7 @@ type (
 
 	Message struct {
 		Player GamePlayer
+		State  GameState `json:"state"`
 		PickMessage
 		BuzzMessage
 		AnswerMessage
@@ -277,7 +278,11 @@ func (g *Game) pauseGame(player GamePlayer) {
 func (g *Game) processMsg(msg Message) error {
 	player := msg.Player
 	if g.Paused {
-		log.Infof("Ignoring message from player %s because game is paused\n", player.name())
+		log.Infof("Ignoring message from player %s because game is paused", player.name())
+		return nil
+	}
+	if g.State != msg.State {
+		log.Infof("Ignoring message from player %s because it is not for the current game state", player.name())
 		return nil
 	}
 	var err error

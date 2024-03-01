@@ -16,10 +16,11 @@ export class RecvBuzzComponent {
     ) { }
 
     handleBuzz(pass: boolean) {
-		if (this.player.CanBuzz()) {
-			this.websocketService.Send({
-				isPass: pass,
-			})
-		}
-	}
+        if (this.player.CanBuzz()) {
+            this.websocketService.Send({
+                state: this.game.State(),
+                isPass: pass,
+            })
+        }
+    }
 }

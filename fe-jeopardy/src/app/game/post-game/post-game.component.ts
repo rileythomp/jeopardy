@@ -26,7 +26,10 @@ export class PostGameComponent {
 	}
 
 	protestFinalCorrectness(playerId: string) {
-		this.websocketService.Send({ protestFor: playerId });
+		this.websocketService.Send({
+			state: this.game.State(),
+			protestFor: playerId
+		});
 	}
 
 	playAgain() {

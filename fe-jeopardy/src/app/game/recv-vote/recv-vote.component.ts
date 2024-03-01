@@ -16,10 +16,11 @@ export class RecvVoteComponent {
     ) { }
 
     handleVote(confirm: boolean) {
-		if (this.player.CanVote()) {
-			this.websocketService.Send({
-				confirm: confirm,
-			})
-		}
-	}
+        if (this.player.CanVote()) {
+            this.websocketService.Send({
+                state: this.game.State(),
+                confirm: confirm,
+            })
+        }
+    }
 }

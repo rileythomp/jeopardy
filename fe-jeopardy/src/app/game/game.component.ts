@@ -15,7 +15,6 @@ const finalJeopardyAnsTimeout = 30
 const voteTimeout = 10
 const dailyDoubleWagerTimeout = 30
 const finalJeopardyWagerTimeout = 30
-const buzzDelay = 0
 
 @Component({
 	selector: 'app-game',
@@ -37,7 +36,6 @@ export class GameComponent implements OnInit {
 	@ViewChild(ModalComponent) private modal: ModalComponent
 
 	constructor(
-		private router: Router,
 		private websocketService: WebsocketService,
 		private jwtService: JwtService,
 		protected game: GameStateService,
@@ -61,10 +59,10 @@ export class GameComponent implements OnInit {
 		this.websocketService.Connect('play')
 
 		this.websocketService.OnOpen(() => {
-			let playReq = {
+			this.websocketService.Send({
+				state: GameState.PreGame,
 				token: this.jwt,
-			}
-			this.websocketService.Send(playReq)
+			})
 		})
 
 		this.websocketService.OnMessage((event: { data: string }) => {
@@ -114,18 +112,18 @@ export class GameComponent implements OnInit {
 					this.startCountdownTimer(pickTimeout)
 					break
 				case GameState.RecvBuzz:
+					this.cancelCountdown()
 					if (this.game.CurQuestionFirstBuzz()) {
 						this.game.BlockBuzz(true)
+						let buzzDelay = this.game.BuzzDelay()
 						setTimeout(() => {
 							this.game.BlockBuzz(false)
 							if (this.game.StartBuzzCountdown()) {
-								this.startCountdownTimer(buzzTimeout - buzzDelay / 1000)
+								this.startCountdownTimer(buzzTimeout - buzzDelay)
 							}
-						}, buzzDelay)
-					} else {
-						if (this.game.StartBuzzCountdown()) {
-							this.startCountdownTimer(buzzTimeout)
-						}
+						}, buzzDelay * 1000)
+					} else if (this.game.StartBuzzCountdown()) {
+						this.startCountdownTimer(buzzTimeout)
 					}
 					break
 				case GameState.RecvAns:

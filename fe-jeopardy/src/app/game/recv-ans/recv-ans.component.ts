@@ -20,6 +20,7 @@ export class RecvAnsComponent {
     handleAnswer() {
         if (this.questionAnswer && this.player.CanAnswer()) {
             this.websocketService.Send({
+                state: this.game.State(),
                 answer: this.questionAnswer,
             })
         }

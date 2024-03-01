@@ -20,6 +20,7 @@ export class RecvWagerComponent {
     handleWager() {
         if (this.wagerAmt != null && this.wagerAmt !== '' && this.player.CanWager()) {
             this.websocketService.Send({
+                state: this.game.State(),
                 wager: this.wagerAmt,
             })
         }
