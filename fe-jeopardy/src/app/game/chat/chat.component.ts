@@ -25,10 +25,6 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 	ngOnInit(): void {
 		this.chatService.Connect()
 
-		this.chatService.OnOpen(() => {
-			this.chatService.Send({ token: this.jwt })
-		})
-
 		this.chatService.OnMessage((event: { data: string }) => {
 			let resp = JSON.parse(event.data)
 

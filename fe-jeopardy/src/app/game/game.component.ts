@@ -52,13 +52,6 @@ export class GameComponent implements OnInit {
 
 		this.websocketService.Connect('play')
 
-		this.websocketService.OnOpen(() => {
-			this.websocketService.Send({
-				state: GameState.PreGame,
-				token: this.jwt,
-			})
-		})
-
 		this.websocketService.OnMessage((event: { data: string }) => {
 			let resp = JSON.parse(event.data)
 

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
@@ -167,26 +168,32 @@ func AddBot(playerId string) error {
 	return nil
 }
 
-func PlayGame(playerId string, conn SafeConn) error {
+func PlayGame(playerId string, ws *websocket.Conn) {
+	conn := socket.NewSafeConn(ws)
+
 	game, err := GetPlayerGame(playerId)
 	if err != nil {
-		return err
+		log.Errorf("Error getting game for player: %s", err.Error())
+		closeConnWithMsg(conn, socket.BadRequest, "Unable to play game: %s", err.Error())
+		return
 	}
 
 	player, err := game.getPlayerById(playerId)
 	if err != nil {
-		return err
+		log.Errorf("Error getting player by id: %s", err.Error())
+		closeConnWithMsg(conn, socket.BadRequest, "Unable to play game: %s", err.Error())
+		return
 	}
 	if player.conn() != nil {
-		return fmt.Errorf("Player already playing")
+		log.Errorf("Error playing game: Player already playing")
+		closeConnWithMsg(conn, socket.BadRequest, "Unable to play game: Player already playing")
+		return
 	}
 	player.setConn(conn)
 	player.sendPings()
 	player.readMessages(game.msgChan, game.pauseChan)
 
 	game.handlePlayerJoined(player)
-
-	return nil
 }
 
 func (g *Game) handlePlayerJoined(player GamePlayer) {
@@ -284,4 +291,9 @@ func removeGame(g *Game) {
 	for _, p := range g.Players {
 		delete(playerGames, p.id())
 	}
+}
+
+func closeConnWithMsg(conn SafeConn, code int, msg string, args ...any) {
+	_ = conn.WriteJSON(Response{Code: code, Message: fmt.Sprintf(msg, args...)})
+	_ = conn.Close()
 }
