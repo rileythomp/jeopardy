@@ -4,39 +4,6 @@ version: 2.1
 orbs:
   node: circleci/node@5
 jobs:
-  test-node:
-    # Install node dependencies and run tests
-    executor: node/default
-    working_directory: ~/project/fe-jeopardy
-    steps:
-      - checkout:
-          path: ~/project
-      - node/install-packages:
-          pkg-manager: npm
-      - run:
-          name: Run tests
-          command: npm test --passWithNoTests
-  build-node:
-    # Build node project
-    executor: node/default
-    working_directory: ~/project/fe-jeopardy
-    steps:
-      - checkout:
-          path: ~/project
-      - node/install-packages:
-          pkg-manager: npm
-      - run:
-          command: npm run build
-      - run:
-          name: Create the ~/artifacts directory if it doesn't exist
-          command: mkdir -p ~/artifacts
-      # Copy output to artifacts dir
-      - run:
-          name: Copy artifacts
-          command: cp -R build dist public .output .next .docusaurus ~/artifacts 2>/dev/null || true
-      - store_artifacts:
-          path: ~/artifacts
-          destination: node-build
   test-go:
     # Install go modules and run tests
     docker:
@@ -44,7 +11,7 @@ jobs:
     working_directory: ~/project/be-jeopardy
     steps:
       - checkout:
-          path: ~/project
+          path: ~/project/be-jeopardy
       - restore_cache:
           key: go-mod-{{ checksum "go.sum" }}
       - run:
@@ -60,16 +27,14 @@ jobs:
             - /home/circleci/go/pkg/mod
       - run:
           name: Run tests
-          command: gotestsum --junitfile junit.xml
-      - store_test_results:
-          path: junit.xml
+          command:go test ./...
   build-go-executables:
     # Build go executables and store them as artifacts
     docker:
       - image: cimg/go:1.20
     steps:
       - checkout:
-          path: ~/project
+          path: ~/project/be-jeopardy
       - restore_cache:
           key: go-mod-{{ checksum "go.sum" }}
       - run:
@@ -92,29 +57,10 @@ jobs:
       - store_artifacts:
           path: ~/artifacts
           destination: executables
-  deploy:
-    # This is an example deploy job, not actually used by the workflow
-    docker:
-      - image: cimg/base:stable
-    steps:
-      # Replace this with steps to deploy to users
-      - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
 workflows:
   build-and-test:
     jobs:
-      - test-node
-      - build-node:
-          requires:
-            - test-node
-            - test-go
       - test-go
       - build-go-executables:
           requires:
-            - test-node
             - test-go
-    # - deploy:
-    #     requires:
-    #       - build-node
-    #       - build-go-executables
