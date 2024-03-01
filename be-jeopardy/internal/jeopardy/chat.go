@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 )
 
 type ChatMessage struct {
@@ -15,25 +16,31 @@ type ChatMessage struct {
 	TimeStamp  int64  `json:"timeStamp"`
 }
 
-func JoinGameChat(playerId string, conn SafeConn) error {
+func JoinGameChat(playerId string, ws *websocket.Conn) {
+	conn := socket.NewSafeConn(ws)
+
 	game, err := GetPlayerGame(playerId)
 	if err != nil {
-		return err
+		log.Errorf("Error getting game for player %s: %s", playerId, err.Error())
+		closeConnWithMsg(conn, socket.BadRequest, "Unable to join chat: %s", err.Error())
+		return
 	}
 
 	player, err := game.getPlayerById(playerId)
 	if err != nil {
-		return err
+		log.Errorf("Error getting player by id: %s", err.Error())
+		closeConnWithMsg(conn, socket.BadRequest, "Unable to join chat: %s", err.Error())
+		return
 	}
 	if player.chatConn() != nil {
-		return fmt.Errorf("Player already in chat")
+		log.Errorf("Error joining chat: Player already in chat")
+		closeConnWithMsg(conn, socket.BadRequest, "Unable to join chat: Player already in chat")
+		return
 	}
 	player.setChatConn(conn)
 
 	player.sendChatPings()
 	player.processChatMessages(game.chatChan)
-
-	return nil
 }
 
 func (p *Player) processChatMessages(chatChan chan ChatMessage) {

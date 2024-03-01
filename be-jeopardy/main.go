@@ -26,8 +26,8 @@ func main() {
 		log.Fatalf("Failed to set trusted proxies: %s", err)
 	}
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowAllOrigins = true
-	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "Access-Token")
+	corsConfig.AllowCredentials = true
+	corsConfig.AllowOrigins = []string{os.Getenv("ALLOW_ORIGIN")}
 	router.Use(cors.New(corsConfig))
 	for _, route := range handlers.Routes {
 		router.Handle(route.Method, route.Path, route.Handler)

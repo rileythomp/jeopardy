@@ -85,7 +85,7 @@ type (
 		FinalAnswers     []string     `json:"finalAnswers"`
 		Paused           bool         `json:"paused"`
 		PausedState      GameState    `json:"pausedState"`
-		PausedAt         time.Time    `json:"pausedAt"`
+		pausedAt         time.Time
 
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
@@ -148,7 +148,6 @@ type (
 
 	Response struct {
 		Code      int        `json:"code"`
-		Token     string     `json:"token,omitempty"`
 		Message   string     `json:"message"`
 		Game      *Game      `json:"game,omitempty"`
 		CurPlayer GamePlayer `json:"curPlayer,omitempty"`
@@ -246,7 +245,7 @@ func (g *Game) restartGame() {
 }
 
 func (g *Game) pauseGame(player GamePlayer) {
-	g.PausedAt = time.Now()
+	g.pausedAt = time.Now()
 	g.Paused = true
 	g.PausedState = g.State
 	if g.State != PostGame {
