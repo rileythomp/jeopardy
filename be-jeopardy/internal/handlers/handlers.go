@@ -101,6 +101,8 @@ var (
 			return r.Header.Get("Origin") == os.Getenv("ALLOW_ORIGIN")
 		},
 	}
+
+	jwtCookie = "jeopardy_access_token"
 )
 
 const (
@@ -115,7 +117,12 @@ const (
 func GetPlayerGame(c *gin.Context) {
 	log.Infof("Received get player game request")
 
-	token := c.Request.Header.Get("Access-Token")
+	token, err := c.Cookie(jwtCookie)
+	if err != nil {
+		log.Errorf("Error getting token from cookie: %s", err.Error())
+		respondWithError(c, http.StatusForbidden, ErrInvalidAuthCredMsg)
+	}
+
 	playerId, err := auth.GetJWTSubject(token)
 	if err != nil {
 		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
@@ -165,9 +172,10 @@ func CreatePrivateGame(c *gin.Context) {
 		return
 	}
 
+	setJwtCookie(c, jwt)
+
 	c.JSON(http.StatusOK, jeopardy.Response{
 		Code:    http.StatusOK,
-		Token:   jwt,
 		Message: "Authorized to create private game",
 		Game:    game,
 	})
@@ -197,9 +205,10 @@ func JoinGameByCode(c *gin.Context) {
 		return
 	}
 
+	setJwtCookie(c, jwt)
+
 	c.JSON(http.StatusOK, jeopardy.Response{
 		Code:    http.StatusOK,
-		Token:   jwt,
 		Message: "Authorized to join game by code",
 		Game:    game,
 	})
@@ -233,9 +242,10 @@ func JoinPublicGame(c *gin.Context) {
 		return
 	}
 
+	setJwtCookie(c, jwt)
+
 	c.JSON(http.StatusOK, jeopardy.Response{
 		Code:    http.StatusOK,
-		Token:   jwt,
 		Message: "Authorized to join public game",
 		Game:    game,
 	})
@@ -284,7 +294,12 @@ func JoinGameChat(c *gin.Context) {
 func AddBot(c *gin.Context) {
 	log.Infof("Received add bot request")
 
-	token := c.Request.Header.Get("Access-Token")
+	token, err := c.Cookie(jwtCookie)
+	if err != nil {
+		log.Errorf("Error getting token from cookie: %s", err.Error())
+		respondWithError(c, http.StatusForbidden, ErrInvalidAuthCredMsg)
+	}
+
 	playerId, err := auth.GetJWTSubject(token)
 	if err != nil {
 		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
@@ -343,7 +358,12 @@ func PlayGame(c *gin.Context) {
 func PlayAgain(c *gin.Context) {
 	log.Infof("Received play again request")
 
-	token := c.Request.Header.Get("Access-Token")
+	token, err := c.Cookie(jwtCookie)
+	if err != nil {
+		log.Errorf("Error getting token from cookie: %s", err.Error())
+		respondWithError(c, http.StatusForbidden, ErrInvalidAuthCredMsg)
+	}
+
 	playerId, err := auth.GetJWTSubject(token)
 	if err != nil {
 		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
@@ -366,7 +386,12 @@ func PlayAgain(c *gin.Context) {
 func LeaveGame(c *gin.Context) {
 	log.Infof("Received leave request")
 
-	token := c.Request.Header.Get("Access-Token")
+	token, err := c.Cookie(jwtCookie)
+	if err != nil {
+		log.Errorf("Error getting token from cookie: %s", err.Error())
+		respondWithError(c, http.StatusForbidden, ErrInvalidAuthCredMsg)
+	}
+
 	playerId, err := auth.GetJWTSubject(token)
 	if err != nil {
 		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
@@ -423,4 +448,8 @@ func closeConnWithMsg(conn *websocket.Conn, code int, msg string, args ...any) {
 
 func respondWithError(c *gin.Context, code int, msg string, args ...any) {
 	c.JSON(code, jeopardy.Response{Code: code, Message: fmt.Sprintf(msg, args...)})
+}
+
+func setJwtCookie(c *gin.Context, jwt string) {
+	c.SetCookie(jwtCookie, jwt, 24*3600, "/", "", false, true)
 }

@@ -1,7 +1,6 @@
 import { Component, OnInit, AfterViewChecked } from '@angular/core'
 import { Message } from '../../model/model'
 import { PlayerService } from 'src/app/services/player.service'
-import { JwtService } from 'src/app/services/jwt.service'
 import { ChatService } from 'src/app/services/chat.service'
 import { Ping } from '../../model/model'
 
@@ -21,14 +20,9 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 	constructor(
 		private chatService: ChatService,
 		protected player: PlayerService,
-		protected jwtService: JwtService,
 	) { }
 
 	ngOnInit(): void {
-		this.jwtService.jwt$.subscribe(jwt => {
-			this.jwt = jwt
-		})
-
 		this.chatService.Connect()
 
 		this.chatService.OnOpen(() => {

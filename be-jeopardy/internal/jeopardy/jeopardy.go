@@ -262,13 +262,13 @@ func PlayAgain(playerId string) error {
 func CleanUpGames() {
 	log.Infof("Performing game cleanup")
 	for _, game := range publicGames {
-		if game.Paused && time.Since(game.PausedAt) > time.Hour {
+		if game.Paused && time.Since(game.pausedAt) > time.Hour {
 			log.Infof("Game %s has been paused for over an hour, removing it", game.Name)
 			removeGame(game)
 		}
 	}
 	for _, game := range privateGames {
-		if game.Paused && time.Since(game.PausedAt) > time.Hour {
+		if game.Paused && time.Since(game.pausedAt) > time.Hour {
 			log.Infof("Game %s has been paused for over an hour, removing it", game.Name)
 			removeGame(game)
 		}

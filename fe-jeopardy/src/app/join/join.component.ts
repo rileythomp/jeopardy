@@ -1,6 +1,5 @@
 import { Component, ViewChild } from '@angular/core'
 import { Router } from '@angular/router'
-import { JwtService } from '../services/jwt.service'
 import { ApiService } from '../services/api.service'
 import { Observer } from 'rxjs'
 import { ServerUnavailableMsg } from '../constants'
@@ -20,14 +19,12 @@ export class JoinComponent {
 
 	constructor(
 		private router: Router,
-		private jwtService: JwtService,
 		private apiService: ApiService,
 	) { }
 
 	private joinResp(): Partial<Observer<any>> {
 		return {
 			next: (resp: any) => {
-				this.jwtService.SetJWT(resp.token)
 				this.router.navigate([`/game/${resp.game.name}`])
 			},
 			error: (err: any) => {

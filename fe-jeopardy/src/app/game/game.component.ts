@@ -3,7 +3,6 @@ import { Router } from '@angular/router'
 import { GameStateService } from '../services/game-state.service'
 import { WebsocketService } from '../services/websocket.service'
 import { PlayerService } from '../services/player.service'
-import { JwtService } from '../services/jwt.service'
 import { GameState, Ping } from '../model/model'
 import { ModalComponent } from '../modal/modal.component'
 
@@ -37,16 +36,11 @@ export class GameComponent implements OnInit {
 
 	constructor(
 		private websocketService: WebsocketService,
-		private jwtService: JwtService,
 		protected game: GameStateService,
 		protected player: PlayerService,
 	) { }
 
 	ngOnInit(): void {
-		this.jwtService.jwt$.subscribe(jwt => {
-			this.jwt = jwt
-		})
-
 		let showJeopardyMusicInfo = localStorage.getItem('showJeopardyMusicInfo')
 		if (showJeopardyMusicInfo === null) {
 			this.showMusicInfo = true
