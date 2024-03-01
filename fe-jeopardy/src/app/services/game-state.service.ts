@@ -96,10 +96,6 @@ export class GameStateService {
 		return this.game.previousAnswer
 	}
 
-	FinalAnswer(): string {
-		return this.game.finalQuestion.answer
-	}
-
 	AnsCorrectness(): boolean {
 		return this.game.ansCorrectness
 	}

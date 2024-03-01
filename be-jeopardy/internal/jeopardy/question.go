@@ -3,6 +3,7 @@ package jeopardy
 import (
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/agnivade/levenshtein"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
@@ -11,6 +12,10 @@ import (
 const (
 	numCategories = 6
 	numQuestions  = 5
+)
+
+var (
+	rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
 type (
@@ -22,7 +27,7 @@ type (
 	Question struct {
 		db.Question
 		CanChoose   bool `json:"canChoose"`
-		DailyDouble bool `json:"dailyDouble"`
+		DailyDouble bool `json:"-"`
 	}
 )
 
@@ -91,9 +96,9 @@ func (g *Game) setDailyDoubles() {
 }
 
 func (g *Game) setFirstRoundDailyDouble() {
-	tIdx := rand.Intn(numCategories)
+	tIdx := rng.Intn(numCategories)
 	qIdx := 0
-	num := rand.Intn(10000)
+	num := rng.Intn(10000)
 	if num < 15 {
 		qIdx = 0
 	} else if num < 1150 {
@@ -109,9 +114,9 @@ func (g *Game) setFirstRoundDailyDouble() {
 }
 
 func (g *Game) setSecondRoundDailyDouble() {
-	tIdx := rand.Intn(numCategories)
+	tIdx := rng.Intn(numCategories)
 	qIdx := 0
-	num := rand.Intn(10000)
+	num := rng.Intn(10000)
 	if num < 15 {
 		qIdx = 0
 	} else if num < 1524 {
@@ -140,6 +145,23 @@ func (g *Game) firstAvailableQuestion() (int, int) {
 
 	}
 	return -1, -1
+}
+
+func (g *Game) nextQuestionInCategory() (int, int) {
+	curRound := g.FirstRound
+	if g.Round == SecondRound {
+		curRound = g.SecondRound
+	}
+	for catIdx, category := range curRound {
+		if category.Title == g.CurQuestion.Category {
+			for valIdx, question := range category.Questions {
+				if question.CanChoose {
+					return catIdx, valIdx
+				}
+			}
+		}
+	}
+	return g.firstAvailableQuestion()
 }
 
 func (g *Game) disableQuestion() {

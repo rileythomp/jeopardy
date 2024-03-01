@@ -27,7 +27,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		let showJeopardyInfo = localStorage.getItem('showJeopardyInfo')
 		if (showJeopardyInfo === null) {
 			localStorage.setItem('showJeopardyInfo', 'shown')
-			this.modalComponent.showJeopardyInfo()
+			this.modalComponent.showJeopardyInfo(true)
 		}
 	}
 }

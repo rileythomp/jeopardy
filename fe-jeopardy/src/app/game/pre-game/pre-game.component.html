@@ -5,4 +5,13 @@
         Link to join: <span id='joinLink' (click)="openJoinLink()">{{gameLink}}/join/{{game.Name()}}</span>&nbsp;
         <ion-icon name="copy-outline" id="copyLink" (click)="copyJoinLink()"></ion-icon>
     </p>
+
+    <div *ngIf="game.PreGame() && !game.IsPaused()">
+        <p>
+            Other players taking too long? Add a Jeopardy bot to the game to play against.
+        </p>
+        <button (click)="addBot()">
+            Add bot
+        </button>
+    </div>
 </div>

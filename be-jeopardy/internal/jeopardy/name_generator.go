@@ -1,9 +1,5 @@
 package jeopardy
 
-import (
-	"math/rand"
-)
-
 var (
 	// from https://github.com/sroberts/wordlists/tree/master and https://github.com/moby/moby/blob/master/pkg/namesgenerator/names-generator.go
 	adjectives = []string{
@@ -1778,5 +1774,5 @@ var (
 )
 
 func genGameCode() string {
-	return adjectives[rand.Intn(len(adjectives))] + "-" + animals[rand.Intn(len(animals))]
+	return adjectives[rng.Intn(len(adjectives))] + "-" + animals[rng.Intn(len(animals))]
 }

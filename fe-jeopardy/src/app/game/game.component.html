@@ -12,7 +12,7 @@
 			</div>
 		</div>
 		<div>
-			<ion-icon *ngIf="!game.BoardIntro() && (p.canPick || p.canBuzz || p.canAnswer || p.canVote || p.canWager)" name="timer-outline"></ion-icon>
+			<ion-icon *ngIf="!game.BoardIntro() && !game.IsPaused() && (p.canPick || p.canBuzz || p.canAnswer || p.canVote || p.canWager)" name="timer-outline"></ion-icon>
 		</div>
 	</div>
 </div>

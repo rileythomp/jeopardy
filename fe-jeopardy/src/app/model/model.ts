@@ -46,10 +46,8 @@ export type Question = {
     category: string;
     comments: string;
     question: string;
-    answer: string;
     value: number;
     canChoose: boolean;
-    dailyDouble: boolean;
 }
 
 export enum GameState {
