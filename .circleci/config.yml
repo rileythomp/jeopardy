@@ -27,7 +27,7 @@ jobs:
             - /home/circleci/go/pkg/mod
       - run:
           name: Run tests
-          command:go test ./...
+          command: go test ./...
   build-go-executables:
     # Build go executables and store them as artifacts
     docker:
