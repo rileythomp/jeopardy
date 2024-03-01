@@ -4,13 +4,20 @@
 
         <div id='join-buttons' class='flex-row'>
             <button (click)="joinPublicGame(playerName)">Join public game</button>
-            <button (click)="createPrivateGame(playerName)">Create a private game</button>
+            <button (click)="createPrivateGame(playerName, 0)">Create a private game</button>
             <button (click)="toggleGameCodeInput()">Join game by code</button>
         </div>
 
         <input *ngIf="showGameCodeInput" (keydown.enter)="joinGameByCode(playerName, gameCode)" type="text" [(ngModel)]="gameCode" placeholder="Game code">
     </div>
 
+    <hr>
+
+    <div id='bots-container' class='flex-column'>
+        <button (click)="createPrivateGame(playerName, 2)">Play against bots</button>
+        <p>No one to play with right now? Play against the Jeopardy bots.</p>
+    </div>
+    
     <hr>
     
     <button (click)="rejoin()">Disconnected? Click to rejoin</button>

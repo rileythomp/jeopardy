@@ -37,8 +37,8 @@ type Player struct {
 	Conn     SafeConn `json:"conn"`
 	ChatConn SafeConn `json:"chatConn"`
 
-	cancelAnswerTimeout context.CancelFunc
-	cancelWagerTimeout  context.CancelFunc
+	CancelAnswerTimeout context.CancelFunc `json:"-"`
+	CancelWagerTimeout  context.CancelFunc `json:"-"`
 
 	sendGamePing *time.Ticker
 	sendChatPing *time.Ticker
@@ -60,16 +60,16 @@ func NewPlayer(name string) *Player {
 		CanWager:            false,
 		CanVote:             false,
 		FinalProtestors:     map[string]bool{},
-		cancelAnswerTimeout: func() {},
-		cancelWagerTimeout:  func() {},
+		CancelAnswerTimeout: func() {},
+		CancelWagerTimeout:  func() {},
 		sendGamePing:        time.NewTicker(pingFrequency),
 		sendChatPing:        time.NewTicker(pingFrequency),
 	}
 }
 
-func (p *Player) processMessages(msgChan chan Message, pauseChan chan *Player) {
+func (p *Player) readMessages(msgChan chan Message, pauseChan chan GamePlayer) {
 	go func() {
-		log.Infof("Starting to process messages for player %s", p.Name)
+		log.Infof("Starting to read messages from player %s", p.Name)
 		for {
 			message, err := p.readMessage()
 			if err != nil {
@@ -82,7 +82,7 @@ func (p *Player) processMessages(msgChan chan Message, pauseChan chan *Player) {
 			}
 			var msg Message
 			if err := json.Unmarshal(message, &msg); err != nil {
-				log.Errorf("Error parsing message: %s", err.Error())
+				log.Errorf("Error parsing message from player: %s", err.Error())
 			}
 			msg.Player = p
 			msgChan <- msg
@@ -122,8 +122,8 @@ func (p *Player) sendPings() {
 }
 
 func (p *Player) pausePlayer() {
-	p.cancelAnswerTimeout()
-	p.cancelWagerTimeout()
+	p.CancelAnswerTimeout()
+	p.CancelWagerTimeout()
 }
 
 func (p *Player) resetPlayer() {
@@ -154,23 +154,137 @@ func (p *Player) updateScore(val int, isCorrect bool, round RoundState) {
 	p.Score += val
 }
 
-func (p *Player) canBuzz(guessedWrong, passed []string) bool {
-	return !p.inLists(guessedWrong, passed)
+func (p *Player) id() string {
+	return p.Id
 }
 
-func (p *Player) canVote(confirmers, challengers []string) bool {
-	return !p.inLists(confirmers, challengers)
+func (p *Player) name() string {
+	return p.Name
 }
 
-func (p *Player) inLists(lists ...[]string) bool {
-	for _, list := range lists {
-		for _, id := range list {
-			if id == p.Id {
-				return true
-			}
-		}
-	}
-	return false
+func (p *Player) conn() SafeConn {
+	return p.Conn
+}
+
+func (p *Player) chatConn() SafeConn {
+	return p.ChatConn
+}
+
+func (p *Player) score() int {
+	return p.Score
+}
+
+func (p *Player) canPick() bool {
+	return p.CanPick
+}
+
+func (p *Player) canBuzz() bool {
+	return p.CanBuzz
+}
+
+func (p *Player) canAnswer() bool {
+	return p.CanAnswer
+}
+
+func (p *Player) canVote() bool {
+	return p.CanVote
+}
+
+func (p *Player) canWager() bool {
+	return p.CanWager
+}
+
+func (p *Player) finalWager() int {
+	return p.FinalWager
+}
+
+func (p *Player) finalCorrect() bool {
+	return p.FinalCorrect
+}
+
+func (p *Player) finalProtestors() map[string]bool {
+	return p.FinalProtestors
+}
+
+func (p *Player) playAgain() bool {
+	return p.PlayAgain
+}
+
+func (p *Player) setId(id string) {
+	p.Id = id
+}
+
+func (p *Player) setName(name string) {
+	p.Name = name
+}
+
+func (p *Player) setConn(conn SafeConn) {
+	p.Conn = conn
+}
+
+func (p *Player) setChatConn(conn SafeConn) {
+	p.ChatConn = conn
+}
+
+func (p *Player) setCanBuzz(canBuzz bool) {
+	p.CanBuzz = canBuzz
+}
+
+func (p *Player) setCanAnswer(canAnswer bool) {
+	p.CanAnswer = canAnswer
+}
+
+func (p *Player) setCanVote(canVote bool) {
+	p.CanVote = canVote
+}
+
+func (p *Player) setCanWager(canWager bool) {
+	p.CanWager = canWager
+}
+
+func (p *Player) setFinalWager(wager int) {
+	p.FinalWager = wager
+}
+
+func (p *Player) setFinalAnswer(answer string) {
+	p.FinalAnswer = answer
+}
+
+func (p *Player) setFinalCorrect(correct bool) {
+	p.FinalCorrect = correct
+}
+
+func (p *Player) setPlayAgain(playAgain bool) {
+	p.PlayAgain = playAgain
+}
+
+func (p *Player) addFinalProtestor(playerId string) {
+	p.FinalProtestors[playerId] = true
+}
+
+func (p *Player) addToScore(points int) {
+	p.Score += points
+}
+
+func (p *Player) endConnections() {
+	p.Conn = nil
+	p.ChatConn = nil
+}
+
+func (p *Player) setCancelWagerTimeout(cancel context.CancelFunc) {
+	p.CancelWagerTimeout = cancel
+}
+
+func (p *Player) setCancelAnswerTimeout(cancel context.CancelFunc) {
+	p.CancelAnswerTimeout = cancel
+}
+
+func (p *Player) cancelAnswerTimeout() {
+	p.CancelAnswerTimeout()
+}
+
+func (p *Player) cancelWagerTimeout() {
+	p.CancelWagerTimeout()
 }
 
 func (p *Player) readMessage() ([]byte, error) {

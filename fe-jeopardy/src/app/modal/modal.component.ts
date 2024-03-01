@@ -10,6 +10,7 @@ export class ModalComponent {
     protected showModal: boolean = false
     protected message: string
     private modalTimeout: NodeJS.Timeout
+    protected firstTime: boolean;
 
     showMessage(msg: string) {
         clearTimeout(this.modalTimeout)
@@ -20,7 +21,8 @@ export class ModalComponent {
         }, 10000)
     }
 
-    showJeopardyInfo() {
+    showJeopardyInfo(firstTime: boolean) {
         this.showInfo = true
+        this.firstTime = firstTime
     }
 }

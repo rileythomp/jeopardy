@@ -2,11 +2,19 @@ package jeopardy
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 )
+
+type GameRequest struct {
+	PlayerName string `json:"playerName"`
+	GameCode   string `json:"gameCode"`
+	Bots       int    `json:"bots"`
+}
 
 var (
 	privateGames = map[string]*Game{}
@@ -37,8 +45,8 @@ func validateName(name string) error {
 	return nil
 }
 
-func CreatePrivateGame(playerName string) (*Game, string, error, int) {
-	if err := validateName(playerName); err != nil {
+func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
+	if err := validateName(req.PlayerName); err != nil {
 		return &Game{}, "", err, socket.BadRequest
 	}
 
@@ -52,9 +60,15 @@ func CreatePrivateGame(playerName string) (*Game, string, error, int) {
 	}
 	privateGames[game.Name] = game
 
-	player := NewPlayer(playerName)
+	player := NewPlayer(req.PlayerName)
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
+
+	for i := 0; i < req.Bots; i++ {
+		bot := NewBot(genGameCode())
+		game.Players = append(game.Players, bot)
+		bot.processMessages()
+	}
 
 	return game, player.Id, nil, 0
 }
@@ -103,17 +117,17 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 		}
 	}
 
-	var player *Player
+	var player GamePlayer
 	if len(game.Players) < numPlayers {
 		player = NewPlayer(playerName)
 		game.Players = append(game.Players, player)
 	} else {
 		for _, p := range game.Players {
-			if p.Conn == nil {
-				delete(playerGames, p.Id)
+			if p.conn() == nil {
+				delete(playerGames, p.id())
 				player = p
-				player.Id = uuid.New().String()
-				player.Name = playerName
+				player.setId(uuid.New().String())
+				player.setName(playerName)
 				break
 			}
 		}
@@ -121,9 +135,9 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 	if player == nil {
 		return &Game{}, "", fmt.Errorf("Game %s is full", gameCode)
 	}
-	playerGames[player.Id] = game
+	playerGames[player.id()] = game
 
-	return game, player.Id, nil
+	return game, player.id(), nil
 }
 
 func GetPlayerGame(playerId string) (*Game, error) {
@@ -132,6 +146,25 @@ func GetPlayerGame(playerId string) (*Game, error) {
 		return nil, fmt.Errorf("No game found for player")
 	}
 	return game, nil
+}
+
+func AddBot(playerId string) error {
+	game, err := GetPlayerGame(playerId)
+	if err != nil {
+		return err
+	}
+
+	if len(game.Players) >= numPlayers {
+		return fmt.Errorf("Game is full")
+	}
+
+	bot := NewBot(genGameCode())
+	game.Players = append(game.Players, bot)
+	bot.processMessages()
+
+	game.handlePlayerJoined(bot)
+
+	return nil
 }
 
 func PlayGame(playerId string, conn SafeConn) error {
@@ -144,27 +177,31 @@ func PlayGame(playerId string, conn SafeConn) error {
 	if err != nil {
 		return err
 	}
-	if player.Conn != nil {
+	if player.conn() != nil {
 		return fmt.Errorf("Player already playing")
 	}
-	player.Conn = conn
+	player.setConn(conn)
+	player.sendPings()
+	player.readMessages(game.msgChan, game.pauseChan)
 
+	game.handlePlayerJoined(player)
+
+	return nil
+}
+
+func (g *Game) handlePlayerJoined(player GamePlayer) {
 	msg := "Waiting for more players"
-	if game.allPlayersReady() {
-		if game.Paused {
-			game.startGame()
+	if g.allPlayersReady() {
+		if g.Paused {
+			g.startGame()
 		} else {
-			game.setState(BoardIntro, game.Players[0])
+			g.setState(BoardIntro, g.Players[0])
+			// g.setState(RecvPick, g.Players[0])
 		}
 		msg = "We are ready to play"
 	}
 
-	player.sendPings()
-	player.processMessages(game.msgChan, game.pauseChan)
-
-	game.messageAllPlayers(msg)
-
-	return nil
+	g.messageAllPlayers(msg)
 }
 
 func LeaveGame(playerId string) error {
@@ -194,11 +231,11 @@ func PlayAgain(playerId string) error {
 		return err
 	}
 
-	player.PlayAgain = true
+	player.setPlayAgain(true)
 
 	restartGame := true
 	for _, p := range game.Players {
-		if !p.PlayAgain || p.Conn == nil {
+		if !p.playAgain() || p.conn() == nil {
 			restartGame = false
 		}
 	}
@@ -208,8 +245,8 @@ func PlayAgain(playerId string) error {
 	}
 
 	for _, p := range game.Players {
-		msg := fmt.Sprintf("%s wants to play again", player.Name)
-		if p.Id == player.Id {
+		msg := fmt.Sprintf("%s wants to play again", player.name())
+		if p.id() == player.id() {
 			msg = "Waiting for all other players to play again"
 		}
 		_ = p.sendMessage(Response{
@@ -220,4 +257,31 @@ func PlayAgain(playerId string) error {
 		})
 	}
 	return nil
+}
+
+func CleanUpGames() {
+	log.Infof("Performing game cleanup")
+	for _, game := range publicGames {
+		if game.Paused && time.Since(game.PausedAt) > time.Hour {
+			log.Infof("Game %s has been paused for over an hour, removing it", game.Name)
+			removeGame(game)
+		}
+	}
+	for _, game := range privateGames {
+		if game.Paused && time.Since(game.PausedAt) > time.Hour {
+			log.Infof("Game %s has been paused for over an hour, removing it", game.Name)
+			removeGame(game)
+		}
+	}
+}
+
+func removeGame(g *Game) {
+	if err := g.questionDB.Close(); err != nil {
+		log.Errorf("Error closing question db: %s", err.Error())
+	}
+	delete(publicGames, g.Name)
+	delete(privateGames, g.Name)
+	for _, p := range g.Players {
+		delete(playerGames, p.id())
+	}
 }

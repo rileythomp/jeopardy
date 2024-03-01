@@ -22,11 +22,6 @@ type (
 		Handler gin.HandlerFunc
 	}
 
-	GameRequest struct {
-		PlayerName string `json:"playerName"`
-		GameCode   string `json:"gameCode"`
-	}
-
 	TokenRequest struct {
 		Token string `json:"token,omitempty"`
 	}
@@ -53,6 +48,11 @@ var (
 			Method:  http.MethodPut,
 			Path:    "/jeopardy/games/:gameCode",
 			Handler: JoinGameByCode,
+		},
+		{
+			Method:  http.MethodPut,
+			Path:    "/jeopardy/games/bot",
+			Handler: AddBot,
 		},
 		{
 			Method:  http.MethodGet,
@@ -140,14 +140,14 @@ func GetPlayerGame(c *gin.Context) {
 func CreatePrivateGame(c *gin.Context) {
 	log.Infof("Received create game request")
 
-	var req GameRequest
+	var req jeopardy.GameRequest
 	if err := parseBody(c.Request.Body, &req); err != nil {
 		log.Errorf("Error parsing create request: %s", err.Error())
 		respondWithError(c, http.StatusBadRequest, ErrMalformedReqMsg)
 		return
 	}
 
-	game, playerId, err, code := jeopardy.CreatePrivateGame(req.PlayerName)
+	game, playerId, err, code := jeopardy.CreatePrivateGame(req)
 	if err != nil {
 		log.Errorf("Error creating private game: %s", err.Error())
 		if code == socket.BadRequest {
@@ -176,7 +176,7 @@ func CreatePrivateGame(c *gin.Context) {
 func JoinGameByCode(c *gin.Context) {
 	log.Infof("Received private join game request")
 
-	var req GameRequest
+	var req jeopardy.GameRequest
 	if err := parseBody(c.Request.Body, &req); err != nil {
 		log.Errorf("Error parsing join request: %s", err.Error())
 		respondWithError(c, http.StatusBadRequest, ErrMalformedReqMsg)
@@ -208,7 +208,7 @@ func JoinGameByCode(c *gin.Context) {
 func JoinPublicGame(c *gin.Context) {
 	log.Infof("Received public join game request")
 
-	var req GameRequest
+	var req jeopardy.GameRequest
 	if err := parseBody(c.Request.Body, &req); err != nil {
 		log.Errorf("Error parsing join request: %s", err.Error())
 		respondWithError(c, http.StatusBadRequest, ErrMalformedReqMsg)
@@ -277,6 +277,25 @@ func JoinGameChat(c *gin.Context) {
 	if err != nil {
 		log.Errorf("Error joining chat: %s", err.Error())
 		closeConnWithMsg(ws, socket.BadRequest, "Unable to join chat: %s", err.Error())
+		return
+	}
+}
+
+func AddBot(c *gin.Context) {
+	log.Infof("Received add bot request")
+
+	token := c.Request.Header.Get("Access-Token")
+	playerId, err := auth.GetJWTSubject(token)
+	if err != nil {
+		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
+		respondWithError(c, http.StatusForbidden, ErrInvalidAuthCredMsg)
+		return
+	}
+
+	err = jeopardy.AddBot(playerId)
+	if err != nil {
+		log.Errorf("Error adding bot to game: %s", err.Error())
+		respondWithError(c, http.StatusBadRequest, "Unable to add bot to game: %s", err.Error())
 		return
 	}
 }

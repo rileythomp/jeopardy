@@ -22,8 +22,6 @@ $ ng serve
 
 ### TODO
 
-- AI opponents
-
 - Accounts with user stats
 
 - Leaderboards

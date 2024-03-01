@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-	"math/rand"
 	"os"
 	"time"
 
@@ -11,11 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/auth"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/handlers"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/jeopardy"
 )
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
-
 	flag.Parse()
 	log.SetFlags(0)
 
@@ -34,6 +32,16 @@ func main() {
 	for _, route := range handlers.Routes {
 		router.Handle(route.Method, route.Path, route.Handler)
 	}
+
+	go func() {
+		cleanUpTicker := time.NewTicker(1 * time.Hour)
+		for {
+			select {
+			case <-cleanUpTicker.C:
+				jeopardy.CleanUpGames()
+			}
+		}
+	}()
 
 	port := os.Getenv("PORT")
 	addr := flag.String("addr", ":"+port, "http service address")
