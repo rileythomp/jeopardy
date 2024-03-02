@@ -113,36 +113,13 @@ type (
 	Message struct {
 		Player GamePlayer
 		State  GameState `json:"state"`
-		PickMessage
-		BuzzMessage
-		AnswerMessage
-		VoteMessage
-		WagerMessage
-		ProtestMessage
-	}
 
-	PickMessage struct {
-		CatIdx int `json:"catIdx"`
-		ValIdx int `json:"valIdx"`
-	}
-
-	BuzzMessage struct {
-		IsPass bool `json:"isPass"`
-	}
-
-	AnswerMessage struct {
-		Answer string `json:"answer"`
-	}
-
-	VoteMessage struct {
-		Confirm bool `json:"confirm"`
-	}
-
-	WagerMessage struct {
-		Wager int `json:"wager"`
-	}
-
-	ProtestMessage struct {
+		CatIdx     int    `json:"catIdx"`
+		ValIdx     int    `json:"valIdx"`
+		IsPass     bool   `json:"isPass"`
+		Answer     string `json:"answer"`
+		Confirm    bool   `json:"confirm"`
+		Wager      int    `json:"wager"`
 		ProtestFor string `json:"protestFor"`
 	}
 
