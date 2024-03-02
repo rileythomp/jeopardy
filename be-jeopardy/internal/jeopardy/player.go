@@ -28,12 +28,14 @@ type Player struct {
 	CanAnswer       bool            `json:"canAnswer"`
 	CanWager        bool            `json:"canWager"`
 	CanVote         bool            `json:"canVote"`
+	CanInitDispute  bool            `json:"canInitDispute"`
 	CanDispute      bool            `json:"canDispute"`
 	FinalWager      int             `json:"finalWager"`
 	FinalAnswer     string          `json:"finalAnswer"`
 	FinalCorrect    bool            `json:"finalCorrect"`
 	FinalProtestors map[string]bool `json:"finalProtestors"`
 	PlayAgain       bool            `json:"playAgain"`
+	LastAnswer      string          `json:"lastAnswer"` // todo: set this after player answer
 
 	Conn     SafeConn `json:"conn"`
 	ChatConn SafeConn `json:"chatConn"`
@@ -199,6 +201,14 @@ func (p *Player) canDispute() bool {
 	return p.CanDispute
 }
 
+func (p *Player) canInitDispute() bool {
+	return p.CanInitDispute
+}
+
+func (p *Player) setCanInitDispute(canInitDispute bool) {
+	p.CanInitDispute = canInitDispute
+}
+
 func (p *Player) finalWager() int {
 	return p.FinalWager
 }
@@ -213,6 +223,14 @@ func (p *Player) finalProtestors() map[string]bool {
 
 func (p *Player) playAgain() bool {
 	return p.PlayAgain
+}
+
+func (p *Player) lastAnswer() string {
+	return p.LastAnswer
+}
+
+func (p *Player) setLastAnswer(lastAns string) {
+	p.LastAnswer = lastAns
 }
 
 func (p *Player) setId(id string) {

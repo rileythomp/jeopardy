@@ -105,7 +105,6 @@ func (g *Game) startDisputeTimeout() {
 		g.Disputers = 0
 		g.NonDisputers = 0
 		g.setState(RecvPick, g.DisputePicker)
-		g.LastToAnswer.setCanDispute(false)
 		g.messageAllPlayers("Dispute resolved")
 		return nil
 	})

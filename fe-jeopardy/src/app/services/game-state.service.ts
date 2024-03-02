@@ -200,4 +200,12 @@ export class GameStateService {
 	InDispute(): boolean {
 		return this.game.state == GameState.RecvDispute
 	}
+
+	DisputerName(): string {
+		return this.game.disputer?.name
+	}
+
+	DisputerAnswer(): string {
+		return this.game.disputer?.lastAnswer
+	}
 }

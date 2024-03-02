@@ -23,10 +23,12 @@ type (
 		canVote() bool
 		canWager() bool
 		canDispute() bool
+		canInitDispute() bool
 		finalWager() int
 		finalCorrect() bool
 		finalProtestors() map[string]bool
 		playAgain() bool
+		lastAnswer() string
 
 		setId(string)
 		setName(string)
@@ -37,10 +39,12 @@ type (
 		setCanVote(bool)
 		setCanWager(bool)
 		setCanDispute(bool)
+		setCanInitDispute(bool)
 		setFinalWager(int)
 		setFinalAnswer(string)
 		setFinalCorrect(bool)
 		setPlayAgain(bool)
+		setLastAnswer(string)
 
 		readMessages(msgChan chan Message, disconnectChan chan GamePlayer)
 		processChatMessages(chan ChatMessage)
@@ -74,7 +78,6 @@ type (
 		Players          []GamePlayer `json:"players"`
 		LastToPick       GamePlayer   `json:"lastToPick"`
 		LastToAnswer     GamePlayer   `json:"lastToAnswer"`
-		DisputePicker    GamePlayer   `json:"disputePicker"`
 		PreviousQuestion string       `json:"previousQuestion"`
 		PreviousAnswer   string       `json:"previousAnswer"`
 		LastAnswer       string       `json:"lastAnswer"`
@@ -83,8 +86,10 @@ type (
 		Passed           []string     `json:"passed"`
 		Confirmers       []string     `json:"confirmations"`
 		Challengers      []string     `json:"challenges"`
+		DisputePicker    GamePlayer   `json:"disputePicker"`
 		Disputers        int          `json:"disputes"`
 		NonDisputers     int          `json:"nonDisputes"`
+		Disputer         GamePlayer   `json:"disputer"`
 		NumFinalWagers   int          `json:"numFinalWagers"`
 		FinalWagers      []string     `json:"finalWagers"`
 		FinalAnswers     []string     `json:"finalAnswers"`
@@ -112,7 +117,7 @@ type (
 
 	QuestionDB interface {
 		GetQuestions() ([]db.Question, error)
-		AddAlternative(alternative, question string) error
+		AddAlternative(alternative, answer string) error
 		Close() error
 	}
 
@@ -298,7 +303,7 @@ func (g *Game) processMsg(msg Message) error {
 	case RecvPick:
 		if msg.Dispute {
 			log.Infof("Player %s disputed the previous question", player.name())
-			g.initDispute(player)
+			err = g.initDispute(player)
 		} else {
 			log.Infof("Player %s picked", player.name())
 			err = g.processPick(player, msg.CatIdx, msg.ValIdx)
@@ -339,7 +344,10 @@ func (g *Game) processMsg(msg Message) error {
 	return err
 }
 
-func (g *Game) initDispute(player GamePlayer) {
+func (g *Game) initDispute(player GamePlayer) error {
+	if !player.canInitDispute() {
+		return fmt.Errorf("player cannot initiate dispute")
+	}
 	g.cancelPickTimeout()
 	for _, p := range g.Players {
 		if p.canPick() {
@@ -347,8 +355,11 @@ func (g *Game) initDispute(player GamePlayer) {
 		}
 	}
 	g.Disputers = 1
+	player.setCanInitDispute(false)
+	g.Disputer = player
 	g.setState(RecvDispute, player)
 	g.messageAllPlayers("Player %s disputed the answer", player.name())
+	return nil
 }
 
 func (g *Game) processPick(player GamePlayer, catIdx, valIdx int) error {
@@ -379,6 +390,9 @@ func (g *Game) processPick(player GamePlayer, catIdx, valIdx int) error {
 	}
 	g.PreviousQuestion = g.CurQuestion.Clue
 	g.PreviousAnswer = g.CurQuestion.Answer
+	for _, p := range g.Players {
+		p.setCanInitDispute(false)
+	}
 	g.messageAllPlayers(msg)
 	return nil
 }
@@ -453,6 +467,13 @@ func (g *Game) processVote(player GamePlayer, confirm bool) error {
 			log.Errorf("Error adding alternative: %s", err.Error())
 		}
 	}
+	if !isCorrect {
+		g.LastToAnswer.setCanInitDispute(true)
+		g.LastToAnswer.setLastAnswer(g.LastAnswer)
+		log.Debugf("player %s can dispute", player.name())
+	} else {
+		log.Debugf("player %s cannot dispute", player.name())
+	}
 	g.nextQuestion(g.LastToAnswer, isCorrect)
 	return nil
 }
@@ -480,16 +501,15 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 	g.cancelDisputeTimeout()
 	nextPicker := g.DisputePicker
 	if g.Disputers > g.NonDisputers {
-		g.LastToAnswer.addToScore(2 * g.CurQuestion.Value)
-		if err := g.questionDB.AddAlternative(g.LastAnswer, g.CurQuestion.Answer); err != nil {
+		g.Disputer.addToScore(2 * g.CurQuestion.Value)
+		if err := g.questionDB.AddAlternative(g.Disputer.lastAnswer(), g.CurQuestion.Answer); err != nil {
 			log.Errorf("Error adding alternative: %s", err.Error())
 		}
-		nextPicker = g.LastToAnswer
+		nextPicker = g.Disputer
 	}
 	g.Disputers = 0
 	g.NonDisputers = 0
 	g.setState(RecvPick, nextPicker)
-	g.LastToAnswer.setCanDispute(false)
 	g.messageAllPlayers("Dispute resolved")
 	return nil
 }
@@ -598,7 +618,6 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 	case RecvPick:
 		for _, p := range g.Players {
 			p.updateActions(p.id() == player.id(), false, false, false, false)
-			p.setCanDispute(g.LastToAnswer.id() == p.id() && !g.AnsCorrectness)
 		}
 		g.startPickTimeout(player)
 	case RecvBuzz:

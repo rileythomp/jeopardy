@@ -53,19 +53,19 @@
 <div *ngIf="game.InDispute()" class='modal-container'>
     <div class='modal-message'>
         <h3>Dispute</h3>
-        <p>{{ game.LastToAnswer() }} has disputed the previous question.</p>
+        <p>{{ game.DisputerName() }} has disputed the previous question.</p>
         <p>Previous question: {{ game.PreviousQuestion() }}</p>
         <p>Official answer: <b>{{ game.PreviousAnswer() }}</b></p>
-        <p>{{ game.LastToAnswer() }}'s answer: <b>{{ game.LastAnswer() }}</b></p>
-        <p>Should {{ game.LastToAnswer() }}'s' answer have been marked as correct?</p>
+        <p>{{ game.DisputerName() }}'s answer: <b>{{ game.DisputerAnswer() }}</b></p>
+        <p>Should {{ game.DisputerName() }}'s' answer have been marked as correct?</p>
     </div>
     
     <div *ngIf='player.CanDispute()' class='flex-row' id='dispute-buttons'>
         <button (click)="disputeQuestion(true)">
-            Yes, {{ game.LastToAnswer() }}'s answer was correct.
+            Yes, {{ game.DisputerName() }}'s answer was correct.
         </button>
         <button (click)="disputeQuestion(false)">
-            No, {{ game.LastToAnswer() }}'s answer was incorrect.
+            No, {{ game.DisputerName() }}'s answer was incorrect.
         </button>
     </div>
     <div *ngIf='!player.CanDispute()'>

@@ -54,6 +54,10 @@ export class PlayerService {
 		return this.player.canDispute;
 	}
 
+	CanInitDispute(): boolean {
+		return this.player.canInitDispute;
+	}
+
 	PlayAgain(): boolean {
 		return this.player.playAgain;
 	}

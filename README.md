@@ -22,6 +22,8 @@ $ ng serve
 
 ### TODO
 
+- Clean up dispute process
+
 - Accounts with user stats
 
 - Leaderboards
