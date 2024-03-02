@@ -46,4 +46,13 @@
 	</audio>
 </div>
 
+<div id='pause-game' *ngIf='!game.Dispute()'>
+	<ion-icon (click)="resumeGame()" *ngIf="game.IsPaused()" name="play"></ion-icon>
+	<ion-icon (click)="pauseGame()" *ngIf="!game.IsPaused()" name="pause"></ion-icon>
+	<div id='pause-info' *ngIf="showPauseGame">
+		<ion-icon name="chevron-up-outline"></ion-icon>
+		<p>Click to pause the game</p>
+	</div>
+</div>
+
 <app-modal></app-modal>

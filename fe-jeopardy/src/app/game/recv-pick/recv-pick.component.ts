@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Question } from 'src/app/model/model';
+import { GameState, Question } from 'src/app/model/model';
 import { PlayerService } from 'src/app/services/player.service';
 import { WebsocketService } from 'src/app/services/websocket.service';
 import { GameStateService } from 'src/app/services/game-state.service';
@@ -39,4 +39,16 @@ export class RecvPickComponent {
 		}
 	}
 
+	showDispute(): boolean {
+		return this.game.State() == GameState.RecvPick &&
+			this.game.LastToAnswer() == this.player.Name() && !this.game.AnsCorrectness() &&
+			!this.game.SettledDispute()
+	}
+
+	disputeQuestion() {
+		this.websocketService.Send({
+			state: this.game.State(),
+			dispute: true,
+		})
+	}
 }

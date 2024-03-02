@@ -77,7 +77,7 @@ export class GameStateService {
 	}
 
 	LastToAnswer(): string {
-		return this.game.lastToAnswer.name
+		return this.game.lastToAnswer?.name
 	}
 
 	WageringPlayer(): string {
@@ -195,5 +195,13 @@ export class GameStateService {
 
 	BuzzDelay(): number {
 		return Math.floor(this.game.curQuestion.question.split(' ').length / 5)
+	}
+
+	Dispute(): boolean {
+		return this.game.dispute
+	}
+
+	SettledDispute(): boolean {
+		return this.game.disputeSettled
 	}
 }

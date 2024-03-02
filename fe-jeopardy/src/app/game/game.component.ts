@@ -29,6 +29,8 @@ export class GameComponent implements OnInit {
 	protected questionAnswer: string
 	protected wagerAmt: string
 
+	showPauseGame: boolean = false
+
 	@ViewChild('jeopardyAudio') private jeopardyAudio: ElementRef
 	protected playMusic: boolean = false
 	protected showMusicInfo: boolean = false
@@ -54,6 +56,15 @@ export class GameComponent implements OnInit {
 				this.showMusicInfo = false
 			}, 5000)
 			localStorage.setItem('showJeopardyMusicInfo', 'shown')
+		}
+
+		let showPauseGame = localStorage.getItem('showPauseGame')
+		if (showPauseGame === null) {
+			this.showPauseGame = true
+			setTimeout(() => {
+				this.showPauseGame = false
+			}, 5000)
+			localStorage.setItem('showPauseGame', 'shown')
 		}
 
 		this.websocketService.Connect('play')
@@ -96,8 +107,16 @@ export class GameComponent implements OnInit {
 
 			if (this.game.IsPaused()) {
 				this.cancelCountdown()
+				if (this.game.Dispute()) {
+					this.modal.showDispute()
+					return
+				}
 				this.modal.showMessage(`${resp.message}, will resume when 3 players are ready`)
 				return
+			}
+
+			if (resp.message == 'Dispute resolved') {
+				this.modal.hideDispute()
 			}
 
 			switch (this.game.State()) {
@@ -152,6 +171,9 @@ export class GameComponent implements OnInit {
 
 	startCountdownTimer(seconds: number): void {
 		this.cancelCountdown()
+		if (this.game.IsPaused()) {
+			return
+		}
 		let countdownBar = document.getElementById('countdown-bar')
 		for (let i = 0; i < 2 * (seconds - 1); i++) {
 			let countdownBox = document.createElement('div')
@@ -192,5 +214,21 @@ export class GameComponent implements OnInit {
 			return 0
 		}
 		return Math.abs(num)
+	}
+
+	resumeGame() {
+		this.modal.showMessage('Game resumed')
+		this.websocketService.Send({
+			state: this.game.State(),
+			pause: -1,
+		})
+	}
+
+	pauseGame() {
+		this.modal.showMessage('Game paused')
+		this.websocketService.Send({
+			state: this.game.State(),
+			pause: 1,
+		})
 	}
 }

@@ -67,7 +67,7 @@ func NewPlayer(name string) *Player {
 	}
 }
 
-func (p *Player) readMessages(msgChan chan Message, pauseChan chan GamePlayer) {
+func (p *Player) readMessages(msgChan chan Message, disconnectChan chan GamePlayer) {
 	go func() {
 		log.Infof("Starting to read messages from player %s", p.Name)
 		for {
@@ -77,7 +77,7 @@ func (p *Player) readMessages(msgChan chan Message, pauseChan chan GamePlayer) {
 				if websocket.IsCloseError(err, 1001) {
 					log.Infof("Player %s closed connection", p.Name)
 				}
-				pauseChan <- p
+				disconnectChan <- p
 				return
 			}
 			var msg Message

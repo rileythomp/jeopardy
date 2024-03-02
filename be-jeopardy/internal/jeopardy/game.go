@@ -40,7 +40,7 @@ type (
 		setFinalCorrect(bool)
 		setPlayAgain(bool)
 
-		readMessages(msgChan chan Message, pauseChan chan GamePlayer)
+		readMessages(msgChan chan Message, disconnectChan chan GamePlayer)
 		processChatMessages(chan ChatMessage)
 		sendPings()
 		sendChatPings()
@@ -86,6 +86,10 @@ type (
 		Paused           bool         `json:"paused"`
 		PausedState      GameState    `json:"pausedState"`
 		PausedAt         time.Time    `json:"pausedAt"`
+		Dispute          bool         `json:"dispute"`
+		Disputes         int          `json:"disputes"`
+		NonDisputes      int          `json:"nonDisputes"`
+		DisputeSettled   bool         `json:"disputeSettled"`
 
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
@@ -96,10 +100,10 @@ type (
 		cancelBuzzTimeout       context.CancelFunc
 		cancelVoteTimeout       context.CancelFunc
 
-		msgChan     chan Message
-		pauseChan   chan GamePlayer
-		restartChan chan bool
-		chatChan    chan ChatMessage
+		msgChan        chan Message
+		disconnectChan chan GamePlayer
+		restartChan    chan bool
+		chatChan       chan ChatMessage
 
 		questionDB QuestionDB
 	}
@@ -119,6 +123,9 @@ type (
 		VoteMessage
 		WagerMessage
 		ProtestMessage
+		// 1 is pause, -1 is to resume
+		Pause   int  `json:"pause"`
+		Dispute bool `json:"dispute"`
 	}
 
 	PickMessage struct {
@@ -189,7 +196,7 @@ func NewGame(db QuestionDB) (*Game, error) {
 		cancelBuzzTimeout:       func() {},
 		cancelVoteTimeout:       func() {},
 		msgChan:                 make(chan Message),
-		pauseChan:               make(chan GamePlayer),
+		disconnectChan:          make(chan GamePlayer),
 		restartChan:             make(chan bool),
 		chatChan:                make(chan ChatMessage),
 		questionDB:              db,
@@ -210,9 +217,9 @@ func (g *Game) processMessages() {
 				if err := g.processMsg(msg); err != nil {
 					log.Errorf("Error processing message: %s\n", err.Error())
 				}
-			case player := <-g.pauseChan:
+			case player := <-g.disconnectChan:
 				log.Infof("Stopping game %s\n", g.Name)
-				g.pauseGame(player)
+				g.disconnectPlayer(player)
 			case <-g.restartChan:
 				log.Infof("Restarting game %s\n", g.Name)
 				g.restartGame()
@@ -245,23 +252,27 @@ func (g *Game) restartGame() {
 	g.messageAllPlayers("We are ready to play")
 }
 
-func (g *Game) pauseGame(player GamePlayer) {
+func (g *Game) pauseGame() {
 	g.PausedAt = time.Now()
 	g.Paused = true
 	g.PausedState = g.State
-	if g.State != PostGame {
-		g.State = PreGame
-	}
 	g.cancelBoardIntroTimeout()
 	g.cancelPickTimeout()
 	g.cancelBuzzTimeout()
 	g.cancelVoteTimeout()
-	player.endConnections()
-	player.setPlayAgain(false)
 	for _, p := range g.Players {
 		p.pausePlayer()
 	}
-	g.messageAllPlayers(fmt.Sprintf("Player %s left the game", player.name()))
+}
+
+func (g *Game) disconnectPlayer(player GamePlayer) {
+	g.pauseGame()
+	if g.State != PostGame {
+		g.State = PreGame
+	}
+	player.endConnections()
+	player.setPlayAgain(false)
+	g.messageAllPlayers("Player %s disconnected from the game", player.name())
 	endGame := true
 	for _, p := range g.Players {
 		if p.conn() != nil {
@@ -277,12 +288,49 @@ func (g *Game) pauseGame(player GamePlayer) {
 
 func (g *Game) processMsg(msg Message) error {
 	player := msg.Player
+	if g.State != msg.State {
+		log.Infof("Ignoring message from player %s because it is not for the current game state", player.name())
+		return nil
+	}
 	if g.Paused {
+		if msg.Pause == -1 {
+			log.Infof("Player %s resumed the game", player.name())
+			g.startGame()
+			g.messageAllPlayers("Player %s resumed the game", player.name())
+			return nil
+		}
+		if g.Dispute {
+			if msg.Dispute {
+				g.Disputes++
+			} else {
+				g.NonDisputes++
+			}
+			if g.Disputes > 1 || g.NonDisputes > 1 {
+				if g.Disputes > g.NonDisputes {
+					g.LastToAnswer.addToScore(2 * g.CurQuestion.Value)
+				}
+				g.Dispute = false
+				g.Disputes = 0
+				g.NonDisputes = 0
+				g.DisputeSettled = true
+				g.startGame()
+				g.messageAllPlayers("Dispute resolved")
+				return nil
+			}
+		}
 		log.Infof("Ignoring message from player %s because game is paused", player.name())
 		return nil
 	}
-	if g.State != msg.State {
-		log.Infof("Ignoring message from player %s because it is not for the current game state", player.name())
+	if msg.Pause == 1 {
+		log.Infof("Player %s paused the game", player.name())
+		g.pauseGame()
+		g.messageAllPlayers("Player %s paused the game", player.name())
+		return nil
+	} else if msg.Dispute {
+		log.Infof("Player %s disputed the previous question", player.name())
+		g.pauseGame()
+		g.Dispute = true
+		g.messageAllPlayers("Player %s disputed the answer", player.name())
 		return nil
 	}
 	var err error
@@ -347,6 +395,7 @@ func (g *Game) processPick(player GamePlayer, catIdx, valIdx int) error {
 	}
 	g.PreviousQuestion = g.CurQuestion.Clue
 	g.PreviousAnswer = g.CurQuestion.Answer
+	g.DisputeSettled = false
 	g.messageAllPlayers(msg)
 	return nil
 }
@@ -680,11 +729,11 @@ func (g *Game) resetGuesses() {
 	g.Challengers = []string{}
 }
 
-func (g *Game) messageAllPlayers(msg string) {
+func (g *Game) messageAllPlayers(msg string, args ...any) {
 	for _, p := range g.Players {
 		_ = p.sendMessage(Response{
 			Code:      socket.Ok,
-			Message:   msg,
+			Message:   fmt.Sprintf(msg, args...),
 			Game:      g,
 			CurPlayer: p,
 		})

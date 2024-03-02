@@ -18,6 +18,8 @@ export type Game = {
     startFinalWagerCountdown: boolean;
     startFinalAnswerCountdown: boolean;
     buzzBlocked: boolean;
+    dispute: boolean;
+    disputeSettled: boolean;
 };
 
 export type Player = {
