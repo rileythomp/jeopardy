@@ -97,6 +97,18 @@ func (g *Game) startVoteTimeout(player GamePlayer) {
 	})
 }
 
+func (g *Game) startDisputeTimeout(player GamePlayer) {
+	ctx, cancel := context.WithCancel(context.Background())
+	g.cancelDisputeTimeout = cancel
+	g.startTimeout(ctx, voteTimeout, &Player{}, func(_ GamePlayer) error {
+		g.Disputers = []string{}
+		g.NonDisputers = []string{}
+		g.setState(RecvPick, player)
+		g.messageAllPlayers("Dispute resolved")
+		return nil
+	})
+}
+
 func (g *Game) startWagerTimeout(player GamePlayer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	player.setCancelWagerTimeout(cancel)

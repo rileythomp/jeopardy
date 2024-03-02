@@ -28,6 +28,7 @@ type Player struct {
 	CanAnswer       bool            `json:"canAnswer"`
 	CanWager        bool            `json:"canWager"`
 	CanVote         bool            `json:"canVote"`
+	CanDispute      bool            `json:"canDispute"`
 	FinalWager      int             `json:"finalWager"`
 	FinalAnswer     string          `json:"finalAnswer"`
 	FinalCorrect    bool            `json:"finalCorrect"`
@@ -194,6 +195,10 @@ func (p *Player) canWager() bool {
 	return p.CanWager
 }
 
+func (p *Player) canDispute() bool {
+	return p.CanDispute
+}
+
 func (p *Player) finalWager() int {
 	return p.FinalWager
 }
@@ -240,6 +245,10 @@ func (p *Player) setCanVote(canVote bool) {
 
 func (p *Player) setCanWager(canWager bool) {
 	p.CanWager = canWager
+}
+
+func (p *Player) setCanDispute(canDispute bool) {
+	p.CanDispute = canDispute
 }
 
 func (p *Player) setFinalWager(wager int) {

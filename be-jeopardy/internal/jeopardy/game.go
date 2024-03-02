@@ -22,6 +22,7 @@ type (
 		canAnswer() bool
 		canVote() bool
 		canWager() bool
+		canDispute() bool
 		finalWager() int
 		finalCorrect() bool
 		finalProtestors() map[string]bool
@@ -35,6 +36,7 @@ type (
 		setCanAnswer(bool)
 		setCanVote(bool)
 		setCanWager(bool)
+		setCanDispute(bool)
 		setFinalWager(int)
 		setFinalAnswer(string)
 		setFinalCorrect(bool)
@@ -86,10 +88,8 @@ type (
 		Paused           bool         `json:"paused"`
 		PausedState      GameState    `json:"pausedState"`
 		PausedAt         time.Time    `json:"pausedAt"`
-		Dispute          bool         `json:"dispute"`
-		Disputes         int          `json:"disputes"`
-		NonDisputes      int          `json:"nonDisputes"`
-		DisputeSettled   bool         `json:"disputeSettled"`
+		Disputers        []string     `json:"disputes"`
+		NonDisputers     []string     `json:"nonDisputes"`
 
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
@@ -99,6 +99,7 @@ type (
 		cancelPickTimeout       context.CancelFunc
 		cancelBuzzTimeout       context.CancelFunc
 		cancelVoteTimeout       context.CancelFunc
+		cancelDisputeTimeout    context.CancelFunc
 
 		msgChan        chan Message
 		disconnectChan chan GamePlayer
@@ -121,14 +122,14 @@ type (
 		CatIdx     int    `json:"catIdx"`
 		ValIdx     int    `json:"valIdx"`
 		IsPass     bool   `json:"isPass"`
+		Wager      int    `json:"wager"`
 		Answer     string `json:"answer"`
 		Confirm    bool   `json:"confirm"`
-		Wager      int    `json:"wager"`
+		Dispute    bool   `json:"dispute"`
 		ProtestFor string `json:"protestFor"`
 
 		// 1 is pause, -1 is to resume
-		Pause   int  `json:"pause"`
-		Dispute bool `json:"dispute"`
+		Pause int `json:"pause"`
 	}
 
 	Response struct {
@@ -150,6 +151,7 @@ const (
 	RecvWager
 	RecvAns
 	RecvVote
+	RecvDispute
 	PostGame
 )
 
@@ -277,25 +279,6 @@ func (g *Game) processMsg(msg Message) error {
 			g.messageAllPlayers("Player %s resumed the game", player.name())
 			return nil
 		}
-		if g.Dispute {
-			if msg.Dispute {
-				g.Disputes++
-			} else {
-				g.NonDisputes++
-			}
-			if g.Disputes > 1 || g.NonDisputes > 1 {
-				if g.Disputes > g.NonDisputes {
-					g.LastToAnswer.addToScore(2 * g.CurQuestion.Value)
-				}
-				g.Dispute = false
-				g.Disputes = 0
-				g.NonDisputes = 0
-				g.DisputeSettled = true
-				g.startGame()
-				g.messageAllPlayers("Dispute resolved")
-				return nil
-			}
-		}
 		log.Infof("Ignoring message from player %s because game is paused", player.name())
 		return nil
 	}
@@ -304,45 +287,85 @@ func (g *Game) processMsg(msg Message) error {
 		g.pauseGame()
 		g.messageAllPlayers("Player %s paused the game", player.name())
 		return nil
-	} else if msg.Dispute {
-		log.Infof("Player %s disputed the previous question", player.name())
-		g.pauseGame()
-		g.Dispute = true
-		g.messageAllPlayers("Player %s disputed the answer", player.name())
-		return nil
 	}
 	var err error
 	switch g.State {
 	case RecvPick:
-		log.Infof("Player %s picked\n", player.name())
-		err = g.processPick(player, msg.CatIdx, msg.ValIdx)
+		if msg.Dispute {
+			log.Infof("Player %s disputed the previous question", player.name())
+			g.cancelPickTimeout()
+			g.setState(RecvDispute, player)
+			g.messageAllPlayers("Player %s disputed the answer", player.name())
+		} else {
+			log.Infof("Player %s picked", player.name())
+			err = g.processPick(player, msg.CatIdx, msg.ValIdx)
+		}
 	case RecvBuzz:
 		action := "buzzed"
 		if msg.IsPass {
 			action = "passed"
 		}
-		log.Infof("Player %s %s\n", player.name(), action)
+		log.Infof("Player %s %s", player.name(), action)
 		err = g.processBuzz(player, msg.IsPass)
+	case RecvWager:
+		log.Infof("Player %s wagered", player.name())
+		err = g.processWager(player, msg.Wager)
 	case RecvAns:
-		log.Infof("Player %s answered\n", player.name())
+		log.Infof("Player %s answered", player.name())
 		err = g.processAnswer(player, msg.Answer)
 	case RecvVote:
 		action := "accepted"
 		if !msg.Confirm {
 			action = "challenged"
 		}
-		log.Infof("Player %s %s\n", player.name(), action)
+		log.Infof("Player %s %s", player.name(), action)
 		err = g.processVote(player, msg.Confirm)
-	case RecvWager:
-		log.Infof("Player %s wagered\n", player.name())
-		err = g.processWager(player, msg.Wager)
+	case RecvDispute:
+		action := "confirmed"
+		if !msg.Dispute {
+			action = "disputed"
+		}
+		log.Infof("Player %s %s", player.name(), action)
+		err = g.processDispute(player, msg.Dispute)
 	case PostGame:
-		log.Infof("Player %s protested\n", player.name())
+		log.Infof("Player %s protested", player.name())
 		err = g.processProtest(player, msg.ProtestFor)
 	case PreGame:
 		err = fmt.Errorf("received unexpected message")
 	}
 	return err
+}
+
+func (g *Game) processDispute(player GamePlayer, dispute bool) error {
+	if !player.canDispute() {
+		return fmt.Errorf("player cannot dispute")
+	}
+	player.setCanDispute(false)
+	if dispute {
+		g.Disputers = append(g.Disputers, player.id())
+	} else {
+		g.NonDisputers = append(g.NonDisputers, player.id())
+
+	}
+	if len(g.Disputers) > 1 || len(g.NonDisputers) > 1 {
+		if len(g.Disputers) > len(g.NonDisputers) {
+			g.LastToAnswer.addToScore(2 * g.CurQuestion.Value)
+		}
+		g.Disputers = []string{}
+		g.NonDisputers = []string{}
+		g.cancelDisputeTimeout()
+		g.setState(RecvPick, player)
+		g.messageAllPlayers("Dispute resolved")
+		return nil
+	}
+	_ = player.sendMessage(Response{
+		Code:      socket.Ok,
+		Message:   "You disputed",
+		Game:      g,
+		CurPlayer: player,
+	})
+	return nil
+
 }
 
 func (g *Game) processPick(player GamePlayer, catIdx, valIdx int) error {
@@ -373,7 +396,6 @@ func (g *Game) processPick(player GamePlayer, catIdx, valIdx int) error {
 	}
 	g.PreviousQuestion = g.CurQuestion.Clue
 	g.PreviousAnswer = g.CurQuestion.Answer
-	g.DisputeSettled = false
 	g.messageAllPlayers(msg)
 	return nil
 }
@@ -596,6 +618,12 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 			}
 			g.startWagerTimeout(p)
 		}
+	case RecvDispute:
+		for _, p := range g.Players {
+			p.updateActions(false, false, false, false, false)
+			p.setCanDispute(true)
+		}
+		g.startDisputeTimeout(player)
 	case PreGame, PostGame:
 		for _, p := range g.Players {
 			p.updateActions(false, false, false, false, false)
