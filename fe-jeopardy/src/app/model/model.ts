@@ -35,6 +35,7 @@ export type Player = {
     canAnswer: boolean;
     canWager: boolean;
     canVote: boolean;
+    canDispute: boolean;
     playAgain: boolean;
     conn: any;
 };
@@ -60,6 +61,7 @@ export enum GameState {
     RecvWager,
     RecvAns,
     RecvVote,
+    RecvDispute,
     PostGame,
     Error,
 }

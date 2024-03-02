@@ -3,7 +3,7 @@
     <p style='display: inline-block; margin-top: 0;' [ngStyle]="{'visibility': game.PreviousAnswer() != '' ? 'visible' : 'hidden'}">
         Previous answer: <b>{{ game.PreviousAnswer() }}</b>
     </p>
-    <button id='dispute-button' *ngIf="showDispute()" (click)="disputeQuestion()">Dispute</button>
+    <button id='dispute-button' *ngIf="player.CanDispute()" (click)="disputeQuestion()">Dispute</button>
     <table>
         <tr>
             <td class='category-title' *ngFor="let title of categories">

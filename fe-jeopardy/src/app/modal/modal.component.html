@@ -55,12 +55,12 @@
         <h3>Dispute</h3>
         <p>{{ game.LastToAnswer() }} has disputed the previous question.</p>
         <p>Previous question: {{ game.PreviousQuestion() }}</p>
-        <p>Previous answer: {{ game.LastAnswer() }}</p>
-        <p>This was marked as incorrect, based on an official answer of "{{ game.PreviousAnswer() }}".</p>
-        <p>Should the answer have been marked as correct?</p>
+        <p>Official answer: <b>{{ game.PreviousAnswer() }}</b></p>
+        <p>{{ game.LastToAnswer() }}'s answer: <b>{{ game.LastAnswer() }}</b></p>
+        <p>Should {{ game.LastToAnswer() }}'s' answer have been marked as correct?</p>
     </div>
     
-    <div *ngIf='!votedDispute'>
+    <div *ngIf='player.CanDispute()' class='flex-row' id='dispute-buttons'>
         <button (click)="disputeQuestion(true)">
             Yes, {{ game.LastToAnswer() }}'s answer was correct.
         </button>
@@ -68,7 +68,7 @@
             No, {{ game.LastToAnswer() }}'s answer was incorrect.
         </button>
     </div>
-    <div *ngIf='votedDispute'>
+    <div *ngIf='!player.CanDispute()'>
         <p>Waiting for other players to confirm the dispute...</p>
     </div>
 </div>

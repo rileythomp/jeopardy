@@ -39,12 +39,6 @@ export class RecvPickComponent {
 		}
 	}
 
-	showDispute(): boolean {
-		return this.game.State() == GameState.RecvPick &&
-			this.game.LastToAnswer() == this.player.Name() && !this.game.AnsCorrectness() &&
-			!this.game.SettledDispute()
-	}
-
 	disputeQuestion() {
 		this.websocketService.Send({
 			state: this.game.State(),

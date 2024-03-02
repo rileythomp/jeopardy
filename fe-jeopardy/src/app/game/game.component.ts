@@ -100,6 +100,8 @@ export class GameComponent implements OnInit {
 			this.player.updatePlayer(resp.curPlayer)
 			this.gameMessage = resp.message
 
+			console.log(resp)
+
 			if (resp.code == 4100) {
 				this.modal.showMessage(resp.message)
 				return
@@ -107,10 +109,6 @@ export class GameComponent implements OnInit {
 
 			if (this.game.IsPaused()) {
 				this.cancelCountdown()
-				if (this.game.Dispute()) {
-					this.modal.showDispute()
-					return
-				}
 				this.modal.showMessage(`${resp.message}, will resume when 3 players are ready`)
 				return
 			}
@@ -154,6 +152,9 @@ export class GameComponent implements OnInit {
 					if (this.player.CanVote()) {
 						this.startCountdownTimer(voteTimeout)
 					}
+					break
+				case GameState.RecvDispute:
+					this.modal.showDispute()
 					break
 				case GameState.RecvWager:
 					if (!this.game.FinalRound()) {

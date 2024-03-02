@@ -50,6 +50,10 @@ export class PlayerService {
 		return this.player.canVote;
 	}
 
+	CanDispute(): boolean {
+		return this.player.canDispute;
+	}
+
 	PlayAgain(): boolean {
 		return this.player.playAgain;
 	}
