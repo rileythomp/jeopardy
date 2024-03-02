@@ -74,6 +74,7 @@ type (
 		Players          []GamePlayer `json:"players"`
 		LastToPick       GamePlayer   `json:"lastToPick"`
 		LastToAnswer     GamePlayer   `json:"lastToAnswer"`
+		DisputePicker    GamePlayer   `json:"disputePicker"`
 		PreviousQuestion string       `json:"previousQuestion"`
 		PreviousAnswer   string       `json:"previousAnswer"`
 		LastAnswer       string       `json:"lastAnswer"`
@@ -340,6 +341,11 @@ func (g *Game) processMsg(msg Message) error {
 
 func (g *Game) initDispute(player GamePlayer) {
 	g.cancelPickTimeout()
+	for _, p := range g.Players {
+		if p.canPick() {
+			g.DisputePicker = p
+		}
+	}
 	g.Disputers = 1
 	g.setState(RecvDispute, player)
 	g.messageAllPlayers("Player %s disputed the answer", player.name())
@@ -472,7 +478,7 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 		return nil
 	}
 	g.cancelDisputeTimeout()
-	nextPicker := g.LastToPick
+	nextPicker := g.DisputePicker
 	if g.Disputers > g.NonDisputers {
 		g.LastToAnswer.addToScore(2 * g.CurQuestion.Value)
 		if err := g.questionDB.AddAlternative(g.LastAnswer, g.CurQuestion.Answer); err != nil {
@@ -486,7 +492,6 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 	g.LastToAnswer.setCanDispute(false)
 	g.messageAllPlayers("Dispute resolved")
 	return nil
-
 }
 
 func (g *Game) processWager(player GamePlayer, wager int) error {
@@ -589,7 +594,7 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 		for _, p := range g.Players {
 			p.updateActions(p.id() == player.id(), false, false, false, false)
 		}
-		g.startBoardIntroTimeout(player)
+		g.startBoardIntroTimeout()
 	case RecvPick:
 		for _, p := range g.Players {
 			p.updateActions(p.id() == player.id(), false, false, false, false)
@@ -600,7 +605,7 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 		for _, p := range g.Players {
 			p.updateActions(false, !inLists(p.id(), g.GuessedWrong, g.Passed), false, false, false)
 		}
-		g.startBuzzTimeout(player)
+		g.startBuzzTimeout()
 	case RecvAns:
 		for _, p := range g.Players {
 			canAnswer := p.id() == player.id()
@@ -619,7 +624,7 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 		for _, p := range g.Players {
 			p.updateActions(false, false, false, false, !inLists(p.id(), g.Confirmers, g.Challengers))
 		}
-		g.startVoteTimeout(player)
+		g.startVoteTimeout()
 	case RecvWager:
 		for _, p := range g.Players {
 			canWager := p.id() == player.id()
@@ -639,7 +644,7 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 			p.updateActions(false, false, false, false, false)
 			p.setCanDispute(p.id() != player.id())
 		}
-		g.startDisputeTimeout(player)
+		g.startDisputeTimeout()
 	case PreGame, PostGame:
 		for _, p := range g.Players {
 			p.updateActions(false, false, false, false, false)

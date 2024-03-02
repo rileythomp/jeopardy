@@ -15,7 +15,7 @@ const (
 	dailyDoubleAnsTimeout     = 30 * time.Second
 	finalJeopardyAnsTimeout   = 30 * time.Second
 	voteTimeout               = 10 * time.Second
-	disputeTimeout            = 300 * time.Second
+	disputeTimeout            = 30 * time.Second
 	dailyDoubleWagerTimeout   = 30 * time.Second
 	finalJeopardyWagerTimeout = 30 * time.Second
 )
@@ -36,7 +36,7 @@ func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player G
 	}()
 }
 
-func (g *Game) startBoardIntroTimeout(player GamePlayer) {
+func (g *Game) startBoardIntroTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelBoardIntroTimeout = cancel
 	g.startTimeout(ctx, boardIntroTimeout, &Player{}, func(_ GamePlayer) error {
@@ -60,7 +60,7 @@ func (g *Game) startPickTimeout(player GamePlayer) {
 	})
 }
 
-func (g *Game) startBuzzTimeout(player GamePlayer) {
+func (g *Game) startBuzzTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.StartBuzzCountdown = true
 	g.cancelBuzzTimeout = cancel
@@ -89,7 +89,7 @@ func (g *Game) startAnswerTimeout(player GamePlayer) {
 	})
 }
 
-func (g *Game) startVoteTimeout(player GamePlayer) {
+func (g *Game) startVoteTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelVoteTimeout = cancel
 	g.startTimeout(ctx, voteTimeout, &Player{}, func(_ GamePlayer) error {
@@ -98,13 +98,13 @@ func (g *Game) startVoteTimeout(player GamePlayer) {
 	})
 }
 
-func (g *Game) startDisputeTimeout(player GamePlayer) {
+func (g *Game) startDisputeTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelDisputeTimeout = cancel
 	g.startTimeout(ctx, disputeTimeout, &Player{}, func(_ GamePlayer) error {
 		g.Disputers = 0
 		g.NonDisputers = 0
-		g.setState(RecvPick, g.LastToPick) // todo: fix the player who picks next
+		g.setState(RecvPick, g.DisputePicker)
 		g.LastToAnswer.setCanDispute(false)
 		g.messageAllPlayers("Dispute resolved")
 		return nil

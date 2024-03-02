@@ -100,8 +100,6 @@ export class GameComponent implements OnInit {
 			this.player.updatePlayer(resp.curPlayer)
 			this.gameMessage = resp.message
 
-			console.log(resp)
-
 			if (resp.code == 4100) {
 				this.modal.showMessage(resp.message)
 				return
@@ -117,6 +115,7 @@ export class GameComponent implements OnInit {
 				case GameState.PreGame:
 				case GameState.PostGame:
 				case GameState.BoardIntro:
+				case GameState.RecvDispute:
 					this.cancelCountdown()
 					break
 				case GameState.RecvPick:
@@ -148,8 +147,6 @@ export class GameComponent implements OnInit {
 					if (this.player.CanVote()) {
 						this.startCountdownTimer(voteTimeout)
 					}
-					break
-				case GameState.RecvDispute:
 					break
 				case GameState.RecvWager:
 					if (!this.game.FinalRound()) {

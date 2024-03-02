@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { GameState, Question } from 'src/app/model/model';
+import { Question } from 'src/app/model/model';
 import { PlayerService } from 'src/app/services/player.service';
 import { WebsocketService } from 'src/app/services/websocket.service';
 import { GameStateService } from 'src/app/services/game-state.service';
