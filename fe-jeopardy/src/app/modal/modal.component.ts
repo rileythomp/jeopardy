@@ -14,7 +14,6 @@ export class ModalComponent {
     protected message: string
     private modalTimeout: NodeJS.Timeout
     protected firstTime: boolean
-    public showDisputeModal: boolean = false
 
     constructor(
         protected game: GameStateService,
@@ -41,13 +40,5 @@ export class ModalComponent {
             state: this.game.State(),
             dispute: dispute,
         })
-    }
-
-    showDispute() {
-        this.showDisputeModal = true
-    }
-
-    hideDispute() {
-        this.showDisputeModal = false
     }
 }

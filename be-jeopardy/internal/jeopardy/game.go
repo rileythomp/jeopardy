@@ -327,7 +327,7 @@ func (g *Game) processMsg(msg Message) error {
 		if !msg.Dispute {
 			action = "disputed"
 		}
-		log.Infof("Player %s %s", player.name(), action)
+		log.Infof("Player %s %s the question", player.name(), action)
 		err = g.processDispute(player, msg.Dispute)
 	case PostGame:
 		log.Infof("Player %s protested", player.name())
@@ -636,6 +636,7 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 		}
 	case RecvDispute:
 		for _, p := range g.Players {
+			p.updateActions(false, false, false, false, false)
 			p.setCanDispute(p.id() != player.id())
 		}
 		g.startDisputeTimeout(player)

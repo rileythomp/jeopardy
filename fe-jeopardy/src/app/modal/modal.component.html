@@ -50,7 +50,7 @@
     </div>
 </div>
 
-<div *ngIf='showDisputeModal' class='modal-container'>
+<div *ngIf="game.InDispute()" class='modal-container'>
     <div class='modal-message'>
         <h3>Dispute</h3>
         <p>{{ game.LastToAnswer() }} has disputed the previous question.</p>

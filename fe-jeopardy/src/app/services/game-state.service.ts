@@ -197,11 +197,7 @@ export class GameStateService {
 		return Math.floor(this.game.curQuestion.question.split(' ').length / 5)
 	}
 
-	Dispute(): boolean {
-		return this.game.dispute
-	}
-
-	SettledDispute(): boolean {
-		return this.game.disputeSettled
+	InDispute(): boolean {
+		return this.game.state == GameState.RecvDispute
 	}
 }

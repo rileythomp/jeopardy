@@ -113,10 +113,6 @@ export class GameComponent implements OnInit {
 				return
 			}
 
-			if (resp.message == 'Dispute resolved') {
-				this.modal.hideDispute()
-			}
-
 			switch (this.game.State()) {
 				case GameState.PreGame:
 				case GameState.PostGame:
@@ -154,7 +150,6 @@ export class GameComponent implements OnInit {
 					}
 					break
 				case GameState.RecvDispute:
-					this.modal.showDispute()
 					break
 				case GameState.RecvWager:
 					if (!this.game.FinalRound()) {
