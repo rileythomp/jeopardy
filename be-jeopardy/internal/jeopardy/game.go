@@ -440,11 +440,15 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 	g.cancelDisputeTimeout()
 	nextPicker := g.DisputePicker
 	if g.Disputers > g.NonDisputers {
-		g.CurQuestion.CurDisputed.Player.addToScore(2 * g.CurQuestion.Value)
-		if err := g.questionDB.AddAlternative(g.CurQuestion.CurDisputed.Answer, g.CurQuestion.Answer); err != nil {
+		if g.CurQuestion.Correct != nil {
+			g.CurQuestion.Correct.Player.addToScore(-g.CurQuestion.Value)
+		}
+		g.CurQuestion.Correct = g.CurQuestion.CurDisputed
+		g.CurQuestion.Correct.Player.addToScore(2 * g.CurQuestion.Value)
+		if err := g.questionDB.AddAlternative(g.CurQuestion.Correct.Answer, g.CurQuestion.Answer); err != nil {
 			log.Errorf("Error adding alternative: %s", err.Error())
 		}
-		nextPicker = g.CurQuestion.CurDisputed.Player
+		nextPicker = g.CurQuestion.Correct.Player
 	}
 	g.Disputers = 0
 	g.NonDisputers = 0

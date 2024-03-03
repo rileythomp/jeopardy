@@ -209,11 +209,18 @@ export class GameStateService {
 	}
 
 	CurAnswerer(): string {
-		console.log(this.game.curQuestion)
 		return this.game.curQuestion.curAns.player.name
 	}
 
 	CurAnswer(): string {
 		return this.game.curQuestion.curAns.answer
+	}
+
+	AnsweredCorrectly(): boolean {
+		return this.game.curQuestion.correct != null
+	}
+
+	CorrectAnswerer(): string {
+		return this.game.curQuestion.correct?.player.name ?? ''
 	}
 }

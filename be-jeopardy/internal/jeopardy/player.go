@@ -71,56 +71,6 @@ type SafeConn interface {
 	Close() error
 }
 
-type GamePlayer interface {
-	id() string
-	name() string
-	conn() SafeConn
-	chatConn() SafeConn
-	score() int
-	canPick() bool
-	canBuzz() bool
-	canAnswer() bool
-	canVote() bool
-	canWager() bool
-	finalWager() int
-	finalCorrect() bool
-	finalProtestors() map[string]bool
-	playAgain() bool
-
-	setId(string)
-	setName(string)
-	setConn(SafeConn)
-	setChatConn(SafeConn)
-	setCanBuzz(bool)
-	setCanAnswer(bool)
-	setCanVote(bool)
-	setCanWager(bool)
-	setFinalWager(int)
-	setFinalAnswer(string)
-	setFinalCorrect(bool)
-	setPlayAgain(bool)
-
-	readMessages(msgChan chan Message, disconnectChan chan GamePlayer)
-	processChatMessages(chan ChatMessage)
-	sendPings()
-	sendChatPings()
-
-	sendMessage(Response) error
-	sendChatMessage(ChatMessage) error
-	updateActions(pick, buzz, answer, wager, vote bool)
-	updateScore(val int, isCorrect bool, round RoundState)
-	addFinalProtestor(string)
-	addToScore(int)
-	resetPlayer()
-	pausePlayer()
-	endConnections()
-
-	setCancelAnswerTimeout(context.CancelFunc)
-	setCancelWagerTimeout(context.CancelFunc)
-	cancelAnswerTimeout()
-	cancelWagerTimeout()
-}
-
 type Player struct {
 	Id              string          `json:"id"`
 	Name            string          `json:"name"`
