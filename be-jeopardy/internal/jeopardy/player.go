@@ -13,6 +13,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type SafeConn interface {
+	ReadMessage() (messageType int, p []byte, err error)
+	WriteJSON(v interface{}) error
+	Close() error
+}
+
 type GamePlayer interface {
 	id() string
 	name() string
@@ -63,12 +69,6 @@ type GamePlayer interface {
 	setCancelWagerTimeout(context.CancelFunc)
 	cancelAnswerTimeout()
 	cancelWagerTimeout()
-}
-
-type SafeConn interface {
-	ReadMessage() (messageType int, p []byte, err error)
-	WriteJSON(v interface{}) error
-	Close() error
 }
 
 type Player struct {

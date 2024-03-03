@@ -26,15 +26,15 @@ type (
 		Passed         []string     `json:"passed"`
 		Confirmers     []string     `json:"confirmations"`
 		Challengers    []string     `json:"challenges"`
-		DisputePicker  GamePlayer   `json:"disputePicker"`
-		Disputers      int          `json:"disputes"`
-		NonDisputers   int          `json:"nonDisputes"`
 		NumFinalWagers int          `json:"numFinalWagers"`
 		FinalWagers    []string     `json:"finalWagers"`
 		FinalAnswers   []string     `json:"finalAnswers"`
 		Paused         bool         `json:"paused"`
 		PausedState    GameState    `json:"pausedState"`
 		PausedAt       time.Time    `json:"pausedAt"`
+		DisputePicker  GamePlayer   `json:"disputePicker"`
+		Disputers      int          `json:"disputes"`
+		NonDisputers   int          `json:"nonDisputes"`
 
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
@@ -67,9 +67,9 @@ type (
 		CatIdx     int    `json:"catIdx"`
 		ValIdx     int    `json:"valIdx"`
 		IsPass     bool   `json:"isPass"`
-		Wager      int    `json:"wager"`
 		Answer     string `json:"answer"`
 		Confirm    bool   `json:"confirm"`
+		Wager      int    `json:"wager"`
 		Dispute    bool   `json:"dispute"`
 		ProtestFor string `json:"protestFor"`
 
@@ -249,9 +249,6 @@ func (g *Game) processMsg(msg Message) error {
 		}
 		log.Infof("Player %s %s", player.name(), action)
 		err = g.processBuzz(player, msg.IsPass)
-	case RecvWager:
-		log.Infof("Player %s wagered", player.name())
-		err = g.processWager(player, msg.Wager)
 	case RecvAns:
 		log.Infof("Player %s answered", player.name())
 		err = g.processAnswer(player, msg.Answer)
@@ -262,6 +259,9 @@ func (g *Game) processMsg(msg Message) error {
 		}
 		log.Infof("Player %s %s", player.name(), action)
 		err = g.processVote(player, msg.Confirm)
+	case RecvWager:
+		log.Infof("Player %s wagered", player.name())
+		err = g.processWager(player, msg.Wager)
 	case RecvDispute:
 		action := "confirmed"
 		if !msg.Dispute {
