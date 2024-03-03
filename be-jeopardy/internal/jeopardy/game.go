@@ -11,56 +11,6 @@ import (
 )
 
 type (
-	GamePlayer interface {
-		id() string
-		name() string
-		conn() SafeConn
-		chatConn() SafeConn
-		score() int
-		canPick() bool
-		canBuzz() bool
-		canAnswer() bool
-		canVote() bool
-		canWager() bool
-		finalWager() int
-		finalCorrect() bool
-		finalProtestors() map[string]bool
-		playAgain() bool
-
-		setId(string)
-		setName(string)
-		setConn(SafeConn)
-		setChatConn(SafeConn)
-		setCanBuzz(bool)
-		setCanAnswer(bool)
-		setCanVote(bool)
-		setCanWager(bool)
-		setFinalWager(int)
-		setFinalAnswer(string)
-		setFinalCorrect(bool)
-		setPlayAgain(bool)
-
-		readMessages(msgChan chan Message, pauseChan chan GamePlayer)
-		processChatMessages(chan ChatMessage)
-		sendPings()
-		sendChatPings()
-
-		sendMessage(Response) error
-		sendChatMessage(ChatMessage) error
-		updateActions(pick, buzz, answer, wager, vote bool)
-		updateScore(val int, isCorrect bool, round RoundState)
-		addFinalProtestor(string)
-		addToScore(int)
-		resetPlayer()
-		pausePlayer()
-		endConnections()
-
-		setCancelAnswerTimeout(context.CancelFunc)
-		setCancelWagerTimeout(context.CancelFunc)
-		cancelAnswerTimeout()
-		cancelWagerTimeout()
-	}
-
 	Game struct {
 		Name             string       `json:"name"`
 		State            GameState    `json:"state"`
@@ -96,17 +46,17 @@ type (
 		cancelBuzzTimeout       context.CancelFunc
 		cancelVoteTimeout       context.CancelFunc
 
-		msgChan     chan Message
-		pauseChan   chan GamePlayer
-		restartChan chan bool
-		chatChan    chan ChatMessage
+		msgChan        chan Message
+		disconnectChan chan GamePlayer
+		restartChan    chan bool
+		chatChan       chan ChatMessage
 
 		questionDB QuestionDB
 	}
 
 	QuestionDB interface {
 		GetQuestions() ([]db.Question, error)
-		AddAlternative(alternative, question string) error
+		AddAlternative(alternative, answer string) error
 		Close() error
 	}
 
@@ -166,7 +116,7 @@ func NewGame(db QuestionDB) (*Game, error) {
 		cancelBuzzTimeout:       func() {},
 		cancelVoteTimeout:       func() {},
 		msgChan:                 make(chan Message),
-		pauseChan:               make(chan GamePlayer),
+		disconnectChan:          make(chan GamePlayer),
 		restartChan:             make(chan bool),
 		chatChan:                make(chan ChatMessage),
 		questionDB:              db,
@@ -185,13 +135,13 @@ func (g *Game) processMessages() {
 			select {
 			case msg := <-g.msgChan:
 				if err := g.processMsg(msg); err != nil {
-					log.Errorf("Error processing message: %s\n", err.Error())
+					log.Errorf("Error processing message: %s", err.Error())
 				}
-			case player := <-g.pauseChan:
-				log.Infof("Stopping game %s\n", g.Name)
-				g.pauseGame(player)
+			case player := <-g.disconnectChan:
+				log.Infof("Stopping game %s", g.Name)
+				g.disconnectPlayer(player)
 			case <-g.restartChan:
-				log.Infof("Restarting game %s\n", g.Name)
+				log.Infof("Restarting game %s", g.Name)
 				g.restartGame()
 			}
 		}
@@ -222,7 +172,7 @@ func (g *Game) restartGame() {
 	g.messageAllPlayers("We are ready to play")
 }
 
-func (g *Game) pauseGame(player GamePlayer) {
+func (g *Game) disconnectPlayer(player GamePlayer) {
 	g.PausedAt = time.Now()
 	g.Paused = true
 	g.PausedState = g.State
@@ -246,7 +196,7 @@ func (g *Game) pauseGame(player GamePlayer) {
 		}
 	}
 	if endGame {
-		log.Infof("All players disconnected, removing game %s\n", g.Name)
+		log.Infof("All players disconnected, removing game %s", g.Name)
 		removeGame(g)
 	}
 
@@ -265,30 +215,30 @@ func (g *Game) processMsg(msg Message) error {
 	var err error
 	switch g.State {
 	case RecvPick:
-		log.Infof("Player %s picked\n", player.name())
+		log.Infof("Player %s picked", player.name())
 		err = g.processPick(player, msg.CatIdx, msg.ValIdx)
 	case RecvBuzz:
 		action := "buzzed"
 		if msg.IsPass {
 			action = "passed"
 		}
-		log.Infof("Player %s %s\n", player.name(), action)
+		log.Infof("Player %s %s", player.name(), action)
 		err = g.processBuzz(player, msg.IsPass)
 	case RecvAns:
-		log.Infof("Player %s answered\n", player.name())
+		log.Infof("Player %s answered", player.name())
 		err = g.processAnswer(player, msg.Answer)
 	case RecvVote:
 		action := "accepted"
 		if !msg.Confirm {
 			action = "challenged"
 		}
-		log.Infof("Player %s %s\n", player.name(), action)
+		log.Infof("Player %s %s", player.name(), action)
 		err = g.processVote(player, msg.Confirm)
 	case RecvWager:
-		log.Infof("Player %s wagered\n", player.name())
+		log.Infof("Player %s wagered", player.name())
 		err = g.processWager(player, msg.Wager)
 	case PostGame:
-		log.Infof("Player %s protested\n", player.name())
+		log.Infof("Player %s protested", player.name())
 		err = g.processProtest(player, msg.ProtestFor)
 	case PreGame:
 		err = fmt.Errorf("received unexpected message")
@@ -502,7 +452,7 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 		for _, p := range g.Players {
 			p.updateActions(p.id() == player.id(), false, false, false, false)
 		}
-		g.startBoardIntroTimeout(player)
+		g.startBoardIntroTimeout()
 	case RecvPick:
 		for _, p := range g.Players {
 			p.updateActions(p.id() == player.id(), false, false, false, false)
@@ -512,7 +462,7 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 		for _, p := range g.Players {
 			p.updateActions(false, !inLists(p.id(), g.GuessedWrong, g.Passed), false, false, false)
 		}
-		g.startBuzzTimeout(player)
+		g.startBuzzTimeout()
 	case RecvAns:
 		for _, p := range g.Players {
 			canAnswer := p.id() == player.id()
@@ -531,7 +481,7 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 		for _, p := range g.Players {
 			p.updateActions(false, false, false, false, !inLists(p.id(), g.Confirmers, g.Challengers))
 		}
-		g.startVoteTimeout(player)
+		g.startVoteTimeout()
 	case RecvWager:
 		for _, p := range g.Players {
 			canWager := p.id() == player.id()
@@ -657,11 +607,11 @@ func (g *Game) resetGuesses() {
 	g.Challengers = []string{}
 }
 
-func (g *Game) messageAllPlayers(msg string) {
+func (g *Game) messageAllPlayers(msg string, args ...any) {
 	for _, p := range g.Players {
 		_ = p.sendMessage(Response{
 			Code:      socket.Ok,
-			Message:   msg,
+			Message:   fmt.Sprintf(msg, args...),
 			Game:      g,
 			CurPlayer: p,
 		})

@@ -58,8 +58,8 @@ func (db *QuestionDB) GetQuestions() ([]Question, error) {
 //go:embed sql/add_alternatives.sql
 var addAlternative string
 
-func (db *QuestionDB) AddAlternative(alternative, question string) error {
-	_, err := db.Conn.Exec(context.Background(), addAlternative, alternative, question)
+func (db *QuestionDB) AddAlternative(alternative, answer string) error {
+	_, err := db.Conn.Exec(context.Background(), addAlternative, alternative, answer)
 	return err
 }
 

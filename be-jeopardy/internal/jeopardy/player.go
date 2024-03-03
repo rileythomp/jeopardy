@@ -19,6 +19,56 @@ type SafeConn interface {
 	Close() error
 }
 
+type GamePlayer interface {
+	id() string
+	name() string
+	conn() SafeConn
+	chatConn() SafeConn
+	score() int
+	canPick() bool
+	canBuzz() bool
+	canAnswer() bool
+	canVote() bool
+	canWager() bool
+	finalWager() int
+	finalCorrect() bool
+	finalProtestors() map[string]bool
+	playAgain() bool
+
+	setId(string)
+	setName(string)
+	setConn(SafeConn)
+	setChatConn(SafeConn)
+	setCanBuzz(bool)
+	setCanAnswer(bool)
+	setCanVote(bool)
+	setCanWager(bool)
+	setFinalWager(int)
+	setFinalAnswer(string)
+	setFinalCorrect(bool)
+	setPlayAgain(bool)
+
+	readMessages(msgChan chan Message, disconnectChan chan GamePlayer)
+	processChatMessages(chan ChatMessage)
+	sendPings()
+	sendChatPings()
+
+	sendMessage(Response) error
+	sendChatMessage(ChatMessage) error
+	updateActions(pick, buzz, answer, wager, vote bool)
+	updateScore(val int, isCorrect bool, round RoundState)
+	addFinalProtestor(string)
+	addToScore(int)
+	resetPlayer()
+	pausePlayer()
+	endConnections()
+
+	setCancelAnswerTimeout(context.CancelFunc)
+	setCancelWagerTimeout(context.CancelFunc)
+	cancelAnswerTimeout()
+	cancelWagerTimeout()
+}
+
 type Player struct {
 	Id              string          `json:"id"`
 	Name            string          `json:"name"`
@@ -67,7 +117,7 @@ func NewPlayer(name string) *Player {
 	}
 }
 
-func (p *Player) readMessages(msgChan chan Message, pauseChan chan GamePlayer) {
+func (p *Player) readMessages(msgChan chan Message, disconnectChan chan GamePlayer) {
 	go func() {
 		log.Infof("Starting to read messages from player %s", p.Name)
 		for {
@@ -77,7 +127,7 @@ func (p *Player) readMessages(msgChan chan Message, pauseChan chan GamePlayer) {
 				if websocket.IsCloseError(err, 1001) {
 					log.Infof("Player %s closed connection", p.Name)
 				}
-				pauseChan <- p
+				disconnectChan <- p
 				return
 			}
 			var msg Message

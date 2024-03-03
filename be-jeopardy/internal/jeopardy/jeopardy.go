@@ -182,7 +182,7 @@ func PlayGame(playerId string, conn SafeConn) error {
 	}
 	player.setConn(conn)
 	player.sendPings()
-	player.readMessages(game.msgChan, game.pauseChan)
+	player.readMessages(game.msgChan, game.disconnectChan)
 
 	game.handlePlayerJoined(player)
 
@@ -215,7 +215,7 @@ func LeaveGame(playerId string) error {
 		return err
 	}
 
-	game.pauseChan <- player
+	game.disconnectChan <- player
 
 	return nil
 }

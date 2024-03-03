@@ -35,7 +35,7 @@ func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player G
 	}()
 }
 
-func (g *Game) startBoardIntroTimeout(player GamePlayer) {
+func (g *Game) startBoardIntroTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelBoardIntroTimeout = cancel
 	g.startTimeout(ctx, boardIntroTimeout, &Player{}, func(_ GamePlayer) error {
@@ -59,7 +59,7 @@ func (g *Game) startPickTimeout(player GamePlayer) {
 	})
 }
 
-func (g *Game) startBuzzTimeout(player GamePlayer) {
+func (g *Game) startBuzzTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.StartBuzzCountdown = true
 	g.cancelBuzzTimeout = cancel
@@ -88,7 +88,7 @@ func (g *Game) startAnswerTimeout(player GamePlayer) {
 	})
 }
 
-func (g *Game) startVoteTimeout(player GamePlayer) {
+func (g *Game) startVoteTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelVoteTimeout = cancel
 	g.startTimeout(ctx, voteTimeout, &Player{}, func(_ GamePlayer) error {
