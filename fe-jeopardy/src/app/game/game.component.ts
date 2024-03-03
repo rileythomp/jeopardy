@@ -211,19 +211,11 @@ export class GameComponent implements OnInit {
 		return Math.abs(num)
 	}
 
-	resumeGame() {
-		this.modal.showMessage('Game resumed')
+	pauseGame(pause: boolean) {
+		this.modal.showMessage(`Game ${pause ? 'paused' : 'resumed'}`)
 		this.websocketService.Send({
 			state: this.game.State(),
-			pause: -1,
-		})
-	}
-
-	pauseGame() {
-		this.modal.showMessage('Game paused')
-		this.websocketService.Send({
-			state: this.game.State(),
-			pause: 1,
+			pause: pause ? 1 : -1,
 		})
 	}
 }

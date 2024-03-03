@@ -10,9 +10,7 @@ export class PlayerService {
 	private player: Player;
 	private playerSubject = new Subject<any>();
 
-	constructor(
-		private game: GameStateService
-	) {
+	constructor() {
 		this.player = <Player>{};
 	}
 
