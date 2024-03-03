@@ -76,24 +76,8 @@ export class GameStateService {
 		return this.game.players.find((player: Player) => player.canAnswer)?.name ?? ''
 	}
 
-	LastToAnswer(): string {
-		return this.game.lastToAnswer?.name
-	}
-
 	WageringPlayer(): string {
 		return this.game.players.find((player: Player) => player.canWager)?.name ?? ''
-	}
-
-	LastAnswer(): string {
-		return this.game.lastAnswer
-	}
-
-	PreviousQuestion(): string {
-		return this.game.previousQuestion
-	}
-
-	PreviousAnswer(): string {
-		return this.game.previousAnswer
 	}
 
 	AnsCorrectness(): boolean {
@@ -157,6 +141,10 @@ export class GameStateService {
 		return this.game.curQuestion.question
 	}
 
+	OfficialAnswer(): string {
+		return this.game.curQuestion.answer
+	}
+
 	CurValue(): number {
 		return this.game.curQuestion.value
 	}
@@ -201,11 +189,31 @@ export class GameStateService {
 		return this.game.state == GameState.RecvDispute
 	}
 
+	CanDispute(playerId: string): boolean {
+		let incorrect = this.game.curQuestion.incorrect
+		for (let i = 0; i < incorrect?.length; i++) {
+			let ans = incorrect[i]
+			if (ans.player.id == playerId && !ans.hasDisputed) {
+				return true
+			}
+		}
+		return false
+	}
+
 	DisputerName(): string {
-		return this.game.disputer?.name
+		return this.game.curQuestion.curDisputed.player.name
 	}
 
 	DisputerAnswer(): string {
-		return this.game.disputer?.lastAnswer
+		return this.game.curQuestion.curDisputed.answer
+	}
+
+	CurAnswerer(): string {
+		console.log(this.game.curQuestion)
+		return this.game.curQuestion.curAns.player.name
+	}
+
+	CurAnswer(): string {
+		return this.game.curQuestion.curAns.answer
 	}
 }

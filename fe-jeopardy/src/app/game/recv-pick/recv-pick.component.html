@@ -1,9 +1,9 @@
 <div class='question-board'>
-    <p [ngStyle]="{'visibility': game.PreviousQuestion() != '' ? 'visible' : 'hidden'}">Previous question: {{ game.PreviousQuestion() }} </p>
-    <p style='display: inline-block; margin-top: 0;' [ngStyle]="{'visibility': game.PreviousAnswer() != '' ? 'visible' : 'hidden'}">
-        Previous answer: <b>{{ game.PreviousAnswer() }}</b>
+    <p [ngStyle]="{'visibility': game.CurQuestion() != '' ? 'visible' : 'hidden'}">Previous question: {{ game.CurQuestion() }} </p>
+    <p style='display: inline-block; margin-top: 0;' [ngStyle]="{'visibility': game.OfficialAnswer() != '' ? 'visible' : 'hidden'}">
+        Previous answer: <b>{{ game.OfficialAnswer() }}</b>
     </p>
-    <button id='dispute-button' *ngIf="player.CanInitDispute()" (click)="disputeQuestion()">Dispute</button>
+    <button id='dispute-button' *ngIf="game.CanDispute(player.Id())" (click)="disputeQuestion()">Dispute</button>
     <table>
         <tr>
             <td class='category-title' *ngFor="let title of categories">

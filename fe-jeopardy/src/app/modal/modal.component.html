@@ -54,8 +54,8 @@
     <div class='modal-message'>
         <h3>Dispute</h3>
         <p>{{ game.DisputerName() }} has disputed the previous question.</p>
-        <p>Previous question: {{ game.PreviousQuestion() }}</p>
-        <p>Official answer: <b>{{ game.PreviousAnswer() }}</b></p>
+        <p>Previous question: {{ game.CurQuestion() }}</p>
+        <p>Official answer: <b>{{ game.OfficialAnswer() }}</b></p>
         <p>{{ game.DisputerName() }}'s answer: <b>{{ game.DisputerAnswer() }}</b></p>
         <p>Should {{ game.DisputerName() }}'s' answer have been marked as correct?</p>
     </div>

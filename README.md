@@ -24,6 +24,8 @@ $ ng serve
 
 - Clean up dispute process
 
+- Hide answers client side
+
 - Accounts with user stats
 
 - Leaderboards

@@ -11,91 +11,30 @@ import (
 )
 
 type (
-	GamePlayer interface {
-		id() string
-		name() string
-		conn() SafeConn
-		chatConn() SafeConn
-		score() int
-		canPick() bool
-		canBuzz() bool
-		canAnswer() bool
-		canVote() bool
-		canWager() bool
-		canDispute() bool
-		canInitDispute() bool
-		finalWager() int
-		finalCorrect() bool
-		finalProtestors() map[string]bool
-		playAgain() bool
-		lastAnswer() string
-
-		setId(string)
-		setName(string)
-		setConn(SafeConn)
-		setChatConn(SafeConn)
-		setCanBuzz(bool)
-		setCanAnswer(bool)
-		setCanVote(bool)
-		setCanWager(bool)
-		setCanDispute(bool)
-		setCanInitDispute(bool)
-		setFinalWager(int)
-		setFinalAnswer(string)
-		setFinalCorrect(bool)
-		setPlayAgain(bool)
-		setLastAnswer(string)
-
-		readMessages(msgChan chan Message, disconnectChan chan GamePlayer)
-		processChatMessages(chan ChatMessage)
-		sendPings()
-		sendChatPings()
-
-		sendMessage(Response) error
-		sendChatMessage(ChatMessage) error
-		updateActions(pick, buzz, answer, wager, vote bool)
-		updateScore(val int, isCorrect bool, round RoundState)
-		addFinalProtestor(string)
-		addToScore(int)
-		resetPlayer()
-		pausePlayer()
-		endConnections()
-
-		setCancelAnswerTimeout(context.CancelFunc)
-		setCancelWagerTimeout(context.CancelFunc)
-		cancelAnswerTimeout()
-		cancelWagerTimeout()
-	}
-
 	Game struct {
-		Name             string       `json:"name"`
-		State            GameState    `json:"state"`
-		Round            RoundState   `json:"round"`
-		FirstRound       []Category   `json:"firstRound"`
-		SecondRound      []Category   `json:"secondRound"`
-		FinalQuestion    Question     `json:"finalQuestion"`
-		CurQuestion      Question     `json:"curQuestion"`
-		Players          []GamePlayer `json:"players"`
-		LastToPick       GamePlayer   `json:"lastToPick"`
-		LastToAnswer     GamePlayer   `json:"lastToAnswer"`
-		PreviousQuestion string       `json:"previousQuestion"`
-		PreviousAnswer   string       `json:"previousAnswer"`
-		LastAnswer       string       `json:"lastAnswer"`
-		AnsCorrectness   bool         `json:"ansCorrectness"`
-		GuessedWrong     []string     `json:"guessedWrong"`
-		Passed           []string     `json:"passed"`
-		Confirmers       []string     `json:"confirmations"`
-		Challengers      []string     `json:"challenges"`
-		DisputePicker    GamePlayer   `json:"disputePicker"`
-		Disputers        int          `json:"disputes"`
-		NonDisputers     int          `json:"nonDisputes"`
-		Disputer         GamePlayer   `json:"disputer"`
-		NumFinalWagers   int          `json:"numFinalWagers"`
-		FinalWagers      []string     `json:"finalWagers"`
-		FinalAnswers     []string     `json:"finalAnswers"`
-		Paused           bool         `json:"paused"`
-		PausedState      GameState    `json:"pausedState"`
-		PausedAt         time.Time    `json:"pausedAt"`
+		Name           string       `json:"name"`
+		State          GameState    `json:"state"`
+		Round          RoundState   `json:"round"`
+		FirstRound     []Category   `json:"firstRound"`
+		SecondRound    []Category   `json:"secondRound"`
+		FinalQuestion  Question     `json:"finalQuestion"`
+		CurQuestion    Question     `json:"curQuestion"`
+		Players        []GamePlayer `json:"players"`
+		LastToPick     GamePlayer   `json:"lastToPick"`
+		AnsCorrectness bool         `json:"ansCorrectness"`
+		GuessedWrong   []string     `json:"guessedWrong"`
+		Passed         []string     `json:"passed"`
+		Confirmers     []string     `json:"confirmations"`
+		Challengers    []string     `json:"challenges"`
+		DisputePicker  GamePlayer   `json:"disputePicker"`
+		Disputers      int          `json:"disputes"`
+		NonDisputers   int          `json:"nonDisputes"`
+		NumFinalWagers int          `json:"numFinalWagers"`
+		FinalWagers    []string     `json:"finalWagers"`
+		FinalAnswers   []string     `json:"finalAnswers"`
+		Paused         bool         `json:"paused"`
+		PausedState    GameState    `json:"pausedState"`
+		PausedAt       time.Time    `json:"pausedAt"`
 
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
@@ -134,8 +73,7 @@ type (
 		Dispute    bool   `json:"dispute"`
 		ProtestFor string `json:"protestFor"`
 
-		// 1 is pause, -1 is to resume
-		Pause int `json:"pause"`
+		Pause int `json:"pause"` // 1 is pause, -1 is resume
 	}
 
 	Response struct {
@@ -178,7 +116,6 @@ func NewGame(db QuestionDB) (*Game, error) {
 		Round:                   FirstRound,
 		Name:                    genGameCode(),
 		LastToPick:              &Player{},
-		LastToAnswer:            &Player{},
 		cancelBoardIntroTimeout: func() {},
 		cancelPickTimeout:       func() {},
 		cancelBuzzTimeout:       func() {},
@@ -220,10 +157,7 @@ func (g *Game) restartGame() {
 	g.State = PreGame
 	g.Round = FirstRound
 	g.LastToPick = &Player{}
-	g.LastToAnswer = &Player{}
-	g.PreviousQuestion = ""
-	g.PreviousAnswer = ""
-	g.LastAnswer = ""
+	g.CurQuestion = Question{}
 	g.AnsCorrectness = false
 	g.GuessedWrong = []string{}
 	g.Passed = []string{}
@@ -344,8 +278,18 @@ func (g *Game) processMsg(msg Message) error {
 	return err
 }
 
+func (g *Game) getIncorrectAns(player GamePlayer) (*Answer, bool) {
+	for _, ans := range g.CurQuestion.Incorrect {
+		if ans.Player.id() == player.id() && !ans.HasDisputed {
+			return ans, true
+		}
+	}
+	return &Answer{}, false
+}
+
 func (g *Game) initDispute(player GamePlayer) error {
-	if !player.canInitDispute() {
+	ans, canDispute := g.getIncorrectAns(player)
+	if !canDispute {
 		return fmt.Errorf("player cannot initiate dispute")
 	}
 	g.cancelPickTimeout()
@@ -355,8 +299,8 @@ func (g *Game) initDispute(player GamePlayer) error {
 		}
 	}
 	g.Disputers = 1
-	player.setCanInitDispute(false)
-	g.Disputer = player
+	ans.HasDisputed = true
+	g.CurQuestion.CurDisputed = ans
 	g.setState(RecvDispute, player)
 	g.messageAllPlayers("Player %s disputed the answer", player.name())
 	return nil
@@ -387,11 +331,6 @@ func (g *Game) processPick(player GamePlayer, catIdx, valIdx int) error {
 	} else {
 		g.setState(RecvBuzz, &Player{})
 		msg = "New Question"
-	}
-	g.PreviousQuestion = g.CurQuestion.Clue
-	g.PreviousAnswer = g.CurQuestion.Answer
-	for _, p := range g.Players {
-		p.setCanInitDispute(false)
 	}
 	g.messageAllPlayers(msg)
 	return nil
@@ -434,8 +373,10 @@ func (g *Game) processAnswer(player GamePlayer, answer string) error {
 		return g.processFinalRoundAns(player, isCorrect, answer)
 	}
 	g.AnsCorrectness = isCorrect
-	g.LastAnswer = answer
-	g.LastToAnswer = player
+	g.CurQuestion.CurAns = &Answer{
+		Player: player,
+		Answer: answer,
+	}
 	g.setState(RecvVote, &Player{})
 	g.messageAllPlayers("Player answered")
 	return nil
@@ -463,18 +404,16 @@ func (g *Game) processVote(player GamePlayer, confirm bool) error {
 	g.cancelVoteTimeout()
 	isCorrect := (g.AnsCorrectness && len(g.Confirmers) == 2) || (!g.AnsCorrectness && len(g.Challengers) == 2)
 	if !g.AnsCorrectness && len(g.Challengers) == 2 {
-		if err := g.questionDB.AddAlternative(g.LastAnswer, g.CurQuestion.Answer); err != nil {
+		if err := g.questionDB.AddAlternative(g.CurQuestion.CurAns.Answer, g.CurQuestion.Answer); err != nil {
 			log.Errorf("Error adding alternative: %s", err.Error())
 		}
 	}
-	if !isCorrect {
-		g.LastToAnswer.setCanInitDispute(true)
-		g.LastToAnswer.setLastAnswer(g.LastAnswer)
-		log.Debugf("player %s can dispute", player.name())
+	if isCorrect {
+		g.CurQuestion.Correct = g.CurQuestion.CurAns
 	} else {
-		log.Debugf("player %s cannot dispute", player.name())
+		g.CurQuestion.Incorrect = append(g.CurQuestion.Incorrect, g.CurQuestion.CurAns)
 	}
-	g.nextQuestion(g.LastToAnswer, isCorrect)
+	g.nextQuestion(g.CurQuestion.CurAns.Player, isCorrect)
 	return nil
 }
 
@@ -501,11 +440,11 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 	g.cancelDisputeTimeout()
 	nextPicker := g.DisputePicker
 	if g.Disputers > g.NonDisputers {
-		g.Disputer.addToScore(2 * g.CurQuestion.Value)
-		if err := g.questionDB.AddAlternative(g.Disputer.lastAnswer(), g.CurQuestion.Answer); err != nil {
+		g.CurQuestion.CurDisputed.Player.addToScore(2 * g.CurQuestion.Value)
+		if err := g.questionDB.AddAlternative(g.CurQuestion.CurDisputed.Answer, g.CurQuestion.Answer); err != nil {
 			log.Errorf("Error adding alternative: %s", err.Error())
 		}
-		nextPicker = g.Disputer
+		nextPicker = g.CurQuestion.CurDisputed.Player
 	}
 	g.Disputers = 0
 	g.NonDisputers = 0
@@ -592,8 +531,6 @@ func (g *Game) processFinalRoundAns(player GamePlayer, isCorrect bool, answer st
 	player.setFinalAnswer(answer)
 	player.setFinalCorrect(isCorrect)
 	if g.roundEnded() {
-		g.PreviousQuestion = g.CurQuestion.Clue
-		g.PreviousAnswer = g.CurQuestion.Answer
 		g.setState(PostGame, &Player{})
 		g.messageAllPlayers("Final round ended")
 		return nil

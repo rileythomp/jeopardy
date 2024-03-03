@@ -93,7 +93,7 @@ func (g *Game) startVoteTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelVoteTimeout = cancel
 	g.startTimeout(ctx, voteTimeout, &Player{}, func(_ GamePlayer) error {
-		g.nextQuestion(g.LastToAnswer, g.AnsCorrectness)
+		g.nextQuestion(g.CurQuestion.CurAns.Player, g.AnsCorrectness)
 		return nil
 	})
 }

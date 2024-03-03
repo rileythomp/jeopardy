@@ -13,6 +13,58 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type GamePlayer interface {
+	id() string
+	name() string
+	conn() SafeConn
+	chatConn() SafeConn
+	score() int
+	canPick() bool
+	canBuzz() bool
+	canAnswer() bool
+	canVote() bool
+	canWager() bool
+	canDispute() bool
+	finalWager() int
+	finalCorrect() bool
+	finalProtestors() map[string]bool
+	playAgain() bool
+
+	setId(string)
+	setName(string)
+	setConn(SafeConn)
+	setChatConn(SafeConn)
+	setCanBuzz(bool)
+	setCanAnswer(bool)
+	setCanVote(bool)
+	setCanWager(bool)
+	setCanDispute(bool)
+	setFinalWager(int)
+	setFinalAnswer(string)
+	setFinalCorrect(bool)
+	setPlayAgain(bool)
+
+	readMessages(msgChan chan Message, disconnectChan chan GamePlayer)
+	processChatMessages(chan ChatMessage)
+	sendPings()
+	sendChatPings()
+
+	sendMessage(Response) error
+	sendChatMessage(ChatMessage) error
+	updateActions(pick, buzz, answer, wager, vote bool)
+	updateScore(val int, isCorrect bool, round RoundState)
+	addFinalProtestor(string)
+	addToScore(int)
+	resetPlayer()
+	pausePlayer()
+	endConnections()
+
+	setCancelAnswerTimeout(context.CancelFunc)
+	setCancelWagerTimeout(context.CancelFunc)
+	cancelAnswerTimeout()
+	cancelWagerTimeout()
+}
+
 type SafeConn interface {
 	ReadMessage() (messageType int, p []byte, err error)
 	WriteJSON(v interface{}) error
@@ -28,14 +80,12 @@ type Player struct {
 	CanAnswer       bool            `json:"canAnswer"`
 	CanWager        bool            `json:"canWager"`
 	CanVote         bool            `json:"canVote"`
-	CanInitDispute  bool            `json:"canInitDispute"`
 	CanDispute      bool            `json:"canDispute"`
 	FinalWager      int             `json:"finalWager"`
 	FinalAnswer     string          `json:"finalAnswer"`
 	FinalCorrect    bool            `json:"finalCorrect"`
 	FinalProtestors map[string]bool `json:"finalProtestors"`
 	PlayAgain       bool            `json:"playAgain"`
-	LastAnswer      string          `json:"lastAnswer"` // todo: set this after player answer
 
 	Conn     SafeConn `json:"conn"`
 	ChatConn SafeConn `json:"chatConn"`
@@ -201,14 +251,6 @@ func (p *Player) canDispute() bool {
 	return p.CanDispute
 }
 
-func (p *Player) canInitDispute() bool {
-	return p.CanInitDispute
-}
-
-func (p *Player) setCanInitDispute(canInitDispute bool) {
-	p.CanInitDispute = canInitDispute
-}
-
 func (p *Player) finalWager() int {
 	return p.FinalWager
 }
@@ -223,14 +265,6 @@ func (p *Player) finalProtestors() map[string]bool {
 
 func (p *Player) playAgain() bool {
 	return p.PlayAgain
-}
-
-func (p *Player) lastAnswer() string {
-	return p.LastAnswer
-}
-
-func (p *Player) setLastAnswer(lastAns string) {
-	p.LastAnswer = lastAns
 }
 
 func (p *Player) setId(id string) {

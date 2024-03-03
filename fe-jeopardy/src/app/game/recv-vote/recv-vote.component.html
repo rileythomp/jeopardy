@@ -3,7 +3,7 @@
         <app-question></app-question>
     </div>
     <p>
-        {{ game.LastToAnswer() }} answered <b>{{ game.AnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{ game.LastAnswer() }}</b>.
+        {{ game.CurAnswerer() }} answered <b>{{ game.AnsCorrectness() ? "correctly" : "incorrectly" }}</b> with <b>{{ game.CurAnswer() }}</b>.
     </p>
     <div id='vote-buttons' class='flex-row' *ngIf="player.CanVote()">
         <button (click)="handleVote(true)">Accept</button>

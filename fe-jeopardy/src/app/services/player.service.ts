@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { Player } from '../model/model';
+import { GameStateService } from './game-state.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -9,7 +10,9 @@ export class PlayerService {
 	private player: Player;
 	private playerSubject = new Subject<any>();
 
-	constructor() {
+	constructor(
+		private game: GameStateService
+	) {
 		this.player = <Player>{};
 	}
 
@@ -52,10 +55,6 @@ export class PlayerService {
 
 	CanDispute(): boolean {
 		return this.player.canDispute;
-	}
-
-	CanInitDispute(): boolean {
-		return this.player.canInitDispute;
 	}
 
 	PlayAgain(): boolean {

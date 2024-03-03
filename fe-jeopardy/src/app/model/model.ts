@@ -7,18 +7,13 @@ export type Game = {
     secondRound: Category[];
     finalQuestion: Question;
     curQuestion: Question;
-    previousQuestion: string;
-    previousAnswer: string;
-    lastAnswer: string;
     ansCorrectness: boolean;
-    lastToAnswer: Player;
     guessedWrong: string[];
     paused: boolean;
     startBuzzCountdown: boolean;
     startFinalWagerCountdown: boolean;
     startFinalAnswerCountdown: boolean;
     buzzBlocked: boolean;
-    disputer: Player;
 };
 
 export type Player = {
@@ -35,8 +30,6 @@ export type Player = {
     canWager: boolean;
     canVote: boolean;
     canDispute: boolean;
-    canInitDispute: boolean;
-    lastAnswer: string;
     playAgain: boolean;
     conn: any;
 };
@@ -46,12 +39,24 @@ type Category = {
     questions: Question[];
 }
 
+export type Answer = {
+    player: Player;
+    answer: string;
+    hasDisputed: boolean;
+}
+
 export type Question = {
     category: string;
     comments: string;
     question: string;
+    answer: string;
     value: number;
     canChoose: boolean;
+
+    curAns: Answer;
+    correct: Answer;
+    incorrect: Answer[];
+    curDisputed: Answer;
 }
 
 export enum GameState {
