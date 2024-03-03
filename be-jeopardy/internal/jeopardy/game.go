@@ -140,13 +140,13 @@ func (g *Game) processMessages() {
 			select {
 			case msg := <-g.msgChan:
 				if err := g.processMsg(msg); err != nil {
-					log.Errorf("Error processing message: %s\n", err.Error())
+					log.Errorf("Error processing message: %s", err.Error())
 				}
 			case player := <-g.disconnectChan:
-				log.Infof("Stopping game %s\n", g.Name)
+				log.Infof("Stopping game %s", g.Name)
 				g.disconnectPlayer(player)
 			case <-g.restartChan:
-				log.Infof("Restarting game %s\n", g.Name)
+				log.Infof("Restarting game %s", g.Name)
 				g.restartGame()
 			}
 		}
@@ -204,7 +204,7 @@ func (g *Game) disconnectPlayer(player GamePlayer) {
 		}
 	}
 	if endGame {
-		log.Infof("All players disconnected, removing game %s\n", g.Name)
+		log.Infof("All players disconnected, removing game %s", g.Name)
 		removeGame(g)
 	}
 
