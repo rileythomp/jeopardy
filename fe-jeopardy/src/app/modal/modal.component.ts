@@ -1,4 +1,7 @@
 import { Component } from '@angular/core';
+import { GameStateService } from '../services/game-state.service';
+import { WebsocketService } from '../services/websocket.service';
+import { PlayerService } from '../services/player.service';
 
 @Component({
     selector: 'app-modal',
@@ -10,7 +13,13 @@ export class ModalComponent {
     protected showModal: boolean = false
     protected message: string
     private modalTimeout: NodeJS.Timeout
-    protected firstTime: boolean;
+    protected firstTime: boolean
+
+    constructor(
+        protected game: GameStateService,
+        protected player: PlayerService,
+        private websocket: WebsocketService
+    ) { }
 
     showMessage(msg: string) {
         clearTimeout(this.modalTimeout)
@@ -24,5 +33,12 @@ export class ModalComponent {
     showJeopardyInfo(firstTime: boolean) {
         this.showInfo = true
         this.firstTime = firstTime
+    }
+
+    disputeQuestion(dispute: boolean) {
+        this.websocket.Send({
+            state: this.game.State(),
+            dispute: dispute,
+        })
     }
 }

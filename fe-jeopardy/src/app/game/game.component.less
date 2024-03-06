@@ -50,46 +50,55 @@
     }
 }
 
-#jeopardy-music {
-    position: fixed;
-    left: 15px;
-    top: calc(var(--header-height) + 15px);
-
-    ion-icon {
-        font-size: 2em;
-    }
-
-    ion-icon:hover {
-        cursor: pointer;
-        transform: scale(1.1);
-    }
-
-    @keyframes moveUpDown {
-
-        0%,
-        1000% {
-            transform: translateY(0);
-        }
-
-        50% {
-            transform: translateY(-5px);
-        }
-    }
-
-    #music-info {
-        animation: moveUpDown 1s infinite;
+#game-controls {
+    .game-control {
+        position: fixed; 
+        left: 15px;
 
         ion-icon {
-            font-size: 1em;
+            font-size: 2em;
         }
-
+    
         ion-icon:hover {
-            cursor: default;
-            transform: none;
+            cursor: pointer;
+            transform: scale(1.1);
         }
 
-        p {
-            margin: 0;
+        @keyframes moveUpDown {
+
+            0%,
+            1000% {
+                transform: translateY(0);
+            }
+    
+            50% {
+                transform: translateY(-5px);
+            }
         }
+    
+        .control-info {
+            animation: moveUpDown 1s infinite;
+
+            ion-icon {
+                font-size: 1em;
+            }
+    
+            ion-icon:hover {
+                cursor: default;
+                transform: none;
+            }
+    
+            p {
+                margin: 0;
+            }
+        }
+    }
+
+    #jeopardy-music {
+        top: calc(var(--header-height) + 15px);
+    }
+    
+    #pause-game {
+        top: calc(var(--header-height) + 60px);
     }
 }

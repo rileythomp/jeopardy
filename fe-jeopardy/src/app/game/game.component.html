@@ -34,16 +34,27 @@
 
 <app-chat></app-chat>
 
-<div id='jeopardy-music'>
-	<ion-icon (click)="stopMusic()" *ngIf="playMusic" name="volume-high-outline"></ion-icon>
-	<ion-icon (click)="startMusic()" *ngIf="!playMusic" name="volume-mute-outline"></ion-icon>
-	<div id='music-info' *ngIf="showMusicInfo">
-		<ion-icon name="chevron-up-outline"></ion-icon>
-		<p>Click for Jeopardy music</p>
+<div id='game-controls'>
+	<div id='jeopardy-music' class='game-control'>
+		<ion-icon (click)="stopMusic()" *ngIf="playMusic" name="volume-high-outline"></ion-icon>
+		<ion-icon (click)="startMusic()" *ngIf="!playMusic" name="volume-mute-outline"></ion-icon>
+		<div class='control-info' *ngIf="showMusicInfo">
+			<ion-icon name="chevron-up-outline"></ion-icon>
+			<p>Click for Jeopardy music</p>
+		</div>
+		<audio loop #jeopardyAudio>
+			<source src="../../assets/jeopardy_music.mp3" />
+		</audio>
 	</div>
-	<audio loop #jeopardyAudio>
-		<source src="../../assets/jeopardy_music.mp3" />
-	</audio>
+	
+	<div id='pause-game' *ngIf='!game.InDispute()' class='game-control'>
+		<ion-icon (click)="pauseGame(false)" *ngIf="game.IsPaused()" name="play"></ion-icon>
+		<ion-icon (click)="pauseGame(true)" *ngIf="!game.IsPaused()" name="pause"></ion-icon>
+		<div class='control-info' *ngIf="showPauseGame">
+			<ion-icon name="chevron-up-outline"></ion-icon>
+			<p>Click to pause the game</p>
+		</div>
+	</div>
 </div>
 
 <app-modal></app-modal>

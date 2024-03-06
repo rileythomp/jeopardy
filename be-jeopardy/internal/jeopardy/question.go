@@ -24,10 +24,22 @@ type (
 		Questions []Question `json:"questions"`
 	}
 
+	Answer struct {
+		Player      GamePlayer `json:"player"`
+		Answer      string     `json:"answer"`
+		Correct     bool       `json:"correct"`
+		HasDisputed bool       `json:"hasDisputed"`
+		Overturned  bool       `json:"overturned"`
+	}
+
 	Question struct {
 		db.Question
 		CanChoose   bool `json:"canChoose"`
 		DailyDouble bool `json:"-"`
+
+		Answers     []*Answer `json:"answers"`
+		CurAns      *Answer   `json:"curAns"`
+		CurDisputed *Answer   `json:"curDisputed"`
 	}
 )
 

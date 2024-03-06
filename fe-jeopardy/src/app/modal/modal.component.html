@@ -19,12 +19,8 @@
             If you ever need to refer to this info again, you can click the <ion-icon name="information-circle-outline"></ion-icon>
             icon in the top right corner of the page. 
         </p>
-        <p>
-            Picking: Players have 30 seconds to pick a question. If no question is picked, the lowest value question will be chosen.
-        </p>
-        <p>
-            Buzzing: Players have 30 seconds to read the question and buzz in. If all 3 players pass, the question will be skipped.
-        </p>
+        <p> Picking: Players have 30 seconds to pick a question. If no question is picked, the lowest value question will be chosen.</p>
+        <p>Buzzing: Players have 30 seconds to read the question and buzz in. If all 3 players pass, the question will be skipped.</p>
         <p>
             <b>Answering</b>: Players have 30 seconds to type in an answer after buzzing in. <b>Do not</b> phrase your answer 
             in the form of a question like on TV. For example, answer "This city is the capital of Germany" with "Berlin" rather than "What is Berlin?"
@@ -34,10 +30,7 @@
             players have 10 seconds to challenge the computer's judgement. If 2/3 players
             challenge the computer's judgement, then it is overturned and the player's score will be adjusted accordingly.
         </p>
-        <p>
-            Wagering: Players have 30 seconds to wager during Double and Final Jeopardy. If no wager is given, the lowest 
-            allowed wager will be chosen. 
-        </p>
+        <p>Wagering: Players have 30 seconds to wager during Double and Final Jeopardy. If no wager is given, the lowest allowed wager will be chosen.</p>
         <p>
             <b>Note</b>: This game is still in development. If you encounter any issues or have any suggestions, please 
             <a href='https://github.com/rileythomp/jeopardy/issues/new' target='blank'>file an issue</a>!
@@ -47,5 +40,36 @@
         <button (click)="showInfo = false">
             Continue  
         </button>
+    </div>
+</div>
+
+<div *ngIf="game.InDispute()" class='modal-container'>
+    <div class='modal-message'>
+        <h3>Dispute</h3>
+        <p>{{ game.DisputerName() }} has disputed the previous question.</p>
+        <p>Overturning this question means {{ game.DisputerName() }} will be given the ${{ game.CurValue() }} as if they had answered correctly.</p>
+        <p *ngIf="game.AdjustedAnswers().length > 0">The following adjustments will be made for players who answered after {{ game.DisputerName() }}</p>
+        <ul>
+            <li *ngFor='let adjAns of game.AdjustedAnswers()'>
+                {{ adjAns.player.name }} will have ${{ game.CurValue() }} {{ adjAns.correct ? 'removed from' : 'added to' }} their score
+            </li>
+        </ul>
+        <p>{{ game.DisputerName() }} will also pick the next question.</p> 
+        <p>Previous question: {{ game.CurQuestion() }}</p>
+        <p>Official answer: <b>{{ game.OfficialAnswer() }}</b></p>
+        <p>{{ game.DisputerName() }}'s answer: <b>{{ game.DisputerAnswer() }}</b></p>
+        <p>Should {{ game.DisputerName() }}'s' answer have been marked as correct?</p>
+    </div>
+    
+    <div *ngIf='player.CanDispute()' class='flex-row' id='dispute-buttons'>
+        <button (click)="disputeQuestion(true)">
+            Yes, {{ game.DisputerName() }}'s answer was correct.
+        </button>
+        <button (click)="disputeQuestion(false)">
+            No, {{ game.DisputerName() }}'s answer was incorrect.
+        </button>
+    </div>
+    <div *ngIf='!player.CanDispute()'>
+        <p>Waiting for other players to confirm the dispute...</p>
     </div>
 </div>

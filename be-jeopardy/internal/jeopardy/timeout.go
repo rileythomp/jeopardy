@@ -15,6 +15,7 @@ const (
 	dailyDoubleAnsTimeout     = 30 * time.Second
 	finalJeopardyAnsTimeout   = 30 * time.Second
 	voteTimeout               = 10 * time.Second
+	disputeTimeout            = 30 * time.Second
 	dailyDoubleWagerTimeout   = 30 * time.Second
 	finalJeopardyWagerTimeout = 30 * time.Second
 )
@@ -83,6 +84,12 @@ func (g *Game) startAnswerTimeout(player GamePlayer) {
 		if g.Round == FinalRound {
 			return g.processFinalRoundAns(player, false, "answer-timeout")
 		}
+		g.CurQuestion.CurAns = &Answer{
+			Player:  player,
+			Answer:  "answer-timeout",
+			Correct: false,
+		}
+		g.CurQuestion.Answers = append(g.CurQuestion.Answers, g.CurQuestion.CurAns)
 		g.nextQuestion(player, false)
 		return nil
 	})
@@ -92,7 +99,19 @@ func (g *Game) startVoteTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelVoteTimeout = cancel
 	g.startTimeout(ctx, voteTimeout, &Player{}, func(_ GamePlayer) error {
-		g.nextQuestion(g.LastToAnswer, g.AnsCorrectness)
+		g.nextQuestion(g.CurQuestion.CurAns.Player, g.AnsCorrectness)
+		return nil
+	})
+}
+
+func (g *Game) startDisputeTimeout() {
+	ctx, cancel := context.WithCancel(context.Background())
+	g.cancelDisputeTimeout = cancel
+	g.startTimeout(ctx, disputeTimeout, &Player{}, func(_ GamePlayer) error {
+		g.Disputers = 0
+		g.NonDisputers = 0
+		g.setState(RecvPick, g.DisputePicker)
+		g.messageAllPlayers("Dispute resolved")
 		return nil
 	})
 }

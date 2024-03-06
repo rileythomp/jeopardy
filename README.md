@@ -22,6 +22,12 @@ $ ng serve
 
 ### TODO
 
+- Hide pause button during disconnect
+
+- Enforce different names within a game
+
+- Hide answers client side
+
 - Accounts with user stats
 
 - Leaderboards

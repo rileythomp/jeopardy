@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core'
 import { Subject } from 'rxjs'
-import { Game, Player, Question, GameState, RoundState } from '../model/model'
+import { Game, Player, Question, GameState, RoundState, Answer } from '../model/model'
 
 @Injectable({
 	providedIn: 'root'
@@ -76,24 +76,8 @@ export class GameStateService {
 		return this.game.players.find((player: Player) => player.canAnswer)?.name ?? ''
 	}
 
-	LastToAnswer(): string {
-		return this.game.lastToAnswer.name
-	}
-
 	WageringPlayer(): string {
 		return this.game.players.find((player: Player) => player.canWager)?.name ?? ''
-	}
-
-	LastAnswer(): string {
-		return this.game.lastAnswer
-	}
-
-	PreviousQuestion(): string {
-		return this.game.previousQuestion
-	}
-
-	PreviousAnswer(): string {
-		return this.game.previousAnswer
 	}
 
 	AnsCorrectness(): boolean {
@@ -157,6 +141,10 @@ export class GameStateService {
 		return this.game.curQuestion.question
 	}
 
+	OfficialAnswer(): string {
+		return this.game.curQuestion.answer
+	}
+
 	CurValue(): number {
 		return this.game.curQuestion.value
 	}
@@ -195,5 +183,57 @@ export class GameStateService {
 
 	BuzzDelay(): number {
 		return Math.floor(this.game.curQuestion.question.split(' ').length / 5)
+	}
+
+	InDispute(): boolean {
+		return this.game.state == GameState.RecvDispute
+	}
+
+	CanInitDispute(playerId: string): boolean {
+		let answers = this.game.curQuestion.answers
+		for (let i = 0; i < answers?.length; i++) {
+			let ans = answers[i]
+			if (ans.player.id == playerId && !ans.hasDisputed && !ans.correct && ans.answer != 'answer-timeout') {
+				return true
+			}
+			if (ans.overturned) {
+				return false
+			}
+		}
+		return false
+	}
+
+	DisputerName(): string {
+		return this.game.curQuestion.curDisputed.player.name
+	}
+
+	DisputerAnswer(): string {
+		return this.game.curQuestion.curDisputed.answer
+	}
+
+	CurAnswerer(): string {
+		return this.game.curQuestion.curAns.player.name
+	}
+
+	CurAnswer(): string {
+		return this.game.curQuestion.curAns.answer
+	}
+
+	AdjustedAnswers(): Answer[] {
+		let adjustments: Answer[] = []
+		let add = false
+		let answers = this.game.curQuestion.answers
+		for (let i = 0; i < answers?.length; i++) {
+			let ans = answers[i]
+			if (ans.player.name == this.DisputerName()) {
+				add = true
+			} else if (add) {
+				adjustments.push(ans)
+			}
+			if (ans.overturned) {
+				break
+			}
+		}
+		return adjustments;
 	}
 }
