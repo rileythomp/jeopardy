@@ -22,7 +22,11 @@ $ ng serve
 
 ### TODO
 
-- Clean up dispute process
+- Separate init dispute and dispute actions
+
+- Hide pause button during disconnect
+
+- Enforce different names within a game
 
 - Hide answers client side
 
