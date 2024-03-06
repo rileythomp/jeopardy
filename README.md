@@ -22,8 +22,6 @@ $ ng serve
 
 ### TODO
 
-- Separate init dispute and dispute actions
-
 - Hide pause button during disconnect
 
 - Enforce different names within a game

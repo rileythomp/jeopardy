@@ -42,7 +42,7 @@ export class RecvPickComponent {
 	disputeQuestion() {
 		this.websocketService.Send({
 			state: this.game.State(),
-			dispute: true,
+			initDispute: true,
 		})
 	}
 }

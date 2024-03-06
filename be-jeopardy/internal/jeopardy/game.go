@@ -70,10 +70,11 @@ type (
 		Answer     string `json:"answer"`
 		Confirm    bool   `json:"confirm"`
 		Wager      int    `json:"wager"`
-		Dispute    bool   `json:"dispute"`
 		ProtestFor string `json:"protestFor"`
 
-		Pause int `json:"pause"` // 1 is pause, -1 is resume
+		Pause       int  `json:"pause"` // 1 is pause, -1 is resume
+		InitDispute bool `json:"initDispute"`
+		Dispute     bool `json:"dispute"`
 	}
 
 	Response struct {
@@ -235,7 +236,7 @@ func (g *Game) processMsg(msg Message) error {
 	var err error
 	switch g.State {
 	case RecvPick:
-		if msg.Dispute {
+		if msg.InitDispute {
 			log.Infof("Player %s disputed the previous question", player.name())
 			err = g.initDispute(player)
 		} else {
