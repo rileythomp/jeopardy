@@ -42,7 +42,9 @@ type Category = {
 export type Answer = {
     player: Player;
     answer: string;
+    correct: boolean;
     hasDisputed: boolean;
+    overturned: boolean;
 }
 
 export type Question = {
@@ -54,8 +56,7 @@ export type Question = {
     canChoose: boolean;
 
     curAns: Answer;
-    correct: Answer;
-    incorrect: Answer[];
+    answers: Answer[];
     curDisputed: Answer;
 }
 

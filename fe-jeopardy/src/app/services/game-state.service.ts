@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core'
 import { Subject } from 'rxjs'
-import { Game, Player, Question, GameState, RoundState } from '../model/model'
+import { Game, Player, Question, GameState, RoundState, Answer } from '../model/model'
 
 @Injectable({
 	providedIn: 'root'
@@ -189,12 +189,15 @@ export class GameStateService {
 		return this.game.state == GameState.RecvDispute
 	}
 
-	CanDispute(playerId: string): boolean {
-		let incorrect = this.game.curQuestion.incorrect
-		for (let i = 0; i < incorrect?.length; i++) {
-			let ans = incorrect[i]
-			if (ans.player.id == playerId && !ans.hasDisputed) {
+	CanInitDispute(playerId: string): boolean {
+		let answers = this.game.curQuestion.answers
+		for (let i = 0; i < answers?.length; i++) {
+			let ans = answers[i]
+			if (ans.player.id == playerId && !ans.hasDisputed && !ans.correct && ans.answer != 'answer-timeout') {
 				return true
+			}
+			if (ans.overturned) {
+				return false
 			}
 		}
 		return false
@@ -216,11 +219,21 @@ export class GameStateService {
 		return this.game.curQuestion.curAns.answer
 	}
 
-	AnsweredCorrectly(): boolean {
-		return this.game.curQuestion.correct != null
-	}
-
-	CorrectAnswerer(): string {
-		return this.game.curQuestion.correct?.player.name ?? ''
+	AdjustedAnswers(): Answer[] {
+		let adjustments: Answer[] = []
+		let add = false
+		let answers = this.game.curQuestion.answers
+		for (let i = 0; i < answers?.length; i++) {
+			let ans = answers[i]
+			if (ans.player.name == this.DisputerName()) {
+				add = true
+			} else if (add) {
+				adjustments.push(ans)
+			}
+			if (ans.overturned) {
+				break
+			}
+		}
+		return adjustments;
 	}
 }

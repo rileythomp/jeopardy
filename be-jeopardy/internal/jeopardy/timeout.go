@@ -84,6 +84,12 @@ func (g *Game) startAnswerTimeout(player GamePlayer) {
 		if g.Round == FinalRound {
 			return g.processFinalRoundAns(player, false, "answer-timeout")
 		}
+		g.CurQuestion.CurAns = &Answer{
+			Player:  player,
+			Answer:  "answer-timeout",
+			Correct: false,
+		}
+		g.CurQuestion.Answers = append(g.CurQuestion.Answers, g.CurQuestion.CurAns)
 		g.nextQuestion(player, false)
 		return nil
 	})

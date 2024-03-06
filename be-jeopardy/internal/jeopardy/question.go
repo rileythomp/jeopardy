@@ -27,7 +27,9 @@ type (
 	Answer struct {
 		Player      GamePlayer `json:"player"`
 		Answer      string     `json:"answer"`
+		Correct     bool       `json:"correct"`
 		HasDisputed bool       `json:"hasDisputed"`
+		Overturned  bool       `json:"overturned"`
 	}
 
 	Question struct {
@@ -36,8 +38,7 @@ type (
 		DailyDouble bool `json:"-"`
 
 		CurAns      *Answer   `json:"curAns"`
-		Correct     *Answer   `json:"correct"`
-		Incorrect   []*Answer `json:"incorrect"`
+		Answers     []*Answer `json:"answers"`
 		CurDisputed *Answer   `json:"curDisputed"`
 	}
 )

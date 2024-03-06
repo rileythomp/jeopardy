@@ -279,9 +279,11 @@ func (g *Game) processMsg(msg Message) error {
 }
 
 func (g *Game) getIncorrectAns(player GamePlayer) (*Answer, bool) {
-	for _, ans := range g.CurQuestion.Incorrect {
+	for _, ans := range g.CurQuestion.Answers {
 		if ans.Player.id() == player.id() && !ans.HasDisputed {
 			return ans, true
+		} else if ans.Overturned {
+			return &Answer{}, false
 		}
 	}
 	return &Answer{}, false
@@ -374,9 +376,11 @@ func (g *Game) processAnswer(player GamePlayer, answer string) error {
 	}
 	g.AnsCorrectness = isCorrect
 	g.CurQuestion.CurAns = &Answer{
-		Player: player,
-		Answer: answer,
+		Player:  player,
+		Answer:  answer,
+		Correct: isCorrect,
 	}
+	g.CurQuestion.Answers = append(g.CurQuestion.Answers, g.CurQuestion.CurAns)
 	g.setState(RecvVote, &Player{})
 	g.messageAllPlayers("Player answered")
 	return nil
@@ -408,11 +412,7 @@ func (g *Game) processVote(player GamePlayer, confirm bool) error {
 			log.Errorf("Error adding alternative: %s", err.Error())
 		}
 	}
-	if isCorrect {
-		g.CurQuestion.Correct = g.CurQuestion.CurAns
-	} else {
-		g.CurQuestion.Incorrect = append(g.CurQuestion.Incorrect, g.CurQuestion.CurAns)
-	}
+	g.CurQuestion.CurAns.Correct = isCorrect
 	g.nextQuestion(g.CurQuestion.CurAns.Player, isCorrect)
 	return nil
 }
@@ -440,15 +440,29 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 	g.cancelDisputeTimeout()
 	nextPicker := g.DisputePicker
 	if g.Disputers > g.NonDisputers {
-		if g.CurQuestion.Correct != nil {
-			g.CurQuestion.Correct.Player.addToScore(-g.CurQuestion.Value)
+		g.CurQuestion.CurDisputed.Overturned = true
+		g.CurQuestion.CurDisputed.Correct = true
+		for i, ans := range g.CurQuestion.Answers {
+			if ans.Player.id() == g.CurQuestion.CurDisputed.Player.id() {
+				ans.Player.addToScore(2 * g.CurQuestion.Value)
+				for j := i + 1; j < len(g.CurQuestion.Answers); j++ {
+					adjAns := g.CurQuestion.Answers[j]
+					if adjAns.Correct {
+						adjAns.Player.addToScore(-g.CurQuestion.Value)
+					} else {
+						adjAns.Player.addToScore(g.CurQuestion.Value)
+					}
+					if adjAns.Overturned {
+						break
+					}
+				}
+				break
+			}
 		}
-		g.CurQuestion.Correct = g.CurQuestion.CurDisputed
-		g.CurQuestion.Correct.Player.addToScore(2 * g.CurQuestion.Value)
-		if err := g.questionDB.AddAlternative(g.CurQuestion.Correct.Answer, g.CurQuestion.Answer); err != nil {
+		if err := g.questionDB.AddAlternative(g.CurQuestion.CurDisputed.Answer, g.CurQuestion.Answer); err != nil {
 			log.Errorf("Error adding alternative: %s", err.Error())
 		}
-		nextPicker = g.CurQuestion.Correct.Player
+		nextPicker = g.CurQuestion.CurDisputed.Player
 	}
 	g.Disputers = 0
 	g.NonDisputers = 0
@@ -636,6 +650,8 @@ func (g *Game) startGame() {
 				player = p
 			}
 		}
+	} else {
+		player = &Player{}
 	}
 	g.setState(state, player)
 }

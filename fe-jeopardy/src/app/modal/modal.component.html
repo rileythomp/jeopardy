@@ -54,10 +54,16 @@
     <div class='modal-message'>
         <h3>Dispute</h3>
         <p>{{ game.DisputerName() }} has disputed the previous question.</p>
-        <p *ngIf="game.AnsweredCorrectly()">
-            Overturning this question will remove ${{ game.CurValue() }} from {{ game.CorrectAnswerer() }} and return it to {{ game.DisputerName() }}.
-            {{ game.DisputerName() }} will also pick the next question.
+        <p>
+            Overturning this question means {{ game.DisputerName() }} will be given the ${{ game.CurValue() }} as if they had answered correctly.
         </p>
+        <p *ngIf="game.AdjustedAnswers().length > 0">The following adjustments will be made for players who answered after {{ game.DisputerName() }}</p>
+        <ul>
+            <li *ngFor='let adjAns of game.AdjustedAnswers()'>
+                {{ adjAns.player.name }} will have ${{ game.CurValue() }} {{ adjAns.correct ? 'removed from' : 'added to' }} their score
+            </li>
+        </ul>
+        <p>{{ game.DisputerName() }} will also pick the next question.</p> 
         <p>Previous question: {{ game.CurQuestion() }}</p>
         <p>Official answer: <b>{{ game.OfficialAnswer() }}</b></p>
         <p>{{ game.DisputerName() }}'s answer: <b>{{ game.DisputerAnswer() }}</b></p>
