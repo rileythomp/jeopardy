@@ -15,7 +15,7 @@ type (
 		Category     string   `json:"category"`
 		Comments     string   `json:"comments"`
 		Clue         string   `json:"question"`
-		Answer       string   `json:"answer"`
+		Answer       string   `json:"-"`
 		Alternatives []string `json:"-"`
 	}
 

@@ -38,18 +38,19 @@ func GetPlayerGames() map[string]string {
 	return playerGameNames
 }
 
-func validateName(name string) error {
+func (g *Game) validateName(name string) error {
 	if len(name) < 1 || len(name) > 20 {
 		return fmt.Errorf("Player name must be between 1 and 20 characters")
+	}
+	for _, p := range g.Players {
+		if p.name() == name {
+			return fmt.Errorf("Sorry, %s is already taken", name)
+		}
 	}
 	return nil
 }
 
 func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
-	if err := validateName(req.PlayerName); err != nil {
-		return &Game{}, "", err, socket.BadRequest
-	}
-
 	questionDB, err := db.NewQuestionDB()
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
@@ -59,6 +60,10 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 		return &Game{}, "", err, socket.ServerError
 	}
 	privateGames[game.Name] = game
+
+	if err := game.validateName(req.PlayerName); err != nil {
+		return &Game{}, "", err, socket.BadRequest
+	}
 
 	player := NewPlayer(req.PlayerName)
 	game.Players = append(game.Players, player)
@@ -74,13 +79,9 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 }
 
 func JoinPublicGame(playerName string) (*Game, string, error, int) {
-	if err := validateName(playerName); err != nil {
-		return &Game{}, "", err, socket.BadRequest
-	}
-
 	var game *Game
 	for _, g := range publicGames {
-		if len(g.Players) < numPlayers {
+		if len(g.Players) < numPlayers && g.validateName(playerName) == nil {
 			game = g
 			break
 		}
@@ -97,6 +98,10 @@ func JoinPublicGame(playerName string) (*Game, string, error, int) {
 		publicGames[game.Name] = game
 	}
 
+	if err := game.validateName(playerName); err != nil {
+		return &Game{}, "", err, socket.BadRequest
+	}
+
 	player := NewPlayer(playerName)
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
@@ -105,16 +110,16 @@ func JoinPublicGame(playerName string) (*Game, string, error, int) {
 }
 
 func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
-	if err := validateName(playerName); err != nil {
-		return &Game{}, "", err
-	}
-
 	game, ok := publicGames[gameCode]
 	if !ok {
 		game, ok = privateGames[gameCode]
 		if !ok {
 			return &Game{}, "", fmt.Errorf("Game %s not found", gameCode)
 		}
+	}
+
+	if err := game.validateName(playerName); err != nil {
+		return &Game{}, "", err
 	}
 
 	var player GamePlayer
@@ -192,6 +197,9 @@ func PlayGame(playerId string, conn SafeConn) error {
 func (g *Game) handlePlayerJoined(player GamePlayer) {
 	msg := "Waiting for more players"
 	if g.allPlayersReady() {
+		if g.Disconnected {
+			g.Disconnected = false
+		}
 		if g.Paused {
 			g.startGame()
 		} else {
@@ -200,7 +208,6 @@ func (g *Game) handlePlayerJoined(player GamePlayer) {
 		}
 		msg = "We are ready to play"
 	}
-
 	g.messageAllPlayers(msg)
 }
 

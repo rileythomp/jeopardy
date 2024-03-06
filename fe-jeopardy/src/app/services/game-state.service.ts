@@ -142,7 +142,7 @@ export class GameStateService {
 	}
 
 	OfficialAnswer(): string {
-		return this.game.curQuestion.answer
+		return this.game.officialAnswer
 	}
 
 	CurValue(): number {
@@ -235,5 +235,9 @@ export class GameStateService {
 			}
 		}
 		return adjustments;
+	}
+
+	Disconnected(): boolean {
+		return this.game.disconnected
 	}
 }

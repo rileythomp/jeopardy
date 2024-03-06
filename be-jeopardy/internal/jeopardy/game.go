@@ -19,6 +19,7 @@ type (
 		SecondRound    []Category   `json:"secondRound"`
 		FinalQuestion  Question     `json:"finalQuestion"`
 		CurQuestion    Question     `json:"curQuestion"`
+		OfficialAnswer string       `json:"officialAnswer"`
 		Players        []GamePlayer `json:"players"`
 		LastToPick     GamePlayer   `json:"lastToPick"`
 		AnsCorrectness bool         `json:"ansCorrectness"`
@@ -29,6 +30,7 @@ type (
 		NumFinalWagers int          `json:"numFinalWagers"`
 		FinalWagers    []string     `json:"finalWagers"`
 		FinalAnswers   []string     `json:"finalAnswers"`
+		Disconnected   bool         `json:"disconnected"`
 		Paused         bool         `json:"paused"`
 		PausedState    GameState    `json:"pausedState"`
 		PausedAt       time.Time    `json:"pausedAt"`
@@ -159,6 +161,7 @@ func (g *Game) restartGame() {
 	g.Round = FirstRound
 	g.LastToPick = &Player{}
 	g.CurQuestion = Question{}
+	g.OfficialAnswer = ""
 	g.AnsCorrectness = false
 	g.GuessedWrong = []string{}
 	g.Passed = []string{}
@@ -191,6 +194,7 @@ func (g *Game) pauseGame() {
 }
 
 func (g *Game) disconnectPlayer(player GamePlayer) {
+	g.Disconnected = true
 	g.pauseGame()
 	if g.State != PostGame {
 		g.State = PreGame
@@ -327,6 +331,7 @@ func (g *Game) processPick(player GamePlayer, catIdx, valIdx int) error {
 	}
 	g.LastToPick = player
 	g.CurQuestion = curQuestion
+	g.OfficialAnswer = g.CurQuestion.Answer
 	var msg string
 	if curQuestion.DailyDouble {
 		g.setState(RecvWager, player)
@@ -666,6 +671,7 @@ func (g *Game) startFinalRound() {
 	g.Round = FinalRound
 	g.resetGuesses()
 	g.CurQuestion = g.FinalQuestion
+	g.OfficialAnswer = g.CurQuestion.Answer
 	g.NumFinalWagers = g.numFinalWagers()
 	if g.NumFinalWagers < 2 {
 		g.setState(PostGame, &Player{})

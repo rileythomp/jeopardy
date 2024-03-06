@@ -73,6 +73,7 @@ func (g *Game) setQuestions() error {
 	g.SecondRound = []Category{}
 	g.FinalQuestion = Question{}
 	g.CurQuestion = Question{}
+	g.OfficialAnswer = ""
 	questions, err := g.questionDB.GetQuestions()
 	if err != nil {
 		return err

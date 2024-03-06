@@ -14,6 +14,8 @@ export type Game = {
     startFinalWagerCountdown: boolean;
     startFinalAnswerCountdown: boolean;
     buzzBlocked: boolean;
+    disconnected: boolean;
+    officialAnswer: string;
 };
 
 export type Player = {

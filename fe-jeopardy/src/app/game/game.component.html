@@ -48,7 +48,7 @@
 	</div>
 	
 	<div id='pause-game' *ngIf='!game.InDispute()' class='game-control'>
-		<ion-icon (click)="pauseGame(false)" *ngIf="game.IsPaused()" name="play"></ion-icon>
+		<ion-icon (click)="pauseGame(false)" *ngIf="game.IsPaused() && !game.Disconnected()" name="play"></ion-icon>
 		<ion-icon (click)="pauseGame(true)" *ngIf="!game.IsPaused()" name="pause"></ion-icon>
 		<div class='control-info' *ngIf="showPauseGame">
 			<ion-icon name="chevron-up-outline"></ion-icon>
