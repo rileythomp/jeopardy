@@ -281,7 +281,7 @@ func (g *Game) processMsg(msg Message) error {
 
 func (g *Game) getIncorrectAns(player GamePlayer) (*Answer, bool) {
 	for _, ans := range g.CurQuestion.Answers {
-		if ans.Player.id() == player.id() && !ans.HasDisputed {
+		if ans.Player.id() == player.id() && !ans.HasDisputed && !ans.Correct && ans.Answer != "answer-timeout" {
 			return ans, true
 		} else if ans.Overturned {
 			return &Answer{}, false
@@ -427,7 +427,6 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 		g.Disputers++
 	} else {
 		g.NonDisputers++
-
 	}
 	if g.Disputers != 2 && g.NonDisputers != 2 {
 		_ = player.sendMessage(Response{

@@ -37,8 +37,8 @@ type (
 		CanChoose   bool `json:"canChoose"`
 		DailyDouble bool `json:"-"`
 
-		CurAns      *Answer   `json:"curAns"`
 		Answers     []*Answer `json:"answers"`
+		CurAns      *Answer   `json:"curAns"`
 		CurDisputed *Answer   `json:"curDisputed"`
 	}
 )
