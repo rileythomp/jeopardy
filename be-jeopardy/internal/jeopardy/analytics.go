@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 )
 
@@ -62,4 +63,20 @@ func getRoundAnalytics(round []Category) ([]AnalyticsCategory, int, int) {
 		analyticsRound = append(analyticsRound, c)
 	}
 	return analyticsRound, roundAnswers, roundCorrects
+}
+
+func GetAnalytics() (any, error) {
+	db, err := db.NewJeopardyDB()
+	if err != nil {
+		log.Errorf("Error connecting to database: %s", err.Error())
+		return nil, err
+	}
+
+	analytics, err := db.GetAnalytics()
+	if err != nil {
+		log.Errorf("Error getting game analytics: %s", err.Error())
+		return nil, err
+	}
+
+	return analytics, nil
 }

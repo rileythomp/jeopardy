@@ -94,6 +94,11 @@ var (
 			Path:    "/jeopardy/chat",
 			Handler: JoinGameChat,
 		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/analytics",
+			Handler: GetAnalytics,
+		},
 	}
 
 	upgrader = websocket.Upgrader{
@@ -383,6 +388,18 @@ func LeaveGame(c *gin.Context) {
 		Code:    http.StatusOK,
 		Message: "Player left the game",
 	})
+}
+
+func GetAnalytics(c *gin.Context) {
+	log.Infof("Received request to get analytics")
+
+	analytics, err := jeopardy.GetAnalytics()
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Unable to get analytics")
+		return
+	}
+
+	c.JSON(http.StatusOK, analytics)
 }
 
 func GetPrivateGames(c *gin.Context) {

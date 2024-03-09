@@ -75,3 +75,39 @@ func (db *JeopardyDB) SaveGameAnalytics(gameID uuid.UUID, createdAt int64, first
 	_, err := db.Conn.Exec(context.Background(), saveGameAnalytics, gameID, createdAt, firstRound, frAns, frCorr, secondRound, srAns, srCorr)
 	return err
 }
+
+//go:embed sql/get_analytics.sql
+var getAnalytics string
+
+func (db *JeopardyDB) GetAnalytics() (any, error) {
+	var (
+		gamesPlayed         int
+		firstRoundAnsRate   int
+		firstRoundCorrRate  int
+		secondRoundAnsRate  int
+		secondRoundCorrRate int
+	)
+	err := db.Conn.QueryRow(context.Background(), getAnalytics).Scan(
+		&gamesPlayed,
+		&firstRoundAnsRate,
+		&firstRoundCorrRate,
+		&secondRoundAnsRate,
+		&secondRoundCorrRate,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return struct {
+		GamesPlayed         int `json:"gamesPlayed"`
+		FirstRoundAnsRate   int `json:"firstRoundAnsRate"`
+		FirstRoundCorrRate  int `json:"firstRoundCorrRate"`
+		SecondRoundAnsRate  int `json:"secondRoundAnsRate"`
+		SecondRoundCorrRate int `json:"secondRoundCorrRate"`
+	}{
+		GamesPlayed:         gamesPlayed,
+		FirstRoundAnsRate:   firstRoundAnsRate,
+		FirstRoundCorrRate:  firstRoundCorrRate,
+		SecondRoundAnsRate:  secondRoundAnsRate,
+		SecondRoundCorrRate: secondRoundCorrRate,
+	}, nil
+}
