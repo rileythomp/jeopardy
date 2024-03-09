@@ -60,6 +60,10 @@ export class ApiService {
         return this.put('play-again', {})
     }
 
+    GetAnalytics(): Observable<any> {
+        return this.get('analytics')
+    }
+
     private post(path: string, req: any): Observable<any> {
         return this.http.post<any>(
             `${httpProtocol}://${apiAddr}/jeopardy/${path}`,
