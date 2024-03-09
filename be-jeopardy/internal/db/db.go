@@ -71,8 +71,16 @@ func (db *JeopardyDB) AddAlternative(alternative, answer string) error {
 //go:embed sql/save_game_analytics.sql
 var saveGameAnalytics string
 
-func (db *JeopardyDB) SaveGameAnalytics(gameID uuid.UUID, createdAt int64, firstRound any, frAns, frCorr int, secondRound any, srAns, srCorr int) error {
-	_, err := db.Conn.Exec(context.Background(), saveGameAnalytics, gameID, createdAt, firstRound, frAns, frCorr, secondRound, srAns, srCorr)
+func (db *JeopardyDB) SaveGameAnalytics(
+	gameID uuid.UUID, createdAt int64,
+	firstRound any, frAns, frCorr int, frScore float64,
+	secondRound any, srAns, srCorr int, srScore float64,
+) error {
+	_, err := db.Conn.Exec(
+		context.Background(), saveGameAnalytics, gameID, createdAt,
+		firstRound, frAns, frCorr, frScore,
+		secondRound, srAns, srCorr, srScore,
+	)
 	return err
 }
 
@@ -84,15 +92,19 @@ func (db *JeopardyDB) GetAnalytics() (any, error) {
 		gamesPlayed         int
 		firstRoundAnsRate   int
 		firstRoundCorrRate  int
+		firstRoundScore     int
 		secondRoundAnsRate  int
 		secondRoundCorrRate int
+		secondRoundScore    int
 	)
 	err := db.Conn.QueryRow(context.Background(), getAnalytics).Scan(
 		&gamesPlayed,
 		&firstRoundAnsRate,
 		&firstRoundCorrRate,
+		&firstRoundScore,
 		&secondRoundAnsRate,
 		&secondRoundCorrRate,
+		&secondRoundScore,
 	)
 	if err != nil {
 		return nil, err
@@ -101,13 +113,17 @@ func (db *JeopardyDB) GetAnalytics() (any, error) {
 		GamesPlayed         int `json:"gamesPlayed"`
 		FirstRoundAnsRate   int `json:"firstRoundAnsRate"`
 		FirstRoundCorrRate  int `json:"firstRoundCorrRate"`
+		FirstRoundScore     int `json:"firstRoundScore"`
 		SecondRoundAnsRate  int `json:"secondRoundAnsRate"`
 		SecondRoundCorrRate int `json:"secondRoundCorrRate"`
+		SecondRoundScore    int `json:"secondRoundScore"`
 	}{
 		GamesPlayed:         gamesPlayed,
 		FirstRoundAnsRate:   firstRoundAnsRate,
 		FirstRoundCorrRate:  firstRoundCorrRate,
+		FirstRoundScore:     firstRoundScore,
 		SecondRoundAnsRate:  secondRoundAnsRate,
 		SecondRoundCorrRate: secondRoundCorrRate,
+		SecondRoundScore:    secondRoundScore,
 	}, nil
 }

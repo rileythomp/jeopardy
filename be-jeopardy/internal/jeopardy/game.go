@@ -39,6 +39,9 @@ type (
 		Disputers      int          `json:"disputes"`
 		NonDisputers   int          `json:"nonDisputes"`
 
+		FirstRoundScore  float64 `json:"firstRoundScore"`
+		SecondRoundScore float64 `json:"secondRoundScore"`
+
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
 		StartFinalWagerCountdown  bool `json:"startFinalWagerCountdown"`
@@ -60,7 +63,11 @@ type (
 	jeopardyDB interface {
 		GetQuestions() ([]db.Question, error)
 		AddAlternative(alternative, answer string) error
-		SaveGameAnalytics(gameID uuid.UUID, createdAt int64, firstRound any, frAns, frCorr int, secondRound any, srAns, srCor int) error
+		SaveGameAnalytics(
+			gameID uuid.UUID, createdAt int64,
+			firstRound any, frAns, frCorr int, frScore float64,
+			secondRound any, srAns, srCor int, srScore float64,
+		) error
 		Close() error
 	}
 
@@ -664,13 +671,23 @@ func (g *Game) startGame() {
 	g.setState(state, player)
 }
 
+func (g *Game) getAvgScore() float64 {
+	total := 0.0
+	for _, p := range g.Players {
+		total += float64(p.score())
+	}
+	return total / 3
+}
+
 func (g *Game) startSecondRound() {
+	g.FirstRoundScore = g.getAvgScore()
 	g.Round = SecondRound
 	g.resetGuesses()
 	g.setState(BoardIntro, g.lowestPlayer())
 }
 
 func (g *Game) startFinalRound() {
+	g.SecondRoundScore = g.getAvgScore()
 	g.Round = FinalRound
 	g.resetGuesses()
 	g.CurQuestion = g.FinalQuestion

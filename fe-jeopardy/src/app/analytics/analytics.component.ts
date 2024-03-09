@@ -23,8 +23,8 @@ export class AnalyticsComponent implements OnInit {
 	ngOnInit(): void {
 		this.apiService.GetAnalytics().subscribe((resp: any) => {
 			this.gamesPlayed = resp.gamesPlayed
-			// this.firstRoundScore = resp.firstRoundScore
-			// this.secondRoundScore = resp.secondRoundScore
+			this.firstRoundScore = resp.firstRoundScore
+			this.secondRoundScore = resp.secondRoundScore
 			this.firstRoundAnsRate = resp.firstRoundAnsRate
 			this.firstRoundCorrRate = resp.firstRoundCorrRate
 			this.secondRoundAnsRate = resp.secondRoundAnsRate

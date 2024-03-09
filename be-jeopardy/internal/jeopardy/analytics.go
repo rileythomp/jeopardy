@@ -28,7 +28,11 @@ type AnalyticsAnswer struct {
 func (g *Game) saveGameAnalytics() {
 	fr, frAns, frCorr := getRoundAnalytics(g.FirstRound)
 	sr, srAns, srCorr := getRoundAnalytics(g.SecondRound)
-	if err := g.questionDB.SaveGameAnalytics(uuid.New(), time.Now().Unix(), fr, frAns, frCorr, sr, srAns, srCorr); err != nil {
+	if err := g.questionDB.SaveGameAnalytics(
+		uuid.New(), time.Now().Unix(),
+		fr, frAns, frCorr, g.FirstRoundScore,
+		sr, srAns, srCorr, g.SecondRoundScore,
+	); err != nil {
 		log.Errorf("Error saving game analytics: %s", err.Error())
 	}
 }

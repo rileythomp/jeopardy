@@ -24,7 +24,9 @@ $ ng serve
 
 - Track and show game analytics
 
-- Allow players to select 1 or 2 round game
+- Allow players to select 1 or 2 round
+
+- Remove alerts
 
 - Allow players to select bot difficulty
 
