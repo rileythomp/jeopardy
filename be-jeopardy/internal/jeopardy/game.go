@@ -485,7 +485,7 @@ func (g *Game) processWager(player GamePlayer, wager int) error {
 		g.startWagerTimeout(player)
 		_ = player.sendMessage(Response{
 			Code:      socket.BadRequest,
-			Message:   fmt.Sprintf("invalid wager, must be between %d and %d", min, max),
+			Message:   fmt.Sprintf("Invalid wager, must be between %d and %d", min, max),
 			Game:      g,
 			CurPlayer: player,
 		})

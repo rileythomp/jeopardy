@@ -167,7 +167,7 @@ func AddBot(playerId string) error {
 	game.Players = append(game.Players, bot)
 	bot.processMessages()
 
-	game.handlePlayerJoined(bot)
+	game.handlePlayerJoined()
 
 	return nil
 }
@@ -189,12 +189,12 @@ func PlayGame(playerId string, conn SafeConn) error {
 	player.sendPings()
 	player.readMessages(game.msgChan, game.disconnectChan)
 
-	game.handlePlayerJoined(player)
+	game.handlePlayerJoined()
 
 	return nil
 }
 
-func (g *Game) handlePlayerJoined(player GamePlayer) {
+func (g *Game) handlePlayerJoined() {
 	msg := "Waiting for more players"
 	if g.allPlayersReady() {
 		if g.Disconnected {

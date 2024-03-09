@@ -130,7 +130,15 @@ func (p *Bot) processMessage(ctx context.Context, resp Response) {
 		}
 		msg.Wager = p.pickWager(g.Players, g.roundMax())
 		sendMessageAfter(ctx, g, msg, 5*time.Second)
-	case PreGame, PostGame, BoardIntro:
+	case RecvDispute:
+		if !p.canDispute() {
+			return
+		}
+		msg.Dispute = true
+		sendMessageAfter(ctx, g, msg, 10*time.Second)
+	case PostGame:
+		p.setPlayAgain(true)
+	case PreGame, BoardIntro:
 		return
 	}
 }
