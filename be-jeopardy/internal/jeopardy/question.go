@@ -49,15 +49,15 @@ func (q *Question) checkAnswer(ans string) bool {
 		dist := levenshtein.ComputeDistance(ans, corr)
 		if len(corr) <= 5 && dist <= 0 {
 			return true
-		} else if len(corr) <= 7 && dist <= 1 {
+		} else if 5 < len(corr) && len(corr) <= 7 && dist <= 1 {
 			return true
-		} else if len(corr) <= 9 && dist <= 2 {
+		} else if 7 < len(corr) && len(corr) <= 9 && dist <= 2 {
 			return true
-		} else if len(corr) <= 12 && dist <= 3 {
+		} else if 9 < len(corr) && len(corr) <= 12 && dist <= 3 {
 			return true
-		} else if len(corr) <= 15 && dist <= 4 {
+		} else if 12 < len(corr) && len(corr) <= 15 && dist <= 4 {
 			return true
-		} else if len(corr) > 15 && dist <= 5 {
+		} else if 15 < len(corr) && dist <= 5 {
 			return true
 		}
 	}
