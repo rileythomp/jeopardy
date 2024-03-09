@@ -22,9 +22,9 @@ $ ng serve
 
 ### TODO
 
-- Track and show game analytics
+- Improve instructions
 
-- Allow players to select 1 or 2 round
+- Allow players to select 1 or 2 round games
 
 - Remove alerts
 
