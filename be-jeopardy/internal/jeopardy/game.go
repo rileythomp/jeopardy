@@ -17,8 +17,8 @@ type (
 		Round          RoundState   `json:"round"`
 		FirstRound     []Category   `json:"firstRound"`
 		SecondRound    []Category   `json:"secondRound"`
-		FinalQuestion  Question     `json:"finalQuestion"`
-		CurQuestion    Question     `json:"curQuestion"`
+		FinalQuestion  *Question    `json:"finalQuestion"`
+		CurQuestion    *Question    `json:"curQuestion"`
 		OfficialAnswer string       `json:"officialAnswer"`
 		Players        []GamePlayer `json:"players"`
 		LastToPick     GamePlayer   `json:"lastToPick"`
@@ -160,7 +160,7 @@ func (g *Game) restartGame() {
 	g.State = PreGame
 	g.Round = FirstRound
 	g.LastToPick = &Player{}
-	g.CurQuestion = Question{}
+	g.CurQuestion = &Question{}
 	g.OfficialAnswer = ""
 	g.AnsCorrectness = false
 	g.GuessedWrong = []string{}
