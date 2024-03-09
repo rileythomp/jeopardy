@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
@@ -53,12 +54,13 @@ type (
 		restartChan    chan bool
 		chatChan       chan ChatMessage
 
-		questionDB QuestionDB
+		questionDB jeopardyDB
 	}
 
-	QuestionDB interface {
+	jeopardyDB interface {
 		GetQuestions() ([]db.Question, error)
 		AddAlternative(alternative, answer string) error
+		SaveGameAnalytics(gameID uuid.UUID, createdAt int64, firstRound any, frAns, frCorr int, secondRound any, srAns, srCor int) error
 		Close() error
 	}
 
@@ -112,7 +114,7 @@ const (
 
 const numPlayers = 3
 
-func NewGame(db QuestionDB) (*Game, error) {
+func NewGame(db jeopardyDB) (*Game, error) {
 	game := &Game{
 		State:                   PreGame,
 		Players:                 []GamePlayer{},
@@ -555,6 +557,7 @@ func (g *Game) processFinalRoundAns(player GamePlayer, isCorrect bool, answer st
 	player.setFinalCorrect(isCorrect)
 	if g.roundEnded() {
 		g.setState(PostGame, &Player{})
+		g.saveGameAnalytics()
 		g.messageAllPlayers("Final round ended")
 		return nil
 	}
@@ -675,6 +678,7 @@ func (g *Game) startFinalRound() {
 	g.NumFinalWagers = g.numFinalWagers()
 	if g.NumFinalWagers < 2 {
 		g.setState(PostGame, &Player{})
+		g.saveGameAnalytics()
 	} else {
 		g.setState(RecvWager, &Player{})
 	}

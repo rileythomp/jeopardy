@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -19,23 +20,27 @@ type (
 		Alternatives []string `json:"-"`
 	}
 
-	QuestionDB struct {
+	JeopardyDB struct {
 		Conn *pgx.Conn
 	}
 )
 
-func NewQuestionDB() (*QuestionDB, error) {
+func NewJeopardyDB() (*JeopardyDB, error) {
 	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
-		return &QuestionDB{}, err
+		return &JeopardyDB{}, err
 	}
-	return &QuestionDB{Conn: conn}, nil
+	return &JeopardyDB{Conn: conn}, nil
+}
+
+func (db *JeopardyDB) Close() error {
+	return db.Conn.Close(context.Background())
 }
 
 //go:embed sql/get_questions.sql
 var getQuestions string
 
-func (db *QuestionDB) GetQuestions() ([]Question, error) {
+func (db *JeopardyDB) GetQuestions() ([]Question, error) {
 	rows, err := db.Conn.Query(context.Background(), getQuestions)
 	if err != nil {
 		return nil, err
@@ -58,11 +63,15 @@ func (db *QuestionDB) GetQuestions() ([]Question, error) {
 //go:embed sql/add_alternatives.sql
 var addAlternative string
 
-func (db *QuestionDB) AddAlternative(alternative, answer string) error {
+func (db *JeopardyDB) AddAlternative(alternative, answer string) error {
 	_, err := db.Conn.Exec(context.Background(), addAlternative, alternative, answer)
 	return err
 }
 
-func (db *QuestionDB) Close() error {
-	return db.Conn.Close(context.Background())
+//go:embed sql/save_game_analytics.sql
+var saveGameAnalytics string
+
+func (db *JeopardyDB) SaveGameAnalytics(gameID uuid.UUID, createdAt int64, firstRound any, frAns, frCorr int, secondRound any, srAns, srCorr int) error {
+	_, err := db.Conn.Exec(context.Background(), saveGameAnalytics, gameID, createdAt, firstRound, frAns, frCorr, secondRound, srAns, srCorr)
+	return err
 }

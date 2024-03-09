@@ -52,7 +52,7 @@ func pickQuestion(g *Game, catIdx, valIdx int) {
 
 func TestPickQuestion(t *testing.T) {
 	t.Run("test pick question", func(t *testing.T) {
-		questionDB, err := db.NewQuestionDB()
+		questionDB, err := db.NewJeopardyDB()
 		if err != nil {
 			t.Fatalf("Failed to create questionDB: %s", err)
 		}

@@ -51,7 +51,7 @@ func (g *Game) validateName(name string) error {
 }
 
 func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
-	questionDB, err := db.NewQuestionDB()
+	questionDB, err := db.NewJeopardyDB()
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
@@ -87,7 +87,7 @@ func JoinPublicGame(playerName string) (*Game, string, error, int) {
 		}
 	}
 	if game == nil {
-		questionDB, err := db.NewQuestionDB()
+		questionDB, err := db.NewJeopardyDB()
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}

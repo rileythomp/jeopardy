@@ -34,6 +34,14 @@ db.execute(
 db.execute(
     '''
     update jeopardy_clues 
+    set alternatives = array_append(alternatives, substring(question from 4))
+    where question like 'an %';
+    '''
+)
+
+db.execute(
+    '''
+    update jeopardy_clues 
     set alternatives = array_append(alternatives, substring(question from 3))
     where question like 'a %';
     '''
