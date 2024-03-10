@@ -8,8 +8,7 @@ import { ModalService } from '../services/modal.service'
 
 const pickTimeout = 30
 const buzzTimeout = 30
-const defaultAnsTimeout = 30
-const dailyDoubleAnsTimeout = 30
+const answerTimeout = 15
 const finalJeopardyAnsTimeout = 30
 const voteTimeout = 10
 const dailyDoubleWagerTimeout = 30
@@ -139,7 +138,7 @@ export class GameComponent implements OnInit {
 					break
 				case GameState.RecvAns:
 					if (!this.game.FinalRound()) {
-						this.startCountdownTimer(defaultAnsTimeout)
+						this.startCountdownTimer(answerTimeout)
 					} else if (this.game.StartFinalAnswerCountdown()) {
 						this.startCountdownTimer(finalJeopardyAnsTimeout)
 					}

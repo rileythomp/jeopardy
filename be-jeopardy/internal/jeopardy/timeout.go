@@ -11,8 +11,7 @@ const (
 	boardIntroTimeout         = 25 * time.Second
 	pickTimeout               = 30 * time.Second
 	buzzTimeout               = 30 * time.Second
-	defaultAnsTimeout         = 30 * time.Second
-	dailyDoubleAnsTimeout     = 30 * time.Second
+	answerTimeout             = 15 * time.Second
 	finalJeopardyAnsTimeout   = 30 * time.Second
 	voteTimeout               = 10 * time.Second
 	disputeTimeout            = 60 * time.Second
@@ -73,10 +72,8 @@ func (g *Game) startBuzzTimeout() {
 func (g *Game) startAnswerTimeout(player GamePlayer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	player.setCancelAnswerTimeout(cancel)
-	answerTimeout := defaultAnsTimeout
-	if g.CurQuestion.DailyDouble {
-		answerTimeout = dailyDoubleAnsTimeout
-	} else if g.Round == FinalRound {
+	answerTimeout := answerTimeout
+	if g.Round == FinalRound {
 		answerTimeout = finalJeopardyAnsTimeout
 		g.StartFinalAnswerCountdown = true
 	}
