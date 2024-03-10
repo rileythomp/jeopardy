@@ -3,9 +3,18 @@
         <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
 
         <div id='join-buttons' class='flex-row'>
-            <button (click)="joinPublicGame(playerName)">Join public game</button>
-            <button (click)="createPrivateGame(playerName, 0)">Create a private game</button>
+            <!-- <button (click)="joinPublicGame(playerName)">Join public game</button> -->
+            <button (click)="createPrivateGame(playerName, 0)">Start a new game</button>
             <button (click)="toggleGameCodeInput()">Join game by code</button>
+        </div>
+        <div class='flex-row'>
+            <div >
+                <input type="checkbox" id="one-round" [(ngModel)]="oneRoundChecked" (change)="twoRoundChecked = !oneRoundChecked">
+                <label for="one-round" style="margin-right: 1em;">1 Round</label>
+                <input type="checkbox" id="two-round" [(ngModel)]="twoRoundChecked" (change)="oneRoundChecked = !twoRoundChecked">
+                <label for="two-round">2 Round</label>
+            </div>
+            <div></div>
         </div>
 
         <input *ngIf="showGameCodeInput" (keydown.enter)="joinGameByCode(playerName, gameCode)" type="text" [(ngModel)]="gameCode" placeholder="Game code">

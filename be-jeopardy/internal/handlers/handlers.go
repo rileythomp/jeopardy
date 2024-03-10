@@ -220,7 +220,7 @@ func JoinPublicGame(c *gin.Context) {
 		return
 	}
 
-	game, playerId, err, code := jeopardy.JoinPublicGame(req.PlayerName)
+	game, playerId, err, code := jeopardy.JoinPublicGame(req)
 	if err != nil {
 		log.Errorf("Error joining public game: %s", err.Error())
 		if code == socket.BadRequest {

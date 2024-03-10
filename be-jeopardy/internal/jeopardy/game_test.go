@@ -15,7 +15,7 @@ func TestSetQuestions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error connecting to database: %s", err.Error())
 		}
-		g := Game{questionDB: &db.JeopardyDB{Conn: conn}}
+		g := Game{jeopardyDB: &db.JeopardyDB{Conn: conn}}
 		err = g.setQuestions()
 		assert.NoError(t, err)
 		assert.Len(t, g.FirstRound, 6)

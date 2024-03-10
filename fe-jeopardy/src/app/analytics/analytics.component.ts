@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { ApiService } from '../services/api.service';
 
 @Component({
@@ -6,7 +6,7 @@ import { ApiService } from '../services/api.service';
 	templateUrl: './analytics.component.html',
 	styleUrls: ['./analytics.component.less']
 })
-export class AnalyticsComponent implements OnInit {
+export class AnalyticsComponent {
 	showAnalytics: boolean
 	gamesPlayed: number
 	firstRoundScore: number
@@ -20,7 +20,7 @@ export class AnalyticsComponent implements OnInit {
 		private apiService: ApiService
 	) { }
 
-	ngOnInit(): void {
+	toggleAnalytics(show: boolean) {
 		this.apiService.GetAnalytics().subscribe((resp: any) => {
 			this.gamesPlayed = resp.gamesPlayed
 			this.firstRoundScore = resp.firstRoundScore
@@ -30,9 +30,6 @@ export class AnalyticsComponent implements OnInit {
 			this.secondRoundAnsRate = resp.secondRoundAnsRate
 			this.secondRoundCorrRate = resp.secondRoundCorrRate
 		})
-	}
-
-	toggleAnalytics(show: boolean) {
 		this.showAnalytics = show
 	}
 }
