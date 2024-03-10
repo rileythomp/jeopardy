@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { GameStateService } from '../../services/game-state.service';
-import { Player } from '../../model/model';
+import { Player, ServerUnavailableMsg } from '../../model/model';
 import { PlayerService } from '../../services/player.service';
 import { WebsocketService } from '../../services/websocket.service';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
+import { ModalService } from 'src/app/services/modal.service';
 
 @Component({
 	selector: 'app-post-game',
@@ -19,6 +20,7 @@ export class PostGameComponent {
 		private websocketService: WebsocketService,
 		protected game: GameStateService,
 		protected player: PlayerService,
+		private modal: ModalService,
 	) { }
 
 	canProtestForPlayer(player: Player): boolean {
@@ -37,8 +39,9 @@ export class PostGameComponent {
 			next: (resp: any) => {
 				console.log(resp)
 			},
-			error: (resp: any) => {
-				alert(resp.error.message)
+			error: (err: any) => {
+				let msg = err.status != 0 ? err.error.message : ServerUnavailableMsg;
+				this.modal.displayMessage(msg)
 			},
 		})
 	}
@@ -48,8 +51,10 @@ export class PostGameComponent {
 			next: (resp: any) => {
 				this.router.navigate(['/'])
 			},
-			error: (resp: any) => {
-				alert(resp.error.message)
+			error: (err: any) => {
+				let msg = err.status != 0 ? err.error.message : ServerUnavailableMsg;
+				console.log(msg)
+				this.router.navigate(['/'])
 			},
 		})
 	}

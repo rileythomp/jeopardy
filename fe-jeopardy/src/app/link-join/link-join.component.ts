@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../services/api.service';
 import { JwtService } from '../services/jwt.service';
-import { ServerUnavailableMsg } from '../constants';
+import { ServerUnavailableMsg } from '../model/model';
 import { ModalService } from '../services/modal.service';
 
 @Component({

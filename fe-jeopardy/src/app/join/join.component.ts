@@ -3,7 +3,7 @@ import { Router } from '@angular/router'
 import { JwtService } from '../services/jwt.service'
 import { ApiService } from '../services/api.service'
 import { Observer } from 'rxjs'
-import { ServerUnavailableMsg } from '../constants'
+import { ServerUnavailableMsg } from '../model/model'
 import { ModalService } from '../services/modal.service'
 
 @Component({
