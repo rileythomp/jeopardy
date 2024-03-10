@@ -20,8 +20,8 @@ var (
 
 type (
 	Category struct {
-		Title     string     `json:"title"`
-		Questions []Question `json:"questions"`
+		Title     string      `json:"title"`
+		Questions []*Question `json:"questions"`
 	}
 
 	Answer struct {
@@ -64,15 +64,15 @@ func (q *Question) checkAnswer(ans string) bool {
 	return false
 }
 
-func (q *Question) equal(q0 Question) bool {
+func (q *Question) equal(q0 *Question) bool {
 	return q.Clue == q0.Clue && q.Answer == q0.Answer
 }
 
 func (g *Game) setQuestions() error {
 	g.FirstRound = []Category{}
 	g.SecondRound = []Category{}
-	g.FinalQuestion = Question{}
-	g.CurQuestion = Question{}
+	g.FinalQuestion = &Question{}
+	g.CurQuestion = &Question{}
 	g.OfficialAnswer = ""
 	questions, err := g.questionDB.GetQuestions()
 	if err != nil {
@@ -80,7 +80,7 @@ func (g *Game) setQuestions() error {
 	}
 	category := Category{}
 	for i, q := range questions {
-		question := Question{Question: q}
+		question := &Question{Question: q}
 		if question.Round == 3 {
 			g.FinalQuestion = question
 			continue

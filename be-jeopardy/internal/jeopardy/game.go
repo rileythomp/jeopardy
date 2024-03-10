@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
@@ -17,8 +18,8 @@ type (
 		Round          RoundState   `json:"round"`
 		FirstRound     []Category   `json:"firstRound"`
 		SecondRound    []Category   `json:"secondRound"`
-		FinalQuestion  Question     `json:"finalQuestion"`
-		CurQuestion    Question     `json:"curQuestion"`
+		FinalQuestion  *Question    `json:"finalQuestion"`
+		CurQuestion    *Question    `json:"curQuestion"`
 		OfficialAnswer string       `json:"officialAnswer"`
 		Players        []GamePlayer `json:"players"`
 		LastToPick     GamePlayer   `json:"lastToPick"`
@@ -38,6 +39,9 @@ type (
 		Disputers      int          `json:"disputes"`
 		NonDisputers   int          `json:"nonDisputes"`
 
+		FirstRoundScore  float64 `json:"firstRoundScore"`
+		SecondRoundScore float64 `json:"secondRoundScore"`
+
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
 		StartFinalWagerCountdown  bool `json:"startFinalWagerCountdown"`
@@ -53,12 +57,17 @@ type (
 		restartChan    chan bool
 		chatChan       chan ChatMessage
 
-		questionDB QuestionDB
+		questionDB jeopardyDB
 	}
 
-	QuestionDB interface {
+	jeopardyDB interface {
 		GetQuestions() ([]db.Question, error)
 		AddAlternative(alternative, answer string) error
+		SaveGameAnalytics(
+			gameID uuid.UUID, createdAt int64,
+			firstRound any, frAns, frCorr int, frScore float64,
+			secondRound any, srAns, srCor int, srScore float64,
+		) error
 		Close() error
 	}
 
@@ -112,7 +121,7 @@ const (
 
 const numPlayers = 3
 
-func NewGame(db QuestionDB) (*Game, error) {
+func NewGame(db jeopardyDB) (*Game, error) {
 	game := &Game{
 		State:                   PreGame,
 		Players:                 []GamePlayer{},
@@ -160,7 +169,7 @@ func (g *Game) restartGame() {
 	g.State = PreGame
 	g.Round = FirstRound
 	g.LastToPick = &Player{}
-	g.CurQuestion = Question{}
+	g.CurQuestion = &Question{}
 	g.OfficialAnswer = ""
 	g.AnsCorrectness = false
 	g.GuessedWrong = []string{}
@@ -555,6 +564,7 @@ func (g *Game) processFinalRoundAns(player GamePlayer, isCorrect bool, answer st
 	player.setFinalCorrect(isCorrect)
 	if g.roundEnded() {
 		g.setState(PostGame, &Player{})
+		g.saveGameAnalytics()
 		g.messageAllPlayers("Final round ended")
 		return nil
 	}
@@ -661,13 +671,23 @@ func (g *Game) startGame() {
 	g.setState(state, player)
 }
 
+func (g *Game) getAvgScore() float64 {
+	total := 0.0
+	for _, p := range g.Players {
+		total += float64(p.score())
+	}
+	return total / 3
+}
+
 func (g *Game) startSecondRound() {
+	g.FirstRoundScore = g.getAvgScore()
 	g.Round = SecondRound
 	g.resetGuesses()
 	g.setState(BoardIntro, g.lowestPlayer())
 }
 
 func (g *Game) startFinalRound() {
+	g.SecondRoundScore = g.getAvgScore()
 	g.Round = FinalRound
 	g.resetGuesses()
 	g.CurQuestion = g.FinalQuestion
@@ -675,6 +695,7 @@ func (g *Game) startFinalRound() {
 	g.NumFinalWagers = g.numFinalWagers()
 	if g.NumFinalWagers < 2 {
 		g.setState(PostGame, &Player{})
+		g.saveGameAnalytics()
 	} else {
 		g.setState(RecvWager, &Player{})
 	}

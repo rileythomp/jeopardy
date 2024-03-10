@@ -14,7 +14,7 @@ func TestGetQuestions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error connecting to database: %s", err.Error())
 		}
-		questionDB := QuestionDB{Conn: conn}
+		questionDB := JeopardyDB{Conn: conn}
 		questions, err := questionDB.GetQuestions()
 		if err != nil {
 			t.Fatalf("Error getting questions: %s", err.Error())

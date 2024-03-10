@@ -30,8 +30,8 @@ export class ModalComponent {
         }, 10000)
     }
 
-    showJeopardyInfo(firstTime: boolean) {
-        this.showInfo = true
+    showJeopardyInfo(firstTime: boolean, show: boolean) {
+        this.showInfo = show
         this.firstTime = firstTime
     }
 

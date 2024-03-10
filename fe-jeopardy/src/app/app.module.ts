@@ -20,6 +20,7 @@ import { QuestionComponent } from './game/question/question.component';
 import { BoardIntroComponent } from './game/board-intro/board-intro.component';
 import { WarningComponent } from './warning/warning.component';
 import { ModalComponent } from './modal/modal.component';
+import { AnalyticsComponent } from './analytics/analytics.component';
 
 @NgModule({
   declarations: [
@@ -39,6 +40,7 @@ import { ModalComponent } from './modal/modal.component';
     BoardIntroComponent,
     WarningComponent,
     ModalComponent,
+    AnalyticsComponent,
   ],
   imports: [
     BrowserModule,

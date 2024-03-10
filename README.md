@@ -22,9 +22,11 @@ $ ng serve
 
 ### TODO
 
-- Track and show game analytics
+- Improve instructions
 
-- Allow players to select 1 or 2 round game
+- Allow players to select 1 or 2 round games
+
+- Remove alerts
 
 - Allow players to select bot difficulty
 

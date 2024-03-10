@@ -1,34 +1,3 @@
-@keyframes fadeInMoveUp {
-    from {
-        transform: translate(-50%, calc(-1*var(--header-height)))
-    }
-    to {
-        transform: translate(-50%, 0);
-    }
-}
-
-.modal-container {
-    position: fixed;
-    left: 50%;
-    transform: translate(-50%);
-    top: calc(var(--header-height) + 15px);
-    width: calc(600px - 4em);
-    background-color: var(--jeopardy-lightblue);
-    border: 2px solid var(--jeopardy-blue);
-    display: flex;
-    flex-direction: column;
-    animation: fadeInMoveUp 2s ease-out;
-    padding: 2em;
-
-    .modal-message {
-
-        h3, p {
-            margin: 0;
-            margin-bottom: 1em;
-        }
-    }
-
-    #dispute-buttons {
-        gap: 30px;
-    }
+#dispute-buttons {
+    gap: 30px;
 }
