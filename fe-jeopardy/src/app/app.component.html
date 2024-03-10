@@ -3,8 +3,8 @@
 		<h2>Jeopardy!</h2>
 	</div>
 	<div>
-		<ion-icon (click)="showJeopardyInfo()" name="information-circle-outline"></ion-icon>
-		<ion-icon (click)="showAnalytics()" name="bar-chart-outline"></ion-icon>
+		<ion-icon (click)="modal.displayInstructions()" name="information-circle-outline"></ion-icon>
+		<ion-icon (click)="modal.displayAnalytics()" name="bar-chart-outline"></ion-icon>
 	</div>
 </div>
 
@@ -13,5 +13,7 @@
 	<router-outlet></router-outlet>
 </div>
 
-<app-modal></app-modal>
-<app-analytics></app-analytics>
+<app-game-message *ngIf="modal.showMessage()"></app-game-message>
+<app-instructions *ngIf="modal.showInstructions()"></app-instructions>
+<app-analytics *ngIf="modal.showAnalytics()"></app-analytics>
+<app-dispute></app-dispute>

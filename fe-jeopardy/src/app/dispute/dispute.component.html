@@ -1,0 +1,30 @@
+<div *ngIf="game.InDispute()" class='modal-container'>
+    <div class='modal-message'>
+        <h3>Dispute</h3>
+        <p>{{ game.DisputerName() }} has disputed the previous question.</p>
+        <p>Overturning this question means {{ game.DisputerName() }} will be given the ${{ game.CurValue() }} as if they had answered correctly.</p>
+        <p *ngIf="game.AdjustedAnswers().length > 0">The following adjustments will be made for players who answered after {{ game.DisputerName() }}</p>
+        <ul>
+            <li *ngFor='let adjAns of game.AdjustedAnswers()'>
+                {{ adjAns.player.name }} will have ${{ game.CurValue() }} {{ adjAns.correct ? 'removed from' : 'added to' }} their score
+            </li>
+        </ul>
+        <p>{{ game.DisputerName() }} will also pick the next question.</p> 
+        <p>Previous question: {{ game.CurQuestion() }}</p>
+        <p>Official answer: <b>{{ game.OfficialAnswer() }}</b></p>
+        <p>{{ game.DisputerName() }}'s answer: <b>{{ game.DisputerAnswer() }}</b></p>
+        <p>Should {{ game.DisputerName() }}'s' answer have been marked as correct?</p>
+    </div>
+    
+    <div *ngIf='player.CanDispute()' class='flex-row' id='dispute-buttons'>
+        <button (click)="disputeQuestion(true)">
+            Yes, {{ game.DisputerName() }}'s answer was correct.
+        </button>
+        <button (click)="disputeQuestion(false)">
+            No, {{ game.DisputerName() }}'s answer was incorrect.
+        </button>
+    </div>
+    <div *ngIf='!player.CanDispute()'>
+        <p>Waiting for other players to confirm the dispute...</p>
+    </div>
+</div>

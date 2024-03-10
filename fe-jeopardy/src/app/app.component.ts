@@ -1,7 +1,7 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { Router } from '@angular/router'
-import { ModalComponent } from './modal/modal.component';
-import { AnalyticsComponent } from './analytics/analytics.component';
+import { environment } from 'src/environments/environment';
+import { ModalService } from './services/modal.service';
 
 @Component({
 	selector: 'app-root',
@@ -11,13 +11,11 @@ import { AnalyticsComponent } from './analytics/analytics.component';
 export class AppComponent implements OnInit, AfterViewInit {
 	constructor(
 		private router: Router,
+		protected modal: ModalService,
 	) { }
 
-	@ViewChild(ModalComponent) modalComponent: ModalComponent
-	@ViewChild(AnalyticsComponent) analytics: AnalyticsComponent
-
 	ngOnInit() {
-		if (window.innerHeight < 600 || window.innerWidth < 1140) {
+		if (environment.production && (window.innerHeight < 600 || window.innerWidth < 1140)) {
 			this.router.navigate(['/warning'], { state: { message: 'Your screen is to small to play this game. Please try on a larger screen.' } })
 		}
 		let jeopardy =
@@ -36,23 +34,13 @@ Please report any issues at https://github.com/rileythomp/jeopardy/issues/new
 	}
 
 	ngAfterViewInit() {
-		if (window.innerHeight < 600 || window.innerWidth < 1140) {
+		if (environment.production && (window.innerHeight < 600 || window.innerWidth < 1140)) {
 			return
 		}
 		let showJeopardyInfo = localStorage.getItem('showJeopardyInfo')
 		if (showJeopardyInfo === null) {
 			localStorage.setItem('showJeopardyInfo', 'shown')
-			this.modalComponent.showJeopardyInfo(true, true)
+			this.modal.displayInstructions()
 		}
-	}
-
-	showAnalytics() {
-		this.modalComponent.showJeopardyInfo(false, false)
-		this.analytics.toggleAnalytics(true)
-	}
-
-	showJeopardyInfo() {
-		this.analytics.toggleAnalytics(false)
-		this.modalComponent.showJeopardyInfo(false, true)
 	}
 }
