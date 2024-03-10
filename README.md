@@ -22,8 +22,6 @@ $ ng serve
 
 ### TODO
 
-- Improve instructions
-
 - Tournament play
 
 - Allow players to select bot difficulty
