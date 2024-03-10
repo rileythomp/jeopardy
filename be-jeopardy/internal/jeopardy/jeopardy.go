@@ -14,6 +14,7 @@ type GameRequest struct {
 	PlayerName string `json:"playerName"`
 	GameCode   string `json:"gameCode"`
 	Bots       int    `json:"bots"`
+	FullGame   bool   `json:"fullGame"`
 }
 
 var (
@@ -55,7 +56,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
-	game, err := NewGame(questionDB)
+	game, err := NewGame(questionDB, req.FullGame)
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
@@ -78,31 +79,31 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	return game, player.Id, nil, 0
 }
 
-func JoinPublicGame(playerName string) (*Game, string, error, int) {
+func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 	var game *Game
 	for _, g := range publicGames {
-		if len(g.Players) < numPlayers && g.validateName(playerName) == nil {
+		if len(g.Players) < numPlayers && g.validateName(req.PlayerName) == nil {
 			game = g
 			break
 		}
 	}
 	if game == nil {
-		questionDB, err := db.NewJeopardyDB()
+		jeopardyDB, err := db.NewJeopardyDB()
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}
-		game, err = NewGame(questionDB)
+		game, err = NewGame(jeopardyDB, req.FullGame)
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}
 		publicGames[game.Name] = game
 	}
 
-	if err := game.validateName(playerName); err != nil {
+	if err := game.validateName(req.PlayerName); err != nil {
 		return &Game{}, "", err, socket.BadRequest
 	}
 
-	player := NewPlayer(playerName)
+	player := NewPlayer(req.PlayerName)
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
 
@@ -283,7 +284,7 @@ func CleanUpGames() {
 }
 
 func removeGame(g *Game) {
-	if err := g.questionDB.Close(); err != nil {
+	if err := g.jeopardyDB.Close(); err != nil {
 		log.Errorf("Error closing question db: %s", err.Error())
 	}
 	delete(publicGames, g.Name)

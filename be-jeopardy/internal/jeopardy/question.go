@@ -74,7 +74,7 @@ func (g *Game) setQuestions() error {
 	g.FinalQuestion = &Question{}
 	g.CurQuestion = &Question{}
 	g.OfficialAnswer = ""
-	questions, err := g.questionDB.GetQuestions()
+	questions, err := g.jeopardyDB.GetQuestions()
 	if err != nil {
 		return err
 	}

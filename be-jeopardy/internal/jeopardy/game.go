@@ -38,6 +38,7 @@ type (
 		DisputePicker  GamePlayer   `json:"disputePicker"`
 		Disputers      int          `json:"disputes"`
 		NonDisputers   int          `json:"nonDisputes"`
+		FullGame       bool         `json:"fullGame"`
 
 		FirstRoundScore  float64 `json:"firstRoundScore"`
 		SecondRoundScore float64 `json:"secondRoundScore"`
@@ -57,17 +58,13 @@ type (
 		restartChan    chan bool
 		chatChan       chan ChatMessage
 
-		questionDB jeopardyDB
+		jeopardyDB jeopardyDB
 	}
 
 	jeopardyDB interface {
 		GetQuestions() ([]db.Question, error)
 		AddAlternative(alternative, answer string) error
-		SaveGameAnalytics(
-			gameID uuid.UUID, createdAt int64,
-			firstRound any, frAns, frCorr int, frScore float64,
-			secondRound any, srAns, srCor int, srScore float64,
-		) error
+		SaveGameAnalytics(gameID uuid.UUID, createdAt int64, fr db.AnalyticsRound, sr db.AnalyticsRound) error
 		Close() error
 	}
 
@@ -121,7 +118,7 @@ const (
 
 const numPlayers = 3
 
-func NewGame(db jeopardyDB) (*Game, error) {
+func NewGame(db jeopardyDB, fullGame bool) (*Game, error) {
 	game := &Game{
 		State:                   PreGame,
 		Players:                 []GamePlayer{},
@@ -136,7 +133,8 @@ func NewGame(db jeopardyDB) (*Game, error) {
 		disconnectChan:          make(chan GamePlayer),
 		restartChan:             make(chan bool),
 		chatChan:                make(chan ChatMessage),
-		questionDB:              db,
+		jeopardyDB:              db,
+		FullGame:                fullGame,
 	}
 	if err := game.setQuestions(); err != nil {
 		return nil, err
@@ -423,7 +421,7 @@ func (g *Game) processVote(player GamePlayer, confirm bool) error {
 	g.cancelVoteTimeout()
 	isCorrect := (g.AnsCorrectness && len(g.Confirmers) == 2) || (!g.AnsCorrectness && len(g.Challengers) == 2)
 	if !g.AnsCorrectness && len(g.Challengers) == 2 {
-		if err := g.questionDB.AddAlternative(g.CurQuestion.CurAns.Answer, g.CurQuestion.Answer); err != nil {
+		if err := g.jeopardyDB.AddAlternative(g.CurQuestion.CurAns.Answer, g.CurQuestion.Answer); err != nil {
 			log.Errorf("Error adding alternative: %s", err.Error())
 		}
 	}
@@ -473,7 +471,7 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 				break
 			}
 		}
-		if err := g.questionDB.AddAlternative(g.CurQuestion.CurDisputed.Answer, g.CurQuestion.Answer); err != nil {
+		if err := g.jeopardyDB.AddAlternative(g.CurQuestion.CurDisputed.Answer, g.CurQuestion.Answer); err != nil {
 			log.Errorf("Error adding alternative: %s", err.Error())
 		}
 		nextPicker = g.CurQuestion.CurDisputed.Player
@@ -680,14 +678,12 @@ func (g *Game) getAvgScore() float64 {
 }
 
 func (g *Game) startSecondRound() {
-	g.FirstRoundScore = g.getAvgScore()
 	g.Round = SecondRound
 	g.resetGuesses()
 	g.setState(BoardIntro, g.lowestPlayer())
 }
 
 func (g *Game) startFinalRound() {
-	g.SecondRoundScore = g.getAvgScore()
 	g.Round = FinalRound
 	g.resetGuesses()
 	g.CurQuestion = g.FinalQuestion
@@ -701,6 +697,19 @@ func (g *Game) startFinalRound() {
 	}
 }
 
+func (g *Game) handleRoundEnd() {
+	if g.Round == FirstRound {
+		g.FirstRoundScore = g.getAvgScore()
+	} else if g.Round == SecondRound {
+		g.SecondRoundScore = g.getAvgScore()
+	}
+	if g.Round == FirstRound && g.FullGame {
+		g.startSecondRound()
+	} else {
+		g.startFinalRound()
+	}
+}
+
 func (g *Game) nextQuestion(player GamePlayer, isCorrect bool) {
 	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
 	if !isCorrect {
@@ -710,13 +719,9 @@ func (g *Game) nextQuestion(player GamePlayer, isCorrect bool) {
 		g.disableQuestion()
 	}
 	var msg string
-	roundOver := g.roundEnded()
-	if roundOver && g.Round == FirstRound {
-		g.startSecondRound()
-		msg = "First round ended"
-	} else if roundOver && g.Round == SecondRound {
-		g.startFinalRound()
-		msg = "Second round ended"
+	if g.roundEnded() {
+		g.handleRoundEnd()
+		msg = "Round ended"
 	} else if g.noPlayerCanBuzz() {
 		g.resetGuesses()
 		g.setState(RecvPick, g.LastToPick)
@@ -739,13 +744,9 @@ func (g *Game) nextQuestion(player GamePlayer, isCorrect bool) {
 func (g *Game) skipQuestion() {
 	var msg string
 	g.disableQuestion()
-	roundOver := g.roundEnded()
-	if roundOver && g.Round == FirstRound {
-		g.startSecondRound()
-		msg = "First round ended"
-	} else if roundOver && g.Round == SecondRound {
-		g.startFinalRound()
-		msg = "Second round ended"
+	if g.roundEnded() {
+		g.handleRoundEnd()
+		msg = "Round ended"
 	} else {
 		g.resetGuesses()
 		g.setState(RecvPick, g.LastToPick)

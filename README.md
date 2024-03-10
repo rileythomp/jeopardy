@@ -24,16 +24,14 @@ $ ng serve
 
 - Improve instructions
 
-- Allow players to select 1 or 2 round games
-
 - Remove alerts
+
+- Tournament play
 
 - Allow players to select bot difficulty
 
-- Accounts with user stats
-
 - Leaderboards
 
-- Tournament play
+- Accounts with user stats
 
 - Look into pion for voice chat

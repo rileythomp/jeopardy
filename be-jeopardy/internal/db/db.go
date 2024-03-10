@@ -68,18 +68,38 @@ func (db *JeopardyDB) AddAlternative(alternative, answer string) error {
 	return err
 }
 
+type AnalyticsRound struct {
+	Categories []AnalyticsCategory
+	Answers    *int
+	Correct    *int
+	Score      *float64
+}
+
+type AnalyticsCategory struct {
+	Title    string              `json:"title"`
+	Question []AnalyticsQuestion `json:"question"`
+}
+
+type AnalyticsQuestion struct {
+	Answers []AnalyticsAnswer `json:"answers"`
+}
+
+type AnalyticsAnswer struct {
+	PlayerID    string `json:"playerId"`
+	Answer      string `json:"answer"`
+	Correct     bool   `json:"correct"`
+	HasDisputed bool   `json:"hasDisputed"`
+	Overturned  bool   `json:"overturned"`
+}
+
 //go:embed sql/save_game_analytics.sql
 var saveGameAnalytics string
 
-func (db *JeopardyDB) SaveGameAnalytics(
-	gameID uuid.UUID, createdAt int64,
-	firstRound any, frAns, frCorr int, frScore float64,
-	secondRound any, srAns, srCorr int, srScore float64,
-) error {
+func (db *JeopardyDB) SaveGameAnalytics(gameID uuid.UUID, createdAt int64, fr AnalyticsRound, sr AnalyticsRound) error {
 	_, err := db.Conn.Exec(
 		context.Background(), saveGameAnalytics, gameID, createdAt,
-		firstRound, frAns, frCorr, frScore,
-		secondRound, srAns, srCorr, srScore,
+		fr.Categories, fr.Answers, fr.Correct, fr.Score,
+		sr.Categories, sr.Answers, sr.Correct, sr.Score,
 	)
 	return err
 }

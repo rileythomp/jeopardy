@@ -15,6 +15,8 @@ export class JoinComponent {
 	protected playerName: string = ''
 	protected gameCode: string = ''
 	protected showGameCodeInput: boolean = false
+	protected oneRoundChecked: boolean = false
+	protected twoRoundChecked: boolean = true
 
 	@ViewChild(ModalComponent) private modal: ModalComponent
 
@@ -38,7 +40,7 @@ export class JoinComponent {
 	}
 
 	createPrivateGame(playerName: string, bots: number) {
-		this.apiService.CreatePrivateGame(playerName, bots).subscribe(this.joinResp())
+		this.apiService.CreatePrivateGame(playerName, bots, this.twoRoundChecked).subscribe(this.joinResp())
 	}
 
 	joinGameByCode(playerName: string, gameCode: string) {

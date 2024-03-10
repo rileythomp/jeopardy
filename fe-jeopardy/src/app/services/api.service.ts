@@ -7,13 +7,6 @@ import { JwtService } from './jwt.service';
 const apiAddr = environment.apiServerUrl;
 const httpProtocol = environment.httpProtocol;
 
-const JsonOpts = {
-    headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    })
-}
-
 @Injectable({
     providedIn: 'root'
 })
@@ -24,10 +17,11 @@ export class ApiService {
         private jwtService: JwtService,
     ) { }
 
-    CreatePrivateGame(playName: string, bots: number): Observable<any> {
+    CreatePrivateGame(playName: string, bots: number, fullGame: boolean): Observable<any> {
         return this.post('games', {
             playerName: playName,
             bots: bots,
+            fullGame: fullGame,
         })
     }
 
@@ -41,6 +35,7 @@ export class ApiService {
     JoinPublicGame(playerName: string): Observable<any> {
         return this.put('games', {
             playerName: playerName,
+            fullGame: true,
         })
     }
 
