@@ -85,6 +85,7 @@ func (g *Game) startAnswerTimeout(player GamePlayer) {
 			Player:  player,
 			Answer:  "answer-timeout",
 			Correct: false,
+			Bot:     player.isBot(),
 		}
 		g.CurQuestion.Answers = append(g.CurQuestion.Answers, g.CurQuestion.CurAns)
 		g.nextQuestion(player, false)

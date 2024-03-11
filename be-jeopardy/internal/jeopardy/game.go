@@ -401,6 +401,7 @@ func (g *Game) processAnswer(player GamePlayer, answer string) error {
 		Player:  player,
 		Answer:  answer,
 		Correct: isCorrect,
+		Bot:     player.isBot(),
 	}
 	g.CurQuestion.Answers = append(g.CurQuestion.Answers, g.CurQuestion.CurAns)
 	g.setState(RecvVote, &Player{})

@@ -172,3 +172,7 @@ func (p *Bot) copyState(player GamePlayer) {
 	p.FinalProtestors = player.finalProtestors()
 	p.PlayAgain = player.playAgain()
 }
+
+func (p *Bot) isBot() bool {
+	return true
+}

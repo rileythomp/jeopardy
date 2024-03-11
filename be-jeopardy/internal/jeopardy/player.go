@@ -35,6 +35,7 @@ type GamePlayer interface {
 	finalCorrect() bool
 	finalProtestors() map[string]bool
 	playAgain() bool
+	isBot() bool
 
 	setId(string)
 	setName(string)
@@ -265,6 +266,10 @@ func (p *Player) finalProtestors() map[string]bool {
 
 func (p *Player) playAgain() bool {
 	return p.PlayAgain
+}
+
+func (p *Player) isBot() bool {
+	return false
 }
 
 func (p *Player) setId(id string) {

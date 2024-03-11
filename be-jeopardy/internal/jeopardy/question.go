@@ -30,6 +30,7 @@ type (
 		Correct     bool       `json:"correct"`
 		HasDisputed bool       `json:"hasDisputed"`
 		Overturned  bool       `json:"overturned"`
+		Bot         bool       `json:"bot"`
 	}
 
 	Question struct {

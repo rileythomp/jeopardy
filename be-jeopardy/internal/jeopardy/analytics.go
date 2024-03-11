@@ -26,12 +26,13 @@ func getRoundAnalytics(round []Category) db.AnalyticsRound {
 		c := db.AnalyticsCategory{Title: category.Title}
 		for _, question := range category.Questions {
 			q := db.AnalyticsQuestion{}
-			if len(question.Answers) > 0 {
-				answers++
-			}
-			seenCorr := false
+			seenAns, seenCorr := false, false
 			for _, ans := range question.Answers {
-				if ans.Correct && !seenCorr {
+				if !seenAns && !ans.Bot {
+					seenAns = true
+					answers++
+				}
+				if ans.Correct && !seenCorr && !ans.Bot {
 					seenCorr = true
 					correct++
 				}
@@ -41,6 +42,7 @@ func getRoundAnalytics(round []Category) db.AnalyticsRound {
 					Correct:     ans.Correct,
 					HasDisputed: ans.HasDisputed,
 					Overturned:  ans.Overturned,
+					Bot:         ans.Bot,
 				}
 				q.Answers = append(q.Answers, answer)
 			}
