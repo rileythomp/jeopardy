@@ -204,8 +204,7 @@ func (g *Game) handlePlayerJoined() {
 		if g.Paused {
 			g.startGame()
 		} else {
-			g.setState(BoardIntro, g.Players[0])
-			// g.setState(RecvPick, g.Players[0])
+			g.startRound(g.Players[0])
 		}
 		msg = "We are ready to play"
 	}

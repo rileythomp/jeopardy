@@ -3,6 +3,7 @@ package jeopardy
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -163,6 +164,14 @@ func (g *Game) processMessages() {
 	}()
 }
 
+func (g *Game) startRound(player GamePlayer) {
+	if os.Getenv("GIN_MODE") == "debug" {
+		g.setState(RecvPick, player)
+	} else {
+		g.setState(BoardIntro, player)
+	}
+}
+
 func (g *Game) restartGame() {
 	g.State = PreGame
 	g.Round = FirstRound
@@ -183,7 +192,7 @@ func (g *Game) restartGame() {
 	for _, p := range g.Players {
 		p.resetPlayer()
 	}
-	g.setState(BoardIntro, g.Players[0])
+	g.startRound(g.Players[0])
 	g.messageAllPlayers("We are ready to play")
 }
 
@@ -663,6 +672,12 @@ func (g *Game) startGame() {
 				player = p
 			}
 		}
+	} else if state == RecvDispute {
+		for _, p := range g.Players {
+			if !p.canDispute() {
+				player = p
+			}
+		}
 	} else {
 		player = &Player{}
 	}
@@ -680,7 +695,7 @@ func (g *Game) getAvgScore() float64 {
 func (g *Game) startSecondRound() {
 	g.Round = SecondRound
 	g.resetGuesses()
-	g.setState(BoardIntro, g.lowestPlayer())
+	g.startRound(g.lowestPlayer())
 }
 
 func (g *Game) startFinalRound() {

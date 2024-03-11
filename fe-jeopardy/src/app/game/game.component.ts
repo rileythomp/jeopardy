@@ -1,16 +1,14 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core'
-import { Router } from '@angular/router'
 import { GameStateService } from '../services/game-state.service'
 import { WebsocketService } from '../services/websocket.service'
 import { PlayerService } from '../services/player.service'
 import { JwtService } from '../services/jwt.service'
 import { GameState, Ping } from '../model/model'
-import { ModalComponent } from '../modal/modal.component'
+import { ModalService } from '../services/modal.service'
 
 const pickTimeout = 30
 const buzzTimeout = 30
-const defaultAnsTimeout = 30
-const dailyDoubleAnsTimeout = 30
+const answerTimeout = 15
 const finalJeopardyAnsTimeout = 30
 const voteTimeout = 10
 const dailyDoubleWagerTimeout = 30
@@ -35,13 +33,12 @@ export class GameComponent implements OnInit {
 	protected playMusic: boolean = false
 	protected showMusicInfo: boolean = false
 
-	@ViewChild(ModalComponent) private modal: ModalComponent
-
 	constructor(
 		private websocketService: WebsocketService,
 		private jwtService: JwtService,
 		protected game: GameStateService,
 		protected player: PlayerService,
+		private modal: ModalService,
 	) { }
 
 	ngOnInit(): void {
@@ -81,12 +78,10 @@ export class GameComponent implements OnInit {
 
 			if (resp.code >= 4400) {
 				switch (resp.code) {
+					case 4400:
 					case 4401:
 					case 4500:
-						this.modal.showMessage(resp.message)
-						break
-					case 4400:
-						this.modal.showMessage(resp.message)
+						this.modal.displayMessage(resp.message)
 						break
 				}
 				return
@@ -103,13 +98,13 @@ export class GameComponent implements OnInit {
 			console.log(resp)
 
 			if (resp.code == 4100) {
-				this.modal.showMessage(resp.message)
+				this.modal.displayMessage(resp.message)
 				return
 			}
 
 			if (this.game.IsPaused()) {
 				this.cancelCountdown()
-				this.modal.showMessage(`${resp.message}, will resume when 3 players are ready`)
+				this.modal.displayMessage(`${resp.message}, will resume when 3 players are ready`)
 				return
 			}
 
@@ -117,8 +112,11 @@ export class GameComponent implements OnInit {
 				case GameState.PreGame:
 				case GameState.PostGame:
 				case GameState.BoardIntro:
+					this.cancelCountdown()
+					break
 				case GameState.RecvDispute:
 					this.cancelCountdown()
+					this.modal.displayDispute()
 					break
 				case GameState.RecvPick:
 					this.startCountdownTimer(pickTimeout)
@@ -140,7 +138,7 @@ export class GameComponent implements OnInit {
 					break
 				case GameState.RecvAns:
 					if (!this.game.FinalRound()) {
-						this.startCountdownTimer(defaultAnsTimeout)
+						this.startCountdownTimer(answerTimeout)
 					} else if (this.game.StartFinalAnswerCountdown()) {
 						this.startCountdownTimer(finalJeopardyAnsTimeout)
 					}
@@ -158,7 +156,7 @@ export class GameComponent implements OnInit {
 					}
 					break
 				default:
-					this.modal.showMessage('Error while updating game')
+					this.modal.displayMessage('Error while updating game')
 					break
 			}
 		})
@@ -212,7 +210,7 @@ export class GameComponent implements OnInit {
 	}
 
 	pauseGame(pause: boolean) {
-		this.modal.showMessage(`Game ${pause ? 'paused' : 'resumed'}`)
+		this.modal.displayMessage(`Game ${pause ? 'paused' : 'resumed'}`)
 		this.websocketService.Send({
 			state: this.game.State(),
 			pause: pause ? 1 : -1,

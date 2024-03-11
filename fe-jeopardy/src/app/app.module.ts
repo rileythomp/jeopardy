@@ -19,8 +19,10 @@ import { ChatComponent } from './game/chat/chat.component';
 import { QuestionComponent } from './game/question/question.component';
 import { BoardIntroComponent } from './game/board-intro/board-intro.component';
 import { WarningComponent } from './warning/warning.component';
-import { ModalComponent } from './modal/modal.component';
 import { AnalyticsComponent } from './analytics/analytics.component';
+import { InstructionsComponent } from './instructions/instructions.component';
+import { DisputeComponent } from './dispute/dispute.component';
+import { GameMessageComponent } from './game-message/game-message.component';
 
 @NgModule({
   declarations: [
@@ -39,8 +41,10 @@ import { AnalyticsComponent } from './analytics/analytics.component';
     QuestionComponent,
     BoardIntroComponent,
     WarningComponent,
-    ModalComponent,
     AnalyticsComponent,
+    InstructionsComponent,
+    DisputeComponent,
+    GameMessageComponent,
   ],
   imports: [
     BrowserModule,

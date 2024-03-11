@@ -1,9 +1,9 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../services/api.service';
 import { JwtService } from '../services/jwt.service';
-import { ServerUnavailableMsg } from '../constants';
-import { ModalComponent } from '../modal/modal.component';
+import { ServerUnavailableMsg } from '../model/model';
+import { ModalService } from '../services/modal.service';
 
 @Component({
     selector: 'app-link-join',
@@ -14,13 +14,12 @@ export class LinkJoinComponent {
     protected gameCode: string;
     protected playerName: string;
 
-    @ViewChild(ModalComponent) private modal: ModalComponent
-
     constructor(
         private route: ActivatedRoute,
         private router: Router,
         private apiService: ApiService,
         private jwtService: JwtService,
+        private modal: ModalService,
     ) {
         this.gameCode = this.route.snapshot.paramMap.get('gameCode') ?? '';
     }
@@ -33,7 +32,7 @@ export class LinkJoinComponent {
             },
             error: (err: any) => {
                 let msg = err.status != 0 ? err.error.message : ServerUnavailableMsg;
-                this.modal.showMessage(msg)
+                this.modal.displayMessage(msg)
             }
         });
     }

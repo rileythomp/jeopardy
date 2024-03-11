@@ -1,13 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../services/api.service';
+import { ModalService } from '../services/modal.service';
 
 @Component({
 	selector: 'app-analytics',
 	templateUrl: './analytics.component.html',
 	styleUrls: ['./analytics.component.less']
 })
-export class AnalyticsComponent {
-	showAnalytics: boolean
+export class AnalyticsComponent implements OnInit {
 	gamesPlayed: number
 	firstRoundScore: number
 	secondRoundScore: number
@@ -17,10 +17,11 @@ export class AnalyticsComponent {
 	secondRoundCorrRate: number
 
 	constructor(
-		private apiService: ApiService
+		private apiService: ApiService,
+		protected modal: ModalService,
 	) { }
 
-	toggleAnalytics(show: boolean) {
+	ngOnInit() {
 		this.apiService.GetAnalytics().subscribe((resp: any) => {
 			this.gamesPlayed = resp.gamesPlayed
 			this.firstRoundScore = resp.firstRoundScore
@@ -30,6 +31,5 @@ export class AnalyticsComponent {
 			this.secondRoundAnsRate = resp.secondRoundAnsRate
 			this.secondRoundCorrRate = resp.secondRoundCorrRate
 		})
-		this.showAnalytics = show
 	}
 }

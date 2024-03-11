@@ -1,10 +1,10 @@
-import { Component, ViewChild } from '@angular/core'
+import { Component } from '@angular/core'
 import { Router } from '@angular/router'
 import { JwtService } from '../services/jwt.service'
 import { ApiService } from '../services/api.service'
 import { Observer } from 'rxjs'
-import { ServerUnavailableMsg } from '../constants'
-import { ModalComponent } from '../modal/modal.component'
+import { ServerUnavailableMsg } from '../model/model'
+import { ModalService } from '../services/modal.service'
 
 @Component({
 	selector: 'app-join',
@@ -18,12 +18,11 @@ export class JoinComponent {
 	protected oneRoundChecked: boolean = false
 	protected twoRoundChecked: boolean = true
 
-	@ViewChild(ModalComponent) private modal: ModalComponent
-
 	constructor(
 		private router: Router,
 		private jwtService: JwtService,
 		private apiService: ApiService,
+		private modal: ModalService,
 	) { }
 
 	private joinResp(): Partial<Observer<any>> {
@@ -34,7 +33,7 @@ export class JoinComponent {
 			},
 			error: (err: any) => {
 				let msg = err.status != 0 ? err.error.message : ServerUnavailableMsg;
-				this.modal.showMessage(msg)
+				this.modal.displayMessage(msg)
 			}
 		}
 	}
@@ -58,7 +57,7 @@ export class JoinComponent {
 			},
 			error: (err: any) => {
 				let msg = err.status != 0 ? err.error.message : ServerUnavailableMsg
-				this.modal.showMessage(msg)
+				this.modal.displayMessage(msg)
 			},
 		})
 	}

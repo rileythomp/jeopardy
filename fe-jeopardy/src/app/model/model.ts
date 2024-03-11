@@ -88,3 +88,5 @@ export type Message = {
     message: string;
     timestamp: number;
 }
+
+export let ServerUnavailableMsg = 'Sorry, Jeopardy is not available right now. Please try again later.'
