@@ -40,7 +40,7 @@ export class ApiService {
     }
 
     AddBot(): Observable<any> {
-        return this.put(`games/bot`, {})
+        return this.put('games/bot', {})
     }
 
     GetPlayerGame(): Observable<any> {

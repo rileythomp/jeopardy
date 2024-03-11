@@ -158,3 +158,17 @@ func sortScores(players []GamePlayer) []int {
 	})
 	return scores
 }
+
+func (p *Bot) copyState(player GamePlayer) {
+	p.Score = player.score()
+	p.CanPick = player.canPick()
+	p.CanBuzz = player.canBuzz()
+	p.CanAnswer = player.canAnswer()
+	p.CanVote = player.canVote()
+	p.CanWager = player.canWager()
+	p.CanDispute = player.canDispute()
+	p.FinalWager = player.finalWager()
+	p.FinalCorrect = player.finalCorrect()
+	p.FinalProtestors = player.finalProtestors()
+	p.PlayAgain = player.playAgain()
+}

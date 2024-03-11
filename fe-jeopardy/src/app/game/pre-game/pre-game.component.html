@@ -1,12 +1,12 @@
 <div id='pre-game-container'>
     <h2>Waiting for more players</h2>
 
-    <p *ngIf="game.PostGame() || game.IsPaused()">
+    <p>
         Link to join: <span id='joinLink' (click)="openJoinLink()">{{gameLink}}/join/{{game.Name()}}</span>&nbsp;
         <ion-icon name="copy-outline" id="copyLink" (click)="copyJoinLink()"></ion-icon>
     </p>
 
-    <div *ngIf="!game.IsPaused()">
+    <div>
         <p>
             Other players taking too long? Add a Jeopardy bot to the game to play against.
         </p>

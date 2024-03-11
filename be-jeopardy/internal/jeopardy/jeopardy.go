@@ -160,12 +160,25 @@ func AddBot(playerId string) error {
 		return err
 	}
 
-	if len(game.Players) >= numPlayers {
+	var bot *Bot
+	if len(game.Players) < numPlayers {
+		bot = NewBot(genGameCode())
+		game.Players = append(game.Players, bot)
+	} else {
+		for i, p := range game.Players {
+			if p.conn() == nil {
+				delete(playerGames, p.id())
+				bot = NewBot(genGameCode())
+				bot.copyState(p)
+				game.Players[i] = bot
+				break
+			}
+		}
+	}
+	if bot == nil {
 		return fmt.Errorf("Game is full")
 	}
 
-	bot := NewBot(genGameCode())
-	game.Players = append(game.Players, bot)
 	bot.processMessages()
 
 	game.handlePlayerJoined()
