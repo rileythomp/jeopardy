@@ -283,9 +283,7 @@ func CleanUpGames() {
 }
 
 func removeGame(g *Game) {
-	if err := g.jeopardyDB.Close(); err != nil {
-		log.Errorf("Error closing question db: %s", err.Error())
-	}
+	g.jeopardyDB.Close()
 	delete(publicGames, g.Name)
 	delete(privateGames, g.Name)
 	for _, p := range g.Players {

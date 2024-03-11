@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type (
@@ -21,27 +21,31 @@ type (
 	}
 
 	JeopardyDB struct {
-		Conn *pgx.Conn
+		pool *pgxpool.Pool
 	}
 )
 
 func NewJeopardyDB() (*JeopardyDB, error) {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	poolConfig, err := pgxpool.ParseConfig(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		return &JeopardyDB{}, err
 	}
-	return &JeopardyDB{Conn: conn}, nil
+	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
+	if err != nil {
+		return &JeopardyDB{}, err
+	}
+	return &JeopardyDB{pool: pool}, nil
 }
 
-func (db *JeopardyDB) Close() error {
-	return db.Conn.Close(context.Background())
+func (db *JeopardyDB) Close() {
+	db.pool.Close()
 }
 
 //go:embed sql/get_questions.sql
 var getQuestions string
 
 func (db *JeopardyDB) GetQuestions() ([]Question, error) {
-	rows, err := db.Conn.Query(context.Background(), getQuestions)
+	rows, err := db.pool.Query(context.Background(), getQuestions)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +68,7 @@ func (db *JeopardyDB) GetQuestions() ([]Question, error) {
 var addAlternative string
 
 func (db *JeopardyDB) AddAlternative(alternative, answer string) error {
-	_, err := db.Conn.Exec(context.Background(), addAlternative, alternative, answer)
+	_, err := db.pool.Exec(context.Background(), addAlternative, alternative, answer)
 	return err
 }
 
@@ -96,7 +100,7 @@ type AnalyticsAnswer struct {
 var saveGameAnalytics string
 
 func (db *JeopardyDB) SaveGameAnalytics(gameID uuid.UUID, createdAt int64, fr AnalyticsRound, sr AnalyticsRound) error {
-	_, err := db.Conn.Exec(
+	_, err := db.pool.Exec(
 		context.Background(), saveGameAnalytics, gameID, createdAt,
 		fr.Categories, fr.Answers, fr.Correct, fr.Score,
 		sr.Categories, sr.Answers, sr.Correct, sr.Score,
@@ -117,7 +121,7 @@ func (db *JeopardyDB) GetAnalytics() (any, error) {
 		secondRoundCorrRate int
 		secondRoundScore    int
 	)
-	err := db.Conn.QueryRow(context.Background(), getAnalytics).Scan(
+	err := db.pool.QueryRow(context.Background(), getAnalytics).Scan(
 		&gamesPlayed,
 		&firstRoundAnsRate,
 		&firstRoundCorrRate,

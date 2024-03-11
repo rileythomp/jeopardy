@@ -66,7 +66,7 @@ type (
 		GetQuestions() ([]db.Question, error)
 		AddAlternative(alternative, answer string) error
 		SaveGameAnalytics(gameID uuid.UUID, createdAt int64, fr db.AnalyticsRound, sr db.AnalyticsRound) error
-		Close() error
+		Close()
 	}
 
 	Message struct {

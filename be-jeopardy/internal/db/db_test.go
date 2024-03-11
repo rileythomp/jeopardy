@@ -1,20 +1,17 @@
 package db
 
 import (
-	"context"
 	"testing"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetQuestions(t *testing.T) {
 	t.Run("test getting questions", func(t *testing.T) {
-		conn, err := pgx.Connect(context.Background(), "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable")
+		questionDB, err := NewJeopardyDB()
 		if err != nil {
 			t.Fatalf("Error connecting to database: %s", err.Error())
 		}
-		questionDB := JeopardyDB{Conn: conn}
 		questions, err := questionDB.GetQuestions()
 		if err != nil {
 			t.Fatalf("Error getting questions: %s", err.Error())

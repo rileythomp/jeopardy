@@ -1,21 +1,19 @@
 package jeopardy
 
 import (
-	"context"
 	"testing"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSetQuestions(t *testing.T) {
 	t.Run("test setting questions", func(t *testing.T) {
-		conn, err := pgx.Connect(context.Background(), "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable")
+		db, err := db.NewJeopardyDB()
 		if err != nil {
 			t.Fatalf("Error connecting to database: %s", err.Error())
 		}
-		g := Game{jeopardyDB: &db.JeopardyDB{Conn: conn}}
+		g := Game{jeopardyDB: db}
 		err = g.setQuestions()
 		assert.NoError(t, err)
 		assert.Len(t, g.FirstRound, 6)
