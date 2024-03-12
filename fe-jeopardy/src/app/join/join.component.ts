@@ -15,8 +15,8 @@ export class JoinComponent {
 	protected playerName: string = ''
 	protected gameCode: string = ''
 	protected showGameCodeInput: boolean = false
-	protected oneRoundChecked: boolean = false
-	protected twoRoundChecked: boolean = true
+	protected oneRoundChecked: boolean = true
+	protected twoRoundChecked: boolean = false
 
 	constructor(
 		private router: Router,

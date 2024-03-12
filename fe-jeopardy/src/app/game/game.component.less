@@ -68,16 +68,18 @@
 
             0%,
             1000% {
-                transform: translateY(0);
+                transform: translateX(0);
             }
     
             50% {
-                transform: translateY(-5px);
+                transform: translateX(-5px);
             }
         }
     
         .control-info {
             animation: moveUpDown 1s infinite;
+            position: fixed; 
+            left: 50px; 
 
             ion-icon {
                 font-size: 1em;
@@ -96,9 +98,17 @@
 
     #jeopardy-music {
         top: calc(var(--header-height) + 15px);
+
+        .control-info {
+            top: calc(var(--header-height) + 22px);
+        }
     }
     
     #pause-game {
         top: calc(var(--header-height) + 60px);
+
+        .control-info {
+            top: calc(var(--header-height) + 67px);
+        }
     }
 }
