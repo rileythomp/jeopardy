@@ -17,6 +17,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 	protected message: string
 	protected hideChat = true
 	protected unreadMessages = 0
+	private receivedMessage = false
 
 	constructor(
 		private chatService: ChatService,
@@ -63,11 +64,16 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 			if (this.hideChat) {
 				this.unreadMessages++
 			}
+
+			this.receivedMessage = true
 		})
 	}
 
 	ngAfterViewChecked(): void {
-		this.scrollToBottom()
+		if (this.receivedMessage) {
+			this.scrollToBottom()
+			this.receivedMessage = false
+		}
 	}
 
 	sendMessage(): void {
