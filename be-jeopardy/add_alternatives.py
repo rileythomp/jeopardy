@@ -12,7 +12,7 @@ db = conn.cursor()
 db.execute(
     '''
     alter table jeopardy_clues 
-    add column alternatives text[];
+    add column if not exists alternatives text[];
     '''
 )
 
@@ -20,6 +20,47 @@ db.execute(
     '''
     update jeopardy_clues 
     set alternatives = ARRAY[question];
+    '''
+)
+
+db.execute(
+    '''
+    update jeopardy_clues 
+    set alternatives = array_append(
+        alternatives,
+        replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(question, 'Á', 'A'), 'à', 'a'), 'á', 'a'), 'â', 'a'), 'ä', 'a'), 'ã', 'a'), 'å', 'a'), 'æ', 'a'), 'É', 'E'), 'è', 'e'), 'é', 'e'), 'ê', 'e'), 'ë', 'e'), 'ì', 'i'), 'í', 'i'), 'î', 'i'), 'ï', 'i'), 'Ö', 'O'), 'ò', 'o'), 'ó', 'o'), 'ø', 'o'), 'œ', 'o'), 'ô', 'o'), 'ö', 'o'), 'Ü', 'U'), 'ú', 'u'), 'û', 'u'), 'ü', 'u'), 'ñ', 'n'), 'ç', 'c'), 'ř', 'r')
+    )
+    where question like '%Á%' or
+    question like '%à%' or
+    question like '%á%' or
+    question like '%â%' or
+    question like '%ä%' or
+    question like '%ã%' or
+    question like '%å%' or
+    question like '%æ%' or
+    question like '%É%' or
+    question like '%è%' or
+    question like '%é%' or
+    question like '%ê%' or
+    question like '%ë%' or
+    question like '%ì%' or
+    question like '%í%' or
+    question like '%î%' or
+    question like '%ï%' or
+    question like '%Ö%' or
+    question like '%ò%' or
+    question like '%ó%' or
+    question like '%ø%' or
+    question like '%œ%' or
+    question like '%ô%' or
+    question like '%ö%' or
+    question like '%Ü%' or
+    question like '%ú%' or
+    question like '%û%' or
+    question like '%ü%' or
+    question like '%ñ%' or
+    question like '%ç%' or
+    question like '%ř%';
     '''
 )
 

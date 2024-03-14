@@ -50,9 +50,11 @@ db.execute(
 
 inserts = 0
 start = time.time()
+num_files = 0
 with os.scandir('clues') as files:
     for file in files:
-        print(f'Starting to process {file.path}')
+        num_files += 1
+        print(f'Processing {file.path}')
         rows = 0
         file_start = time.time()
         with open(file.path, 'r') as tsv:
@@ -62,15 +64,16 @@ with os.scandir('clues') as files:
                 if rows == 1:
                     continue
                 db.execute(
-                    'insert into jeopardy_clues (round, clue_value, daily_double_value, category, comments, answer, question, air_date, notes) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                    '''
+                    insert into jeopardy_clues (round, clue_value, daily_double_value, category, comments, answer, question, air_date, notes)
+                    values (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ''',
                     clue
                 )
                 inserts += 1
-                if rows % 1000 == 0:
-                    print(f'Inserted {rows} rows')
         file_end = time.time()
         print(
-            f'Finished processing {file.path}, inserted {rows} rows in {file_end - file_start:.2f} seconds\n')
+            f'Finished processing {file.path}, inserted {rows} rows in {file_end - file_start:.2f} seconds')
 
 db.execute(
     '''
@@ -99,7 +102,7 @@ db.execute(
 
 end = time.time()
 print(
-    f'Finished processing all files, inserted {inserts} rows in {end - start:.2f} seconds')
+    f'Finished processing {num_files} files, inserted {inserts} rows in {end - start:.2f} seconds')
 
 conn.commit()
 db.close()
