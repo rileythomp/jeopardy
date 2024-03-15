@@ -59,7 +59,7 @@ type GamePlayer interface {
 	sendMessage(Response) error
 	sendChatMessage(ChatMessage) error
 	updateActions(pick, buzz, answer, wager, vote bool)
-	updateScore(val int, isCorrect bool, round RoundState)
+	updateScore(val int, isCorrect, penalty bool, round RoundState)
 	addFinalProtestor(string)
 	addToScore(int)
 	resetPlayer()
@@ -198,12 +198,15 @@ func (p *Player) updateActions(pick, buzz, answer, wager, vote bool) {
 	p.CanVote = vote
 }
 
-func (p *Player) updateScore(val int, isCorrect bool, round RoundState) {
+func (p *Player) updateScore(val int, isCorrect, penalty bool, round RoundState) {
 	if round == FinalRound {
 		val = p.FinalWager
 	}
 	if !isCorrect {
 		val *= -1
+		if !penalty {
+			val = 0
+		}
 	}
 	p.Score += val
 }

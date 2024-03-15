@@ -3,7 +3,7 @@
     <p style='display: inline-block; margin-top: 0;' [ngStyle]="{'visibility': game.OfficialAnswer() != '' ? 'visible' : 'hidden'}">
         Previous answer: <b>{{ game.OfficialAnswer() }}</b>
     </p>
-    <button id='dispute-button' *ngIf="game.CanInitDispute(player.Id())" (click)="disputeQuestion()">Dispute</button>
+    <button id='dispute-button' *ngIf="game.CanInitDispute(player.Id()) && game.Penalty()" (click)="disputeQuestion()">Dispute</button>
     <table>
         <tr>
             <td class='category-title' *ngFor="let title of categories">

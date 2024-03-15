@@ -16,6 +16,7 @@ export type Game = {
     buzzBlocked: boolean;
     disconnected: boolean;
     officialAnswer: string;
+    penalty: boolean;
 };
 
 export type Player = {

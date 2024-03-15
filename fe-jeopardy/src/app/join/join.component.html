@@ -8,14 +8,18 @@
             <button (click)="toggleGameCodeInput()">Join game by code</button>
         </div>
         <div class='flex-row gap15'>
-            <div >
-                <div>
+            <div>
+                <div class='round-choice'>
                     <input type="checkbox" id="one-round" [(ngModel)]="oneRoundChecked" (change)="twoRoundChecked = !oneRoundChecked">
-                    <label for="one-round" style="margin-right: 1em;">1 Round (~10-15 min)</label>
+                    <label for="one-round" style="margin-right: 1em;">1 Round</label>
                 </div>
-                <div>
+                <div class='round-choice'>
                     <input type="checkbox" id="two-round" [(ngModel)]="twoRoundChecked" (change)="oneRoundChecked = !twoRoundChecked">
-                    <label for="two-round">2 Round (~20-25 min)</label>
+                    <label for="two-round">2 Rounds</label>
+                </div>
+                <div id='penalty-choice'>
+                    <input type="checkbox" id="penalty-input" [(ngModel)]="penaltyChecked">
+                    <label for='penalty-input'>Penaly for incorrect answers</label>
                 </div>
             </div>
             <div>

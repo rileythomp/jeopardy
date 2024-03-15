@@ -17,11 +17,12 @@ export class ApiService {
         private jwtService: JwtService,
     ) { }
 
-    CreatePrivateGame(playName: string, bots: number, fullGame: boolean): Observable<any> {
+    CreatePrivateGame(playName: string, bots: number, fullGame: boolean, penalty: boolean): Observable<any> {
         return this.post('games', {
             playerName: playName,
             bots: bots,
             fullGame: fullGame,
+            penalty: penalty,
         })
     }
 

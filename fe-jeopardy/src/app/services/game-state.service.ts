@@ -240,4 +240,8 @@ export class GameStateService {
 	Disconnected(): boolean {
 		return this.game.disconnected
 	}
+
+	Penalty(): boolean {
+		return this.game.penalty
+	}
 }

@@ -9,6 +9,9 @@ import (
 )
 
 func (g *Game) saveGameAnalytics() {
+	if !g.Penalty {
+		return
+	}
 	fr, sr := getRoundAnalytics(g.FirstRound), getRoundAnalytics(g.SecondRound)
 	fr.Score, sr.Score = &g.FirstRoundScore, &g.SecondRoundScore
 	if !g.FullGame {

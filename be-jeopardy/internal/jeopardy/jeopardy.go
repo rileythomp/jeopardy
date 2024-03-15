@@ -15,6 +15,7 @@ type GameRequest struct {
 	GameCode   string `json:"gameCode"`
 	Bots       int    `json:"bots"`
 	FullGame   bool   `json:"fullGame"`
+	Penalty    bool   `json:"penalty"`
 }
 
 var (
@@ -56,7 +57,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
-	game, err := NewGame(questionDB, req.FullGame)
+	game, err := NewGame(questionDB, req.FullGame, req.Penalty)
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
@@ -92,7 +93,7 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}
-		game, err = NewGame(jeopardyDB, req.FullGame)
+		game, err = NewGame(jeopardyDB, req.FullGame, req.Penalty)
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}

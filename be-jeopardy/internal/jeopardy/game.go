@@ -40,6 +40,7 @@ type (
 		Disputers      int          `json:"disputes"`
 		NonDisputers   int          `json:"nonDisputes"`
 		FullGame       bool         `json:"fullGame"`
+		Penalty        bool         `json:"penalty"`
 
 		FirstRoundScore  float64 `json:"firstRoundScore"`
 		SecondRoundScore float64 `json:"secondRoundScore"`
@@ -119,7 +120,7 @@ const (
 
 const numPlayers = 3
 
-func NewGame(db jeopardyDB, fullGame bool) (*Game, error) {
+func NewGame(db jeopardyDB, fullGame, penalty bool) (*Game, error) {
 	game := &Game{
 		State:                   PreGame,
 		Players:                 []GamePlayer{},
@@ -136,6 +137,7 @@ func NewGame(db jeopardyDB, fullGame bool) (*Game, error) {
 		chatChan:                make(chan ChatMessage),
 		jeopardyDB:              db,
 		FullGame:                fullGame,
+		Penalty:                 penalty,
 	}
 	if err := game.setQuestions(); err != nil {
 		return nil, err
@@ -466,14 +468,21 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 		g.CurQuestion.CurDisputed.Correct = true
 		for i, ans := range g.CurQuestion.Answers {
 			if ans.Player.id() == g.CurQuestion.CurDisputed.Player.id() {
-				ans.Player.addToScore(2 * g.CurQuestion.Value)
+				adjustment := g.CurQuestion.Value
+				if g.Penalty {
+					adjustment = 2 * g.CurQuestion.Value
+				}
+				ans.Player.addToScore(adjustment)
 				for j := i + 1; j < len(g.CurQuestion.Answers); j++ {
 					adjAns := g.CurQuestion.Answers[j]
-					if adjAns.Correct {
-						adjAns.Player.addToScore(-g.CurQuestion.Value)
-					} else {
-						adjAns.Player.addToScore(g.CurQuestion.Value)
+					adjustment = -g.CurQuestion.Value
+					if !adjAns.Correct {
+						adjustment *= -1
+						if !g.Penalty {
+							adjustment = 0
+						}
 					}
+					adjAns.Player.addToScore(adjustment)
 					if adjAns.Overturned {
 						break
 					}
@@ -553,11 +562,14 @@ func (g *Game) processProtest(protestByPlayer GamePlayer, protestFor string) err
 		})
 		return nil
 	}
+	adjustment := protestForPlayer.finalWager()
 	if protestForPlayer.finalCorrect() {
-		protestForPlayer.addToScore(-2 * protestForPlayer.finalWager())
-	} else {
-		protestForPlayer.addToScore(2 * protestForPlayer.finalWager())
+		adjustment *= -1
 	}
+	if g.Penalty {
+		adjustment = 2 * adjustment
+	}
+	protestForPlayer.addToScore(adjustment)
 	protestForPlayer.setFinalCorrect(!protestForPlayer.finalCorrect())
 	g.setState(PostGame, &Player{})
 	g.messageAllPlayers("Final Jeopardy result changed")
@@ -565,7 +577,7 @@ func (g *Game) processProtest(protestByPlayer GamePlayer, protestFor string) err
 }
 
 func (g *Game) processFinalRoundAns(player GamePlayer, isCorrect bool, answer string) error {
-	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
+	player.updateScore(g.CurQuestion.Value, isCorrect, g.Penalty, g.Round)
 	g.FinalAnswers = append(g.FinalAnswers, player.id())
 	player.setCanAnswer(false)
 	player.setFinalAnswer(answer)
@@ -727,7 +739,7 @@ func (g *Game) handleRoundEnd() {
 }
 
 func (g *Game) nextQuestion(player GamePlayer, isCorrect bool) {
-	player.updateScore(g.CurQuestion.Value, isCorrect, g.Round)
+	player.updateScore(g.CurQuestion.Value, isCorrect, g.Penalty, g.Round)
 	if !isCorrect {
 		g.GuessedWrong = append(g.GuessedWrong, player.id())
 	}

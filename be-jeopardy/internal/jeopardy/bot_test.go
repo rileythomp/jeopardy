@@ -56,7 +56,7 @@ func TestPickQuestion(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create questionDB: %s", err)
 		}
-		game, err := NewGame(questionDB, true)
+		game, err := NewGame(questionDB, true, true)
 		if err != nil {
 			t.Fatalf("Failed to create game: %s", err)
 		}
