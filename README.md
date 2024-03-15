@@ -2,7 +2,7 @@
 
 Real-time multi-player Jeopardy game with over 100,000 questions.
 
-Features:
+### Features
 
 - Game configuration
 
@@ -24,16 +24,19 @@ Features:
 
 - Handles players disconnecting and rejoining the game
 
-## Server
+### Usage
+
+Server
 
 ```
 $ cd jeopardy-be
-$ source .env
 $ go mod tidy
+$ docker compose up -d postgres
+$ source .env
 $ make run
 ```
 
-## Client
+Client
 
 ```
 $ cd jeopardy-fe
