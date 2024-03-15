@@ -46,7 +46,7 @@
 		</audio>
 	</div>
 	
-	<div id='pause-game' *ngIf='!game.InDispute()' class='game-control'>
+	<div id='pause-game' *ngIf='!game.InDispute() && !game.PreGame()' class='game-control'>
 		<ion-icon (click)="pauseGame(false)" *ngIf="game.IsPaused() && !game.Disconnected()" name="play"></ion-icon>
 		<ion-icon (click)="pauseGame(true)" *ngIf="!game.IsPaused()" name="pause"></ion-icon>
 		<div class='control-info' *ngIf="showPauseGame">
