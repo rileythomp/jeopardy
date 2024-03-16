@@ -21,6 +21,9 @@
                     <input type="checkbox" id="penalty-input" [(ngModel)]="penaltyChecked">
                     <label for='penalty-input'>Penaly for incorrect answers</label>
                 </div>
+                <div>
+                    <button id='advanced-options'>+</button><span> Advanced options</span>
+                </div>
             </div>
             <div>
                 <input id="game-code" *ngIf="showGameCodeInput" (keydown.enter)="joinGameByCode(playerName, gameCode)" type="text" [(ngModel)]="gameCode" placeholder="Game code">
