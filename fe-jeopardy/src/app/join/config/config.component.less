@@ -1,0 +1,125 @@
+#game-config {
+    #config-inputs {
+        input {
+            padding: 5px;
+        }
+
+        .game-inputs {
+            gap: 5px; 
+
+            div {
+                margin-bottom: 10px;
+            }
+
+            input[type="text"] {
+                width: 85%;
+            }
+
+            #number-config {
+                width: 2.25em;
+                height: 0.5em;
+            }
+        }
+
+        #question-inputs {
+            * {
+                margin-bottom: 10px;
+            }
+            
+            select {
+                width: 100%;
+                height: 2em;
+            }
+
+            input {
+                height: 1em;
+            }
+
+            #search-container {
+                position: relative;
+                width: 100%; 
+
+                input {
+                    width: calc(100% - 12px);
+                    margin: 0;
+                }
+
+                .loader {
+                    border: 4px solid lightgrey;
+                    border-top: 4px solid var(--jeopardy-blue);
+                    border-radius: 50%;
+                    width: 0.75em;
+                    height: 0.75em;
+                    animation: spin 2s linear infinite;
+                    position: absolute;
+                    right: 10px;
+                    top: 3px;
+                    transform: translateY(-50%);
+                }
+                
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+
+                #results-dropdown {
+                    background-color: white; 
+                    z-index: 1;
+                    position: absolute;
+                    width: 100%;
+                    max-height: 15em;
+                    overflow-y: auto;
+    
+                    .search-result {
+                        border: 1px solid black;
+                        border-top: none;
+                        border-right: none;
+                        margin: 0;
+                        padding: 3px;
+                    }
+
+                    .search-result:hover {
+                        background-color: lightgrey;
+                    }
+                }
+            }
+            
+            #question-lists {
+                p {
+                    margin: 0;
+                }
+
+                ol, ul {
+                    margin: 0;
+                    
+                    li {
+                        margin: 3px 0;
+                    }
+                }
+
+                .remove-category {
+                    font-size: 0.9em;
+                }
+
+                .remove-category:hover {
+                    color: red;
+                    cursor: pointer;
+                    font-weight: bolder;
+                }
+            }
+        }
+    }
+
+    #config-buttons {
+        margin-top: 10px;
+        text-align: center;
+
+        button {
+            padding: 5px 10px;
+        }
+
+        button:first-child {
+            margin-right: 15px;
+        }
+    }
+}
