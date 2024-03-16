@@ -57,8 +57,8 @@ export class JoinComponent {
 		).subscribe(this.joinResp())
 	}
 
-	joinGameByCode(gameCode: string) {
-		this.apiService.JoinGameByCode(this.playerName, gameCode).subscribe(this.joinResp())
+	joinGameByCode() {
+		this.apiService.JoinGameByCode(this.playerName, this.gameCode).subscribe(this.joinResp())
 	}
 
 	joinPublicGame() {
@@ -79,7 +79,7 @@ export class JoinComponent {
 
 	toggleGameCodeInput() {
 		if (this.showGameCodeInput && this.gameCode && this.playerName) {
-			this.joinGameByCode(this.gameCode)
+			this.joinGameByCode()
 			return
 		}
 		this.showGameCodeInput = !this.showGameCodeInput
