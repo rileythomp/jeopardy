@@ -118,8 +118,16 @@ const numPlayers = 3
 func NewGame(db jeopardyDB, fullGame, penalty bool) (*Game, error) {
 	game := &Game{
 		GameConfig: GameConfig{
-			FullGame: fullGame,
-			Penalty:  penalty,
+			FullGame:           fullGame,
+			Penalty:            penalty,
+			pickTimeout:        30 * time.Second,
+			buzzTimeout:        30 * time.Second,
+			answerTimeout:      15 * time.Second,
+			finalAnswerTimeout: 30 * time.Second,
+			voteTimeout:        10 * time.Second,
+			disputeTimeout:     60 * time.Second,
+			wagerTimeout:       30 * time.Second,
+			finalWagerTimeout:  30 * time.Second,
 		},
 		GameChannels: GameChannels{
 			msgChan:        make(chan Message),
