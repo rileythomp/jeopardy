@@ -16,14 +16,6 @@
         }
     }
 
-    .round-choice {
-        display: inline;
-    }
-
-    #penalty-choice {
-        margin-top: 5px;
-    }
-
     #advanced-options {
         padding: 1px 5px;
         margin-top: 5px;
@@ -31,5 +23,57 @@
     
     hr {
         margin: 0;
+    }
+}
+
+.game-inputs {
+    gap: 5px;
+}
+
+
+#game-config {
+    #config-inputs {
+        gap: 15px;
+
+        input {
+            padding: 5px;
+        }
+    
+        #number-config {
+            width: 2.25em;
+            height: 0.5em;
+        }
+
+        #question-inputs {
+            gap: 5px;
+
+            * {
+                margin-bottom: 10px;
+            }
+            
+            select, input {
+                height: 2em;
+                width: 100%;
+            }
+
+            input {
+                height: 1em;
+                width: calc(100% - 12px);
+            }
+            
+        }
+    }
+
+    #config-buttons {
+        margin-top: 10px;
+        text-align: center;
+
+        button {
+            padding: 5px 10px;
+        }
+
+        button:first-child {
+            margin-right: 15px;
+        }
     }
 }

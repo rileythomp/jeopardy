@@ -244,4 +244,32 @@ export class GameStateService {
 	Penalty(): boolean {
 		return this.game.penalty
 	}
+
+	PickTimeout(): number {
+		return this.game.pickTimeout
+	}
+
+	BuzzTimeout(): number {
+		return this.game.buzzTimeout
+	}
+
+	AnswerTimeout(): number {
+		return this.game.answerTimeout
+	}
+
+	VoteTimeout(): number {
+		return this.game.voteTimeout
+	}
+
+	WagerTimeout(): number {
+		return this.game.wagerTimeout
+	}
+
+	FinalAnswerTimeout(): number {
+		return this.game.finalAnswerTimeout
+	}
+
+	FinalWagerTimeout(): number {
+		return this.game.finalWagerTimeout
+	}
 }

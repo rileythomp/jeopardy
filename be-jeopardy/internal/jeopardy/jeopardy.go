@@ -11,11 +11,16 @@ import (
 )
 
 type GameRequest struct {
-	PlayerName string `json:"playerName"`
-	GameCode   string `json:"gameCode"`
-	Bots       int    `json:"bots"`
-	FullGame   bool   `json:"fullGame"`
-	Penalty    bool   `json:"penalty"`
+	PlayerName   string `json:"playerName"`
+	GameCode     string `json:"gameCode"`
+	Bots         int    `json:"bots"`
+	FullGame     bool   `json:"fullGame"`
+	Penalty      bool   `json:"penalty"`
+	PickConfig   int    `json:"pickConfig"`
+	BuzzConfig   int    `json:"buzzConfig"`
+	AnswerConfig int    `json:"answerConfig"`
+	VoteConfig   int    `json:"voteConfig"`
+	WagerConfig  int    `json:"wagerConfig"`
 }
 
 var (
@@ -57,7 +62,13 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
-	config := NewConfig(req.FullGame, req.Penalty, req.Bots)
+	config, err := NewConfig(
+		req.FullGame, req.Penalty, req.Bots,
+		req.PickConfig, req.BuzzConfig, req.AnswerConfig, req.VoteConfig, req.WagerConfig,
+	)
+	if err != nil {
+		return &Game{}, "", err, socket.BadRequest
+	}
 	game, err := NewGame(questionDB, config)
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
@@ -94,7 +105,13 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}
-		config := NewConfig(req.FullGame, req.Penalty, req.Bots)
+		config, err := NewConfig(
+			req.FullGame, req.Penalty, req.Bots,
+			req.PickConfig, req.BuzzConfig, req.AnswerConfig, req.VoteConfig, req.WagerConfig,
+		)
+		if err != nil {
+			return &Game{}, "", err, socket.BadRequest
+		}
 		game, err = NewGame(jeopardyDB, config)
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError

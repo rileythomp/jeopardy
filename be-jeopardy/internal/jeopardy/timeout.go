@@ -7,7 +7,7 @@ import (
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 )
 
-const boardIntroTimeout = 25 * time.Second
+const boardIntroTimeout = 25
 
 type GameTimeouts struct {
 	cancelBoardIntroTimeout context.CancelFunc
@@ -17,9 +17,9 @@ type GameTimeouts struct {
 	cancelDisputeTimeout    context.CancelFunc
 }
 
-func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player GamePlayer, processTimeout func(player GamePlayer) error) {
+func (g *Game) startTimeout(ctx context.Context, timeout int, player GamePlayer, processTimeout func(player GamePlayer) error) {
 	go func() {
-		timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), timeout)
+		timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 		defer timeoutCancel()
 		select {
 		case <-ctx.Done():
@@ -51,7 +51,7 @@ func (g *Game) startBoardIntroTimeout() {
 func (g *Game) startPickTimeout(player GamePlayer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelPickTimeout = cancel
-	g.startTimeout(ctx, g.pickTimeout, &Player{}, func(_ GamePlayer) error {
+	g.startTimeout(ctx, g.PickTimeout, &Player{}, func(_ GamePlayer) error {
 		catIdx, valIdx := g.firstAvailableQuestion()
 		return g.processPick(player, catIdx, valIdx)
 	})
@@ -61,7 +61,7 @@ func (g *Game) startBuzzTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.StartBuzzCountdown = true
 	g.cancelBuzzTimeout = cancel
-	g.startTimeout(ctx, g.buzzTimeout, &Player{}, func(_ GamePlayer) error {
+	g.startTimeout(ctx, g.BuzzTimeout, &Player{}, func(_ GamePlayer) error {
 		g.skipQuestion()
 		return nil
 	})
@@ -70,9 +70,9 @@ func (g *Game) startBuzzTimeout() {
 func (g *Game) startAnswerTimeout(player GamePlayer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	player.setCancelAnswerTimeout(cancel)
-	timeout := g.answerTimeout
+	timeout := g.AnswerTimeout
 	if g.Round == FinalRound {
-		timeout = g.finalAnswerTimeout
+		timeout = g.FinalAnswerTimeout
 		g.StartFinalAnswerCountdown = true
 	}
 	go g.startTimeout(ctx, timeout, player, func(player GamePlayer) error {
@@ -94,7 +94,7 @@ func (g *Game) startAnswerTimeout(player GamePlayer) {
 func (g *Game) startVoteTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelVoteTimeout = cancel
-	g.startTimeout(ctx, g.voteTimeout, &Player{}, func(_ GamePlayer) error {
+	g.startTimeout(ctx, g.VoteTimeout, &Player{}, func(_ GamePlayer) error {
 		g.nextQuestion(g.CurQuestion.CurAns.Player, g.AnsCorrectness)
 		return nil
 	})
@@ -103,7 +103,7 @@ func (g *Game) startVoteTimeout() {
 func (g *Game) startDisputeTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelDisputeTimeout = cancel
-	g.startTimeout(ctx, g.disputeTimeout, &Player{}, func(_ GamePlayer) error {
+	g.startTimeout(ctx, g.DisputeTimeout, &Player{}, func(_ GamePlayer) error {
 		g.Disputers = 0
 		g.NonDisputers = 0
 		g.setState(RecvPick, g.DisputePicker)
@@ -115,9 +115,9 @@ func (g *Game) startDisputeTimeout() {
 func (g *Game) startWagerTimeout(player GamePlayer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	player.setCancelWagerTimeout(cancel)
-	wagerTimeout := g.wagerTimeout
+	wagerTimeout := g.WagerTimeout
 	if g.Round == FinalRound {
-		wagerTimeout = g.finalWagerTimeout
+		wagerTimeout = g.FinalWagerTimeout
 		g.StartFinalWagerCountdown = true
 	}
 	g.startTimeout(ctx, wagerTimeout, player, func(player GamePlayer) error {

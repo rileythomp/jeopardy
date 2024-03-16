@@ -18,13 +18,23 @@ export class JoinComponent {
 	protected oneRoundChecked: boolean = true
 	protected twoRoundChecked: boolean = false
 	protected penaltyChecked: boolean = true
+	protected botConfig: number = 0
+	protected pickConfig: number = 30
+	protected buzzConfig: number = 30
+	protected answerConfig: number = 15
+	protected voteConfig: number = 10
+	protected wagerConfig: number = 30
+
+	protected questionMode: string = 'cyo'
 
 	constructor(
 		private router: Router,
 		private jwtService: JwtService,
 		private apiService: ApiService,
-		private modal: ModalService,
-	) { }
+		protected modal: ModalService,
+	) {
+		this.modal.displayConfig()
+	}
 
 	private joinResp(): Partial<Observer<any>> {
 		return {
@@ -39,21 +49,20 @@ export class JoinComponent {
 		}
 	}
 
-	createPrivateGame(playerName: string, bots: number) {
+	createPrivateGame(bots: number) {
 		this.apiService.CreatePrivateGame(
-			playerName,
-			bots,
-			this.twoRoundChecked,
-			this.penaltyChecked
+			this.playerName,
+			bots, this.twoRoundChecked, this.penaltyChecked,
+			this.pickConfig, this.buzzConfig, this.answerConfig, this.voteConfig, this.wagerConfig
 		).subscribe(this.joinResp())
 	}
 
-	joinGameByCode(playerName: string, gameCode: string) {
-		this.apiService.JoinGameByCode(playerName, gameCode).subscribe(this.joinResp())
+	joinGameByCode(gameCode: string) {
+		this.apiService.JoinGameByCode(this.playerName, gameCode).subscribe(this.joinResp())
 	}
 
-	joinPublicGame(playerName: string) {
-		this.apiService.JoinPublicGame(playerName).subscribe(this.joinResp())
+	joinPublicGame() {
+		this.apiService.JoinPublicGame(this.playerName).subscribe(this.joinResp())
 	}
 
 	rejoin() {
@@ -70,9 +79,42 @@ export class JoinComponent {
 
 	toggleGameCodeInput() {
 		if (this.showGameCodeInput && this.gameCode && this.playerName) {
-			this.joinGameByCode(this.playerName, this.gameCode)
+			this.joinGameByCode(this.gameCode)
 			return
 		}
 		this.showGameCodeInput = !this.showGameCodeInput
+	}
+
+	validateBotConfig() {
+		this.botConfig = Math.min(Math.max(this.botConfig, 0), 2)
+	}
+
+	validatePickConfig() {
+		this.pickConfig = Math.min(Math.max(this.pickConfig, 3), 60)
+	}
+
+	validateBuzzConfig() {
+		this.buzzConfig = Math.min(Math.max(this.buzzConfig, 3), 60)
+	}
+
+	validateAnswerConfig() {
+		this.answerConfig = Math.min(Math.max(this.answerConfig, 3), 60)
+	}
+
+	validateVoteConfig() {
+		this.voteConfig = Math.min(Math.max(this.voteConfig, 3), 60)
+	}
+
+	validateWagerConfig() {
+		this.wagerConfig = Math.min(Math.max(this.wagerConfig, 3), 60)
+	}
+
+	hideConfig() {
+		this.pickConfig = 30
+		this.buzzConfig = 30
+		this.answerConfig = 15
+		this.voteConfig = 10
+		this.wagerConfig = 30
+		this.modal.hideConfig()
 	}
 }

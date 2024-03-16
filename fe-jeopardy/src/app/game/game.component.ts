@@ -6,13 +6,13 @@ import { JwtService } from '../services/jwt.service'
 import { GameState, Ping } from '../model/model'
 import { ModalService } from '../services/modal.service'
 
-const pickTimeout = 30
-const buzzTimeout = 30
-const answerTimeout = 15
-const finalJeopardyAnsTimeout = 30
-const voteTimeout = 10
-const dailyDoubleWagerTimeout = 30
-const finalJeopardyWagerTimeout = 30
+// const pickTimeout = 30
+// const buzzTimeout = 30
+// const answerTimeout = 15
+// const finalJeopardyAnsTimeout = 30
+// const voteTimeout = 10
+// const dailyDoubleWagerTimeout = 30
+// const finalJeopardyWagerTimeout = 30
 
 @Component({
 	selector: 'app-game',
@@ -119,7 +119,7 @@ export class GameComponent implements OnInit {
 					this.modal.displayDispute()
 					break
 				case GameState.RecvPick:
-					this.startCountdownTimer(pickTimeout)
+					this.startCountdownTimer(this.game.PickTimeout())
 					break
 				case GameState.RecvBuzz:
 					this.cancelCountdown()
@@ -129,30 +129,30 @@ export class GameComponent implements OnInit {
 						setTimeout(() => {
 							this.game.BlockBuzz(false)
 							if (this.game.StartBuzzCountdown()) {
-								this.startCountdownTimer(buzzTimeout - buzzDelay)
+								this.startCountdownTimer(this.game.BuzzTimeout() - buzzDelay)
 							}
 						}, buzzDelay * 1000)
 					} else if (this.game.StartBuzzCountdown()) {
-						this.startCountdownTimer(buzzTimeout)
+						this.startCountdownTimer(this.game.BuzzTimeout())
 					}
 					break
 				case GameState.RecvAns:
 					if (!this.game.FinalRound()) {
-						this.startCountdownTimer(answerTimeout)
+						this.startCountdownTimer(this.game.AnswerTimeout())
 					} else if (this.game.StartFinalAnswerCountdown()) {
-						this.startCountdownTimer(finalJeopardyAnsTimeout)
+						this.startCountdownTimer(this.game.FinalAnswerTimeout())
 					}
 					break
 				case GameState.RecvVote:
 					if (this.player.CanVote()) {
-						this.startCountdownTimer(voteTimeout)
+						this.startCountdownTimer(this.game.VoteTimeout())
 					}
 					break
 				case GameState.RecvWager:
 					if (!this.game.FinalRound()) {
-						this.startCountdownTimer(dailyDoubleWagerTimeout)
+						this.startCountdownTimer(this.game.WagerTimeout())
 					} else if (this.game.StartFinalWagerCountdown()) {
-						this.startCountdownTimer(finalJeopardyWagerTimeout)
+						this.startCountdownTimer(this.game.FinalWagerTimeout())
 					}
 					break
 				default:
@@ -163,6 +163,7 @@ export class GameComponent implements OnInit {
 	}
 
 	startCountdownTimer(seconds: number): void {
+		console.log('seconds', seconds)
 		this.cancelCountdown()
 		if (this.game.IsPaused()) {
 			return

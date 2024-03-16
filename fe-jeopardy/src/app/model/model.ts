@@ -17,6 +17,13 @@ export type Game = {
     disconnected: boolean;
     officialAnswer: string;
     penalty: boolean;
+    pickTimeout: number;
+    buzzTimeout: number;
+    answerTimeout: number;
+    voteTimeout: number;
+    wagerTimeout: number;
+    finalAnswerTimeout: number;
+    finalWagerTimeout: number;
 };
 
 export type Player = {
