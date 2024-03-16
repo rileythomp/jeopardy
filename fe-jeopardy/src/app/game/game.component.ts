@@ -6,14 +6,6 @@ import { JwtService } from '../services/jwt.service'
 import { GameState, Ping } from '../model/model'
 import { ModalService } from '../services/modal.service'
 
-// const pickTimeout = 30
-// const buzzTimeout = 30
-// const answerTimeout = 15
-// const finalJeopardyAnsTimeout = 30
-// const voteTimeout = 10
-// const dailyDoubleWagerTimeout = 30
-// const finalJeopardyWagerTimeout = 30
-
 @Component({
 	selector: 'app-game',
 	templateUrl: './game.component.html',
