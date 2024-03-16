@@ -57,7 +57,8 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
-	game, err := NewGame(questionDB, req.FullGame, req.Penalty, req.Bots)
+	config := NewConfig(req.FullGame, req.Penalty, req.Bots)
+	game, err := NewGame(questionDB, config)
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
@@ -93,7 +94,8 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}
-		game, err = NewGame(jeopardyDB, req.FullGame, req.Penalty, req.Bots)
+		config := NewConfig(req.FullGame, req.Penalty, req.Bots)
+		game, err = NewGame(jeopardyDB, config)
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}
