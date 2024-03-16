@@ -18,15 +18,6 @@ export class JoinComponent {
 	protected oneRoundChecked: boolean = true
 	protected twoRoundChecked: boolean = false
 	protected penaltyChecked: boolean = true
-	protected botConfig: number = 0
-	protected pickConfig: number = 30
-	protected buzzConfig: number = 30
-	protected answerConfig: number = 15
-	protected voteConfig: number = 10
-	protected wagerConfig: number = 30
-	protected firstRoundCategories: any[] = []
-	protected secondRoundCategories: any[] = []
-
 
 	constructor(
 		private router: Router,
@@ -51,9 +42,10 @@ export class JoinComponent {
 	createPrivateGame(bots: number) {
 		this.apiService.CreatePrivateGame(
 			this.playerName,
-			bots, this.twoRoundChecked, this.penaltyChecked,
-			this.pickConfig, this.buzzConfig, this.answerConfig, this.voteConfig, this.wagerConfig,
-			this.firstRoundCategories, this.secondRoundCategories
+			bots,
+			this.twoRoundChecked,
+			this.penaltyChecked,
+			30, 30, 15, 10, 30, [], []
 		).subscribe(this.joinResp())
 	}
 
