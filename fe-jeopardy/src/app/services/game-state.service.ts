@@ -182,7 +182,7 @@ export class GameStateService {
 	}
 
 	BuzzDelay(): number {
-		return Math.floor(this.game.curQuestion.question.split(' ').length / 5)
+		return Math.max(Math.floor(this.game.curQuestion.question.split(' ').length / 5), 3)
 	}
 
 	InDispute(): boolean {

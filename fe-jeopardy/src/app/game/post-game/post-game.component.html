@@ -19,7 +19,7 @@
                 {{ p.name }} answered <b>{{ p.finalCorrect ? 'correctly': 'incorrectly' }}</b> with <b>{{ p.finalAnswer }}</b>
             </span>
             <button *ngIf="p.finalAnswer != 'answer-timeout' && canProtestForPlayer(p)"
-                (click)="protestFinalCorrectness(p.id)">Protest</button>
+                (click)="protestFinalCorrectness(p.id)">Dispute</button>
     
             <span *ngIf="p.finalAnswer == 'answer-timeout'">{{ p.name }} didn't answer in time.</span>
         </div>
