@@ -155,7 +155,6 @@ export class GameComponent implements OnInit {
 	}
 
 	startCountdownTimer(seconds: number): void {
-		console.log('seconds', seconds)
 		this.cancelCountdown()
 		if (this.game.IsPaused()) {
 			return
