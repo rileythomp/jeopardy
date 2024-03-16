@@ -45,8 +45,10 @@
     <div class='modal-message'>
         <h3>Jeopardy Configuration</h3>
         <div id='config-inputs' class='flex-row'>
-            <div class='flex-column game-inputs'>
-                <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
+            <div class='game-inputs'>
+                <div>
+                    <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
+                </div>
                 <div>
                     <input type="checkbox" id="one-round" [(ngModel)]="oneRoundChecked" (change)="twoRoundChecked = !oneRoundChecked">
                     <label for="one-round" style="margin-right: 1em;">1 Round</label>
@@ -61,7 +63,6 @@
                     <input class='number-config' type="number"  [(ngModel)]="botConfig" min="0" max="2" (change)="validateBotConfig()">
                     <label for="bot-config"> Bots</label>
                 </div>
-                <!----------------------------------------------->
                 <div>
                     <input class='number-config' type="number"  [(ngModel)]="pickConfig" min="3" max="60" (change)="validatePickConfig()">
                     <label for="pick-config"> Pick Timeout</label>
@@ -82,15 +83,47 @@
                     <input class='number-config' type="number"  [(ngModel)]="wagerConfig" min="3" max="60" (change)="validateWagerConfig()">
                     <label for="wager-config"> Wager Timeout</label>
                 </div>
-                
             </div>
+
             <div id='question-inputs'>
                 <select id="question-mode" [(ngModel)]="questionMode">
-                    <option value="random">Random</option>
+                    <option value="random">Random Questions</option>
                     <option value="cyo">Choose your own</option>
                 </select>
-                <div>
-                    <input *ngIf="questionMode == 'cyo'" type="text" placeholder="Search categories">
+                <div *ngIf="questionMode == 'cyo'">
+                    <div id='search-container'>
+                        <input type="text" placeholder="Search categories" [(ngModel)]="categorySearch" (input)="searchCategories()" (click)="searchCategories()">
+                        <div class="loader" *ngIf="searchLoader"></div>
+                        <div id='results-dropdown'>
+                            <div class='search-result' *ngFor="let result of searchResults" (click)="addCategory(result)">
+                                {{result.category}} {{twoRoundChecked ? '(' + result.round + ')' : ''}}
+                            </div>
+                        </div>
+                    </div>
+                    <div id='question-lists'>
+                        <div>
+                            <p>First Round</p>
+                            <ol>
+                                <li *ngFor='let category of firstRoundCategories'>
+                                    {{category.category}}
+                                    <span class='remove-category' (click)="removeCategory(category)">
+                                        &nbsp;✕
+                                    </span>
+                                </li>
+                            </ol>
+                        </div>
+                        <div *ngIf="twoRoundChecked">
+                            <p>Second Round</p>
+                            <ol>
+                                <li *ngFor='let category of secondRoundCategories'>
+                                    {{category.category}}
+                                    <span class='remove-category' (click)="removeCategory(category)">
+                                        &nbsp;✕
+                                    </span>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

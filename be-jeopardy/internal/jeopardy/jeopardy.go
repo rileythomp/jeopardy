@@ -2,6 +2,7 @@ package jeopardy
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -297,6 +298,36 @@ func PlayAgain(playerId string) error {
 		})
 	}
 	return nil
+}
+
+var searchDB *db.JeopardyDB
+
+func init() {
+	var err error
+	searchDB, err = db.NewJeopardyDB()
+	if err != nil {
+		log.Fatalf("Error connecting to database: %s", err.Error())
+	}
+}
+
+func SearchCategories(category, rounds string) ([]db.Category, error) {
+	if category == "" {
+		return []db.Category{}, nil
+	}
+	start := ""
+	if len(category) > 2 {
+		start = "%"
+	}
+	secondRound := 2
+	if rounds == "first" {
+		secondRound = 1
+	}
+	categories, err := searchDB.SearchCategories(strings.ToLower(category), start, secondRound)
+	if err != nil {
+		log.Errorf("Error searching categories: %s", err.Error())
+		return nil, err
+	}
+	return categories, nil
 }
 
 func CleanUpGames() {

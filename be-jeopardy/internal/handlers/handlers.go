@@ -99,6 +99,11 @@ var (
 			Path:    "/jeopardy/analytics",
 			Handler: GetAnalytics,
 		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/categories",
+			Handler: SearchCategories,
+		},
 	}
 
 	upgrader = websocket.Upgrader{
@@ -400,6 +405,21 @@ func GetAnalytics(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, analytics)
+}
+
+func SearchCategories(c *gin.Context) {
+	log.Infof("Received request to search categories")
+
+	category := c.Query("category")
+	rounds := c.Query("rounds")
+
+	categories, err := jeopardy.SearchCategories(category, rounds)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Unable to search categories")
+		return
+	}
+
+	c.JSON(http.StatusOK, categories)
 }
 
 func GetPrivateGames(c *gin.Context) {

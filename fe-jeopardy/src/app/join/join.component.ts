@@ -24,6 +24,11 @@ export class JoinComponent {
 	protected answerConfig: number = 15
 	protected voteConfig: number = 10
 	protected wagerConfig: number = 30
+	protected firstRoundCategories: any[] = []
+	protected secondRoundCategories: any[] = []
+	protected searchResults: any[] = []
+	protected categorySearch: string = ''
+	protected searchLoader = false
 
 	protected questionMode: string = 'cyo'
 
@@ -116,5 +121,50 @@ export class JoinComponent {
 		this.voteConfig = 10
 		this.wagerConfig = 30
 		this.modal.hideConfig()
+	}
+
+	searchCategories() {
+		this.searchLoader = true
+		if (this.categorySearch == '') {
+			this.searchResults = []
+			document.getElementById('results-dropdown')!.style.borderBottom = 'none';
+			this.searchLoader = false
+			return
+		}
+		this.apiService.SearchCategories(this.categorySearch, this.twoRoundChecked).subscribe({
+			next: (resp: any) => {
+				console.log(resp)
+				this.searchResults = resp
+				if (resp.length > 0) {
+					document.getElementById('results-dropdown')!.style.borderBottom = '1px solid black';
+				} else {
+					document.getElementById('results-dropdown')!.style.borderBottom = 'none';
+				}
+				this.searchLoader = false
+			},
+			error: (err: any) => {
+				let msg = err.status != 0 ? err.error.message : ServerUnavailableMsg;
+				this.modal.displayMessage(msg)
+			}
+		})
+	}
+
+	canAddCategory(category: any, round: number, list: any[]): boolean {
+		return category.round == round && list.length < 6 && !list.some((c) => c.category == category.category && c.airDate == category.airDate)
+	}
+
+	addCategory(category: any) {
+		if (this.canAddCategory(category, 1, this.firstRoundCategories)) {
+			this.firstRoundCategories.push(category)
+		} else if (this.canAddCategory(category, 2, this.secondRoundCategories)) {
+			this.secondRoundCategories.push(category)
+		}
+		this.searchResults = []
+		document.getElementById('results-dropdown')!.style.borderBottom = 'none';
+	}
+
+	removeCategory(category: any) {
+		this.firstRoundCategories = this.firstRoundCategories.filter((c) => c.category != category.category && c.airDate != category.airDate)
+		this.secondRoundCategories = this.secondRoundCategories.filter((c) => c.category != category.category && c.airDate != category.airDate)
 	}
 }

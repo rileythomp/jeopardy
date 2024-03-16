@@ -152,3 +152,36 @@ func (db *JeopardyDB) GetAnalytics() (any, error) {
 		SecondRoundScore:    secondRoundScore,
 	}, nil
 }
+
+//go:embed sql/search_categories.sql
+var searchCategories string
+
+type Category struct {
+	Category string `json:"category"`
+	Round    int    `json:"round"`
+	AirDate  string `json:"airDate"`
+}
+
+func (db *JeopardyDB) SearchCategories(query, start string, secondRound int) ([]Category, error) {
+	rows, err := db.pool.Query(context.Background(), searchCategories, query, secondRound, start)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	categories := []Category{}
+	for rows.Next() {
+		var category Category
+		err := rows.Scan(
+			&category.Category,
+			&category.Round,
+			&category.AirDate,
+		)
+		if err != nil {
+			return nil, err
+		}
+		categories = append(categories, category)
+	}
+
+	return categories, nil
+}

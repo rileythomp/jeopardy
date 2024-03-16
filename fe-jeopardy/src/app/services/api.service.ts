@@ -63,6 +63,11 @@ export class ApiService {
         return this.get('analytics')
     }
 
+    SearchCategories(category: string, bothRounds: boolean): Observable<any> {
+        let rounds = bothRounds ? 'both' : 'first'
+        return this.get(`categories?category=${category}&rounds=${rounds}`)
+    }
+
     private post(path: string, req: any): Observable<any> {
         return this.http.post<any>(
             `${httpProtocol}://${apiAddr}/jeopardy/${path}`,
