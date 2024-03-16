@@ -115,11 +115,12 @@ const (
 
 const numPlayers = 3
 
-func NewGame(db jeopardyDB, fullGame, penalty bool) (*Game, error) {
+func NewGame(db jeopardyDB, fullGame, penalty bool, bots int) (*Game, error) {
 	game := &Game{
 		GameConfig: GameConfig{
 			FullGame:           fullGame,
 			Penalty:            penalty,
+			Bots:               bots,
 			pickTimeout:        30 * time.Second,
 			buzzTimeout:        30 * time.Second,
 			answerTimeout:      15 * time.Second,

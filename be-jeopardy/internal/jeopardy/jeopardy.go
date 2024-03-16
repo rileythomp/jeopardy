@@ -57,7 +57,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
-	game, err := NewGame(questionDB, req.FullGame, req.Penalty)
+	game, err := NewGame(questionDB, req.FullGame, req.Penalty, req.Bots)
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
@@ -71,7 +71,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
 
-	for i := 0; i < req.Bots; i++ {
+	for i := 0; i < game.Bots; i++ {
 		bot := NewBot(genGameCode())
 		game.Players = append(game.Players, bot)
 		bot.processMessages()
@@ -93,7 +93,7 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}
-		game, err = NewGame(jeopardyDB, req.FullGame, req.Penalty)
+		game, err = NewGame(jeopardyDB, req.FullGame, req.Penalty, req.Bots)
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}

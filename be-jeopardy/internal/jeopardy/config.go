@@ -5,6 +5,7 @@ import "time"
 type GameConfig struct {
 	FullGame bool `json:"fullGame"`
 	Penalty  bool `json:"penalty"`
+	Bots     int  `json:"bots"`
 
 	pickTimeout        time.Duration
 	buzzTimeout        time.Duration

@@ -118,7 +118,7 @@ func (p *Bot) processMessage(ctx context.Context, resp Response) {
 		}
 		scores := sortScores(g.Players)
 		msg.IsPass = p.score() != scores[2]
-		sendBuzzAfter(ctx, g, msg, botPassTimeout, botAnswerTimeout)
+		sendBuzzAfter(ctx, g, msg, botPassTimeout, botBuzzTimeout)
 	case RecvAns:
 		if !p.canAnswer() {
 			return
