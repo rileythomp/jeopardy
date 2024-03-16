@@ -12,16 +12,18 @@ import (
 )
 
 type GameRequest struct {
-	PlayerName   string `json:"playerName"`
-	GameCode     string `json:"gameCode"`
-	Bots         int    `json:"bots"`
-	FullGame     bool   `json:"fullGame"`
-	Penalty      bool   `json:"penalty"`
-	PickConfig   int    `json:"pickConfig"`
-	BuzzConfig   int    `json:"buzzConfig"`
-	AnswerConfig int    `json:"answerConfig"`
-	VoteConfig   int    `json:"voteConfig"`
-	WagerConfig  int    `json:"wagerConfig"`
+	PlayerName            string        `json:"playerName"`
+	GameCode              string        `json:"gameCode"`
+	Bots                  int           `json:"bots"`
+	FullGame              bool          `json:"fullGame"`
+	Penalty               bool          `json:"penalty"`
+	PickConfig            int           `json:"pickConfig"`
+	BuzzConfig            int           `json:"buzzConfig"`
+	AnswerConfig          int           `json:"answerConfig"`
+	VoteConfig            int           `json:"voteConfig"`
+	WagerConfig           int           `json:"wagerConfig"`
+	FirstRoundCategories  []db.Category `json:"firstRoundCategories"`
+	SecondRoundCategories []db.Category `json:"secondRoundCategories"`
 }
 
 var (
@@ -66,6 +68,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	config, err := NewConfig(
 		req.FullGame, req.Penalty, req.Bots,
 		req.PickConfig, req.BuzzConfig, req.AnswerConfig, req.VoteConfig, req.WagerConfig,
+		req.FirstRoundCategories, req.SecondRoundCategories,
 	)
 	if err != nil {
 		return &Game{}, "", err, socket.BadRequest
@@ -109,6 +112,7 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 		config, err := NewConfig(
 			req.FullGame, req.Penalty, req.Bots,
 			req.PickConfig, req.BuzzConfig, req.AnswerConfig, req.VoteConfig, req.WagerConfig,
+			req.FirstRoundCategories, req.SecondRoundCategories,
 		)
 		if err != nil {
 			return &Game{}, "", err, socket.BadRequest

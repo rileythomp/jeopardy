@@ -10,6 +10,7 @@ Real-time multi-player Jeopardy game with over 100,000 questions.
   - Play in public or private games
   - Play 1 or 2 round games
   - Play with or without penalties for incorrect answers
+  - Choose the categories you want to play with
 
 - Game analytics
 

@@ -44,8 +44,35 @@ func (db *JeopardyDB) Close() {
 //go:embed sql/get_questions.sql
 var getQuestions string
 
-func (db *JeopardyDB) GetQuestions() ([]Question, error) {
-	rows, err := db.pool.Query(context.Background(), getQuestions)
+func (db *JeopardyDB) GetQuestions(firstRoundCategories, secondRoundCategories int) ([]Question, error) {
+	rows, err := db.pool.Query(context.Background(), getQuestions, firstRoundCategories, secondRoundCategories)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	questions := []Question{}
+	for rows.Next() {
+		var q Question
+		err := rows.Scan(&q.Round, &q.Value, &q.Category, &q.Comments, &q.Clue, &q.Answer, &q.Alternatives)
+		if err != nil {
+			return nil, err
+		}
+		questions = append(questions, q)
+	}
+
+	return questions, nil
+}
+
+//go:embed sql/get_category_questions.sql
+var getCategoryQuestions string
+
+func (db *JeopardyDB) GetCategoryQuestions(category Category) ([]Question, error) {
+	rows, err := db.pool.Query(
+		context.Background(),
+		getCategoryQuestions,
+		category.Category, category.AirDate, category.Round,
+	)
 	if err != nil {
 		return nil, err
 	}

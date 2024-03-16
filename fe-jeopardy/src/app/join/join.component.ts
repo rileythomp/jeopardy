@@ -37,9 +37,7 @@ export class JoinComponent {
 		private jwtService: JwtService,
 		private apiService: ApiService,
 		protected modal: ModalService,
-	) {
-		this.modal.displayConfig()
-	}
+	) { }
 
 	private joinResp(): Partial<Observer<any>> {
 		return {
@@ -58,7 +56,8 @@ export class JoinComponent {
 		this.apiService.CreatePrivateGame(
 			this.playerName,
 			bots, this.twoRoundChecked, this.penaltyChecked,
-			this.pickConfig, this.buzzConfig, this.answerConfig, this.voteConfig, this.wagerConfig
+			this.pickConfig, this.buzzConfig, this.answerConfig, this.voteConfig, this.wagerConfig,
+			this.firstRoundCategories, this.secondRoundCategories
 		).subscribe(this.joinResp())
 	}
 

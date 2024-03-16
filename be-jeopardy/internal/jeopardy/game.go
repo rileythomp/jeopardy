@@ -59,7 +59,8 @@ type (
 	}
 
 	jeopardyDB interface {
-		GetQuestions() ([]db.Question, error)
+		GetQuestions(firstRoundCategories, secondRoundCategories int) ([]db.Question, error)
+		GetCategoryQuestions(category db.Category) ([]db.Question, error)
 		AddAlternative(alternative, answer string) error
 		SaveGameAnalytics(gameID uuid.UUID, createdAt int64, fr db.AnalyticsRound, sr db.AnalyticsRound) error
 		Close()

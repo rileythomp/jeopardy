@@ -12,7 +12,7 @@ func TestGetQuestions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error connecting to database: %s", err.Error())
 		}
-		questions, err := questionDB.GetQuestions()
+		questions, err := questionDB.GetQuestions(6, 6)
 		if err != nil {
 			t.Fatalf("Error getting questions: %s", err.Error())
 		}
