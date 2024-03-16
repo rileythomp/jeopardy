@@ -19,6 +19,14 @@ const (
 	finalJeopardyWagerTimeout = 30 * time.Second
 )
 
+type GameTimeouts struct {
+	cancelBoardIntroTimeout context.CancelFunc
+	cancelPickTimeout       context.CancelFunc
+	cancelBuzzTimeout       context.CancelFunc
+	cancelVoteTimeout       context.CancelFunc
+	cancelDisputeTimeout    context.CancelFunc
+}
+
 func (g *Game) startTimeout(ctx context.Context, timeout time.Duration, player GamePlayer, processTimeout func(player GamePlayer) error) {
 	go func() {
 		timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), timeout)

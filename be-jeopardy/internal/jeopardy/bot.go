@@ -13,6 +13,17 @@ type Bot struct {
 	botChan chan Response
 }
 
+const (
+	botPickTimeout    = 3 * time.Second
+	botPassTimeout    = 5 * time.Second
+	botBuzzTimeout    = 20 * time.Second
+	botAnswerTimeout  = 5 * time.Second
+	botDDAnsTimeout   = 10 * time.Second
+	botVoteTimeout    = 5 * time.Second
+	botWagerTimeout   = 5 * time.Second
+	botDisputeTimeout = 10 * time.Second
+)
+
 func NewBot(name string) *Bot {
 	bot := &Bot{
 		Player:  NewPlayer(name),
@@ -100,22 +111,22 @@ func (p *Bot) processMessage(ctx context.Context, resp Response) {
 			return
 		}
 		msg.CatIdx, msg.ValIdx = g.nextQuestionInCategory()
-		sendMessageAfter(ctx, g, msg, 3*time.Second)
+		sendMessageAfter(ctx, g, msg, botPickTimeout)
 	case RecvBuzz:
 		if !p.canBuzz() {
 			return
 		}
 		scores := sortScores(g.Players)
 		msg.IsPass = p.score() != scores[2]
-		sendBuzzAfter(ctx, g, msg, 5*time.Second, 20*time.Second)
+		sendBuzzAfter(ctx, g, msg, botPassTimeout, botAnswerTimeout)
 	case RecvAns:
 		if !p.canAnswer() {
 			return
 		}
 		msg.Answer = g.CurQuestion.Answer
-		delay := 5 * time.Second
+		delay := botAnswerTimeout
 		if g.CurQuestion.DailyDouble {
-			delay = 10 * time.Second
+			delay = botDDAnsTimeout
 		}
 		sendMessageAfter(ctx, g, msg, delay)
 	case RecvVote:
@@ -123,19 +134,19 @@ func (p *Bot) processMessage(ctx context.Context, resp Response) {
 			return
 		}
 		msg.Confirm = true
-		sendMessageAfter(ctx, g, msg, 5*time.Second)
+		sendMessageAfter(ctx, g, msg, botVoteTimeout)
 	case RecvWager:
 		if !p.canWager() {
 			return
 		}
 		msg.Wager = p.pickWager(g.Players, g.roundMax())
-		sendMessageAfter(ctx, g, msg, 5*time.Second)
+		sendMessageAfter(ctx, g, msg, botWagerTimeout)
 	case RecvDispute:
 		if !p.canDispute() {
 			return
 		}
 		msg.Dispute = true
-		sendMessageAfter(ctx, g, msg, 10*time.Second)
+		sendMessageAfter(ctx, g, msg, botDisputeTimeout)
 	case PostGame:
 		p.setPlayAgain(true)
 	case PreGame, BoardIntro:

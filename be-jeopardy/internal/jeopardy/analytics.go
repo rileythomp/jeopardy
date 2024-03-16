@@ -8,6 +8,11 @@ import (
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 )
 
+type GameAnalytics struct {
+	FirstRoundScore  float64 `json:"firstRoundScore"`
+	SecondRoundScore float64 `json:"secondRoundScore"`
+}
+
 func (g *Game) saveGameAnalytics() {
 	if !g.Penalty {
 		return
