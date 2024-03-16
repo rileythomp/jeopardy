@@ -69,12 +69,3 @@ func NewConfig(
 		SecondRoundCategories: secondRoundCategories,
 	}, nil
 }
-
-// pickTimeout:        30 * time.Second,
-// buzzTimeout:        30 * time.Second,
-// answerTimeout:      15 * time.Second,
-// finalAnswerTimeout: 30 * time.Second,
-// voteTimeout:        10 * time.Second,
-// disputeTimeout:     60 * time.Second,
-// wagerTimeout:       30 * time.Second,
-// finalWagerTimeout:  30 * time.Second,
