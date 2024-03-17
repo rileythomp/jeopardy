@@ -20,6 +20,12 @@ type (
 		Alternatives []string `json:"-"`
 	}
 
+	Category struct {
+		Name    string `json:"category"`
+		Round   int    `json:"round"`
+		AirDate string `json:"airDate"`
+	}
+
 	JeopardyDB struct {
 		pool *pgxpool.Pool
 	}
@@ -44,8 +50,31 @@ func (db *JeopardyDB) Close() {
 //go:embed sql/get_questions.sql
 var getQuestions string
 
-func (db *JeopardyDB) GetQuestions() ([]Question, error) {
-	rows, err := db.pool.Query(context.Background(), getQuestions)
+func (db *JeopardyDB) GetQuestions(firstRoundCategories, secondRoundCategories int) ([]Question, error) {
+	rows, err := db.pool.Query(context.Background(), getQuestions, firstRoundCategories, secondRoundCategories)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	questions := []Question{}
+	for rows.Next() {
+		var q Question
+		err := rows.Scan(&q.Round, &q.Value, &q.Category, &q.Comments, &q.Clue, &q.Answer, &q.Alternatives)
+		if err != nil {
+			return nil, err
+		}
+		questions = append(questions, q)
+	}
+
+	return questions, nil
+}
+
+//go:embed sql/get_category_questions.sql
+var getCategoryQuestions string
+
+func (db *JeopardyDB) GetCategoryQuestions(category Category) ([]Question, error) {
+	rows, err := db.pool.Query(context.Background(), getCategoryQuestions, category.Name, category.AirDate, category.Round)
 	if err != nil {
 		return nil, err
 	}
@@ -151,4 +180,26 @@ func (db *JeopardyDB) GetAnalytics() (any, error) {
 		SecondRoundCorrRate: secondRoundCorrRate,
 		SecondRoundScore:    secondRoundScore,
 	}, nil
+}
+
+//go:embed sql/search_categories.sql
+var searchCategories string
+
+func (db *JeopardyDB) SearchCategories(query, start string, secondRound int) ([]Category, error) {
+	rows, err := db.pool.Query(context.Background(), searchCategories, query, secondRound, start)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	categories := []Category{}
+	for rows.Next() {
+		var category Category
+		if err := rows.Scan(&category.Name, &category.Round, &category.AirDate); err != nil {
+			return nil, err
+		}
+		categories = append(categories, category)
+	}
+
+	return categories, nil
 }

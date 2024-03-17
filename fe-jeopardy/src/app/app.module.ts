@@ -23,6 +23,7 @@ import { AnalyticsComponent } from './analytics/analytics.component';
 import { InstructionsComponent } from './instructions/instructions.component';
 import { DisputeComponent } from './dispute/dispute.component';
 import { GameMessageComponent } from './game-message/game-message.component';
+import { ConfigComponent } from './join/config/config.component';
 
 @NgModule({
   declarations: [
@@ -45,6 +46,7 @@ import { GameMessageComponent } from './game-message/game-message.component';
     InstructionsComponent,
     DisputeComponent,
     GameMessageComponent,
+    ConfigComponent,
   ],
   imports: [
     BrowserModule,

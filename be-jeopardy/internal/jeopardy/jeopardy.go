@@ -2,6 +2,7 @@ package jeopardy
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,11 +12,18 @@ import (
 )
 
 type GameRequest struct {
-	PlayerName string `json:"playerName"`
-	GameCode   string `json:"gameCode"`
-	Bots       int    `json:"bots"`
-	FullGame   bool   `json:"fullGame"`
-	Penalty    bool   `json:"penalty"`
+	PlayerName            string        `json:"playerName"`
+	GameCode              string        `json:"gameCode"`
+	Bots                  int           `json:"bots"`
+	FullGame              bool          `json:"fullGame"`
+	Penalty               bool          `json:"penalty"`
+	PickConfig            int           `json:"pickConfig"`
+	BuzzConfig            int           `json:"buzzConfig"`
+	AnswerConfig          int           `json:"answerConfig"`
+	VoteConfig            int           `json:"voteConfig"`
+	WagerConfig           int           `json:"wagerConfig"`
+	FirstRoundCategories  []db.Category `json:"firstRoundCategories"`
+	SecondRoundCategories []db.Category `json:"secondRoundCategories"`
 }
 
 var (
@@ -57,7 +65,15 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
-	game, err := NewGame(questionDB, req.FullGame, req.Penalty)
+	config, err := NewConfig(
+		req.FullGame, req.Penalty, req.Bots,
+		req.PickConfig, req.BuzzConfig, req.AnswerConfig, req.VoteConfig, req.WagerConfig,
+		req.FirstRoundCategories, req.SecondRoundCategories,
+	)
+	if err != nil {
+		return &Game{}, "", err, socket.BadRequest
+	}
+	game, err := NewGame(questionDB, config)
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
@@ -71,7 +87,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
 
-	for i := 0; i < req.Bots; i++ {
+	for i := 0; i < game.Bots; i++ {
 		bot := NewBot(genGameCode())
 		game.Players = append(game.Players, bot)
 		bot.processMessages()
@@ -93,7 +109,15 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}
-		game, err = NewGame(jeopardyDB, req.FullGame, req.Penalty)
+		config, err := NewConfig(
+			req.FullGame, req.Penalty, req.Bots,
+			req.PickConfig, req.BuzzConfig, req.AnswerConfig, req.VoteConfig, req.WagerConfig,
+			req.FirstRoundCategories, req.SecondRoundCategories,
+		)
+		if err != nil {
+			return &Game{}, "", err, socket.BadRequest
+		}
+		game, err = NewGame(jeopardyDB, config)
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}
@@ -278,6 +302,36 @@ func PlayAgain(playerId string) error {
 		})
 	}
 	return nil
+}
+
+var searchDB *db.JeopardyDB
+
+func init() {
+	var err error
+	searchDB, err = db.NewJeopardyDB()
+	if err != nil {
+		log.Fatalf("Error connecting to database: %s", err.Error())
+	}
+}
+
+func SearchCategories(category, rounds string) ([]db.Category, error) {
+	if category == "" {
+		return []db.Category{}, nil
+	}
+	start := ""
+	if len(category) > 2 {
+		start = "%"
+	}
+	secondRound := 2
+	if rounds == "first" {
+		secondRound = 1
+	}
+	categories, err := searchDB.SearchCategories(strings.ToLower(category), start, secondRound)
+	if err != nil {
+		log.Errorf("Error searching categories: %s", err.Error())
+		return nil, err
+	}
+	return categories, nil
 }
 
 func CleanUpGames() {

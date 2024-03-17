@@ -4,7 +4,7 @@ with r1_categories as (
 	group by category, air_date, round
 	having count(*) = 5 and round = 1
 	order by random() asc
-	limit 6
+	limit $1
 ),
 r2_categories as (
 	select category, air_date, round
@@ -12,7 +12,7 @@ r2_categories as (
 	group by category, air_date, round
 	having count(*) = 5 and round = 2
 	order by random() asc
-	limit 6
+	limit $2
 ),
 round1 as (
 	select jc.round, jc.clue_value, jc.category, jc.comments, jc.answer, jc.question, jc.alternatives

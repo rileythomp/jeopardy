@@ -1,7 +1,6 @@
 package jeopardy
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"time"
@@ -14,6 +13,13 @@ import (
 
 type (
 	Game struct {
+		GameConfig
+		GameAnalytics
+		GameChannels
+		GameTimeouts
+
+		jeopardyDB jeopardyDB
+
 		Name           string       `json:"name"`
 		State          GameState    `json:"state"`
 		Round          RoundState   `json:"round"`
@@ -39,32 +45,22 @@ type (
 		DisputePicker  GamePlayer   `json:"disputePicker"`
 		Disputers      int          `json:"disputes"`
 		NonDisputers   int          `json:"nonDisputes"`
-		FullGame       bool         `json:"fullGame"`
-		Penalty        bool         `json:"penalty"`
-
-		FirstRoundScore  float64 `json:"firstRoundScore"`
-		SecondRoundScore float64 `json:"secondRoundScore"`
 
 		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
 		StartFinalWagerCountdown  bool `json:"startFinalWagerCountdown"`
+	}
 
-		cancelBoardIntroTimeout context.CancelFunc
-		cancelPickTimeout       context.CancelFunc
-		cancelBuzzTimeout       context.CancelFunc
-		cancelVoteTimeout       context.CancelFunc
-		cancelDisputeTimeout    context.CancelFunc
-
+	GameChannels struct {
 		msgChan        chan Message
 		disconnectChan chan GamePlayer
 		restartChan    chan bool
 		chatChan       chan ChatMessage
-
-		jeopardyDB jeopardyDB
 	}
 
 	jeopardyDB interface {
-		GetQuestions() ([]db.Question, error)
+		GetQuestions(firstRoundCategories, secondRoundCategories int) ([]db.Question, error)
+		GetCategoryQuestions(category db.Category) ([]db.Question, error)
 		AddAlternative(alternative, answer string) error
 		SaveGameAnalytics(gameID uuid.UUID, createdAt int64, fr db.AnalyticsRound, sr db.AnalyticsRound) error
 		Close()
@@ -120,24 +116,28 @@ const (
 
 const numPlayers = 3
 
-func NewGame(db jeopardyDB, fullGame, penalty bool) (*Game, error) {
+func NewGame(db jeopardyDB, config GameConfig) (*Game, error) {
 	game := &Game{
-		State:                   PreGame,
-		Players:                 []GamePlayer{},
-		Round:                   FirstRound,
-		Name:                    genGameCode(),
-		LastToPick:              &Player{},
-		cancelBoardIntroTimeout: func() {},
-		cancelPickTimeout:       func() {},
-		cancelBuzzTimeout:       func() {},
-		cancelVoteTimeout:       func() {},
-		msgChan:                 make(chan Message),
-		disconnectChan:          make(chan GamePlayer),
-		restartChan:             make(chan bool),
-		chatChan:                make(chan ChatMessage),
-		jeopardyDB:              db,
-		FullGame:                fullGame,
-		Penalty:                 penalty,
+		GameConfig: config,
+		GameChannels: GameChannels{
+			msgChan:        make(chan Message),
+			disconnectChan: make(chan GamePlayer),
+			restartChan:    make(chan bool),
+			chatChan:       make(chan ChatMessage),
+		},
+		GameTimeouts: GameTimeouts{
+			cancelBoardIntroTimeout: func() {},
+			cancelPickTimeout:       func() {},
+			cancelBuzzTimeout:       func() {},
+			cancelVoteTimeout:       func() {},
+			cancelDisputeTimeout:    func() {},
+		},
+		jeopardyDB: db,
+		State:      PreGame,
+		Players:    []GamePlayer{},
+		Round:      FirstRound,
+		Name:       genGameCode(),
+		LastToPick: &Player{},
 	}
 	if err := game.setQuestions(); err != nil {
 		return nil, err

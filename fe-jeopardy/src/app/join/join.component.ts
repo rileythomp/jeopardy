@@ -23,7 +23,7 @@ export class JoinComponent {
 		private router: Router,
 		private jwtService: JwtService,
 		private apiService: ApiService,
-		private modal: ModalService,
+		protected modal: ModalService,
 	) { }
 
 	private joinResp(): Partial<Observer<any>> {
@@ -39,21 +39,22 @@ export class JoinComponent {
 		}
 	}
 
-	createPrivateGame(playerName: string, bots: number) {
+	createPrivateGame(bots: number) {
 		this.apiService.CreatePrivateGame(
-			playerName,
+			this.playerName,
 			bots,
 			this.twoRoundChecked,
-			this.penaltyChecked
+			this.penaltyChecked,
+			30, 30, 15, 10, 30, [], []
 		).subscribe(this.joinResp())
 	}
 
-	joinGameByCode(playerName: string, gameCode: string) {
-		this.apiService.JoinGameByCode(playerName, gameCode).subscribe(this.joinResp())
+	joinGameByCode() {
+		this.apiService.JoinGameByCode(this.playerName, this.gameCode).subscribe(this.joinResp())
 	}
 
-	joinPublicGame(playerName: string) {
-		this.apiService.JoinPublicGame(playerName).subscribe(this.joinResp())
+	joinPublicGame() {
+		this.apiService.JoinPublicGame(this.playerName).subscribe(this.joinResp())
 	}
 
 	rejoin() {
@@ -70,7 +71,7 @@ export class JoinComponent {
 
 	toggleGameCodeInput() {
 		if (this.showGameCodeInput && this.gameCode && this.playerName) {
-			this.joinGameByCode(this.playerName, this.gameCode)
+			this.joinGameByCode()
 			return
 		}
 		this.showGameCodeInput = !this.showGameCodeInput

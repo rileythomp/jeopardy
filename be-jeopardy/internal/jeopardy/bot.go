@@ -13,6 +13,17 @@ type Bot struct {
 	botChan chan Response
 }
 
+const (
+	botPickTimeout    = 3 * time.Second
+	botPassTimeout    = 5 * time.Second
+	botBuzzTimeout    = 20 * time.Second
+	botAnswerTimeout  = 5 * time.Second
+	botDDAnsTimeout   = 10 * time.Second
+	botVoteTimeout    = 5 * time.Second
+	botWagerTimeout   = 5 * time.Second
+	botDisputeTimeout = 10 * time.Second
+)
+
 func NewBot(name string) *Bot {
 	bot := &Bot{
 		Player:  NewPlayer(name),
@@ -100,42 +111,58 @@ func (p *Bot) processMessage(ctx context.Context, resp Response) {
 			return
 		}
 		msg.CatIdx, msg.ValIdx = g.nextQuestionInCategory()
-		sendMessageAfter(ctx, g, msg, 3*time.Second)
+		wrongAnswer := false
+		for _, ans := range g.CurQuestion.Answers {
+			if !ans.Correct {
+				wrongAnswer = true
+				break
+			}
+		}
+		timeout := botPickTimeout
+		if wrongAnswer {
+			timeout = 10 * time.Second
+		}
+		timeout = min(timeout, time.Duration(g.PickTimeout-1)*time.Second)
+		sendMessageAfter(ctx, g, msg, timeout)
 	case RecvBuzz:
 		if !p.canBuzz() {
 			return
 		}
 		scores := sortScores(g.Players)
 		msg.IsPass = p.score() != scores[2]
-		sendBuzzAfter(ctx, g, msg, 5*time.Second, 20*time.Second)
+		buzzTimeout := min(botBuzzTimeout, time.Duration(g.BuzzTimeout-1)*time.Second)
+		sendBuzzAfter(ctx, g, msg, botPassTimeout, buzzTimeout)
 	case RecvAns:
 		if !p.canAnswer() {
 			return
 		}
 		msg.Answer = g.CurQuestion.Answer
-		delay := 5 * time.Second
+		timeout := botAnswerTimeout
 		if g.CurQuestion.DailyDouble {
-			delay = 10 * time.Second
+			timeout = botDDAnsTimeout
 		}
-		sendMessageAfter(ctx, g, msg, delay)
+		timeout = min(timeout, time.Duration(g.AnswerTimeout-1)*time.Second)
+		sendMessageAfter(ctx, g, msg, timeout)
 	case RecvVote:
 		if !p.canVote() {
 			return
 		}
 		msg.Confirm = true
-		sendMessageAfter(ctx, g, msg, 5*time.Second)
+		timeout := min(botVoteTimeout, time.Duration(g.VoteTimeout-1)*time.Second)
+		sendMessageAfter(ctx, g, msg, timeout)
 	case RecvWager:
 		if !p.canWager() {
 			return
 		}
 		msg.Wager = p.pickWager(g.Players, g.roundMax())
-		sendMessageAfter(ctx, g, msg, 5*time.Second)
+		timeout := min(botWagerTimeout, time.Duration(g.WagerTimeout-1)*time.Second)
+		sendMessageAfter(ctx, g, msg, timeout)
 	case RecvDispute:
 		if !p.canDispute() {
 			return
 		}
 		msg.Dispute = true
-		sendMessageAfter(ctx, g, msg, 10*time.Second)
+		sendMessageAfter(ctx, g, msg, botDisputeTimeout)
 	case PostGame:
 		p.setPlayAgain(true)
 	case PreGame, BoardIntro:
