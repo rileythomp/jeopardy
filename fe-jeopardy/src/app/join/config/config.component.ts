@@ -88,7 +88,7 @@ export class ConfigComponent {
 	}
 
 	validateBuzzConfig() {
-		this.buzzConfig = Math.min(Math.max(this.buzzConfig, 3), 60)
+		this.buzzConfig = Math.min(Math.max(this.buzzConfig, 10), 60)
 	}
 
 	validateAnswerConfig() {
