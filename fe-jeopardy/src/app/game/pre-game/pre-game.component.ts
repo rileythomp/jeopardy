@@ -31,4 +31,8 @@ export class PreGameComponent {
 	addBot(): void {
 		this.apiService.AddBot().subscribe()
 	}
+
+	startGame(): void {
+		this.apiService.StartGame().subscribe()
+	}
 }

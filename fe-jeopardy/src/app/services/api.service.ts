@@ -68,6 +68,10 @@ export class ApiService {
         return this.get(`categories?category=${category}&rounds=${rounds}`)
     }
 
+    StartGame(): Observable<any> {
+        return this.put('games/start', {})
+    }
+
     private post(path: string, req: any): Observable<any> {
         return this.http.post<any>(
             `${httpProtocol}://${apiAddr}/jeopardy/${path}`,

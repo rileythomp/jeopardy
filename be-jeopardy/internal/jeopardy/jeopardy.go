@@ -61,7 +61,7 @@ func (g *Game) validateName(name string) error {
 }
 
 func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
-	questionDB, err := db.NewJeopardyDB()
+	jeopardyDB, err := db.NewJeopardyDB()
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
@@ -73,7 +73,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	if err != nil {
 		return &Game{}, "", err, socket.BadRequest
 	}
-	game, err := NewGame(questionDB, config)
+	game, err := NewGame(jeopardyDB, config)
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
@@ -99,7 +99,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 	var game *Game
 	for _, g := range publicGames {
-		if len(g.Players) < numPlayers && g.validateName(req.PlayerName) == nil {
+		if len(g.Players) < maxPlayers && g.validateName(req.PlayerName) == nil {
 			game = g
 			break
 		}
@@ -149,7 +149,7 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 	}
 
 	var player GamePlayer
-	if len(game.Players) < numPlayers {
+	if len(game.Players) < maxPlayers {
 		player = NewPlayer(playerName)
 		game.Players = append(game.Players, player)
 	} else {
@@ -186,7 +186,7 @@ func AddBot(playerId string) error {
 	}
 
 	var bot *Bot
-	if len(game.Players) < numPlayers {
+	if len(game.Players) < maxPlayers {
 		bot = NewBot(genBotCode())
 		game.Players = append(game.Players, bot)
 	} else {
@@ -201,12 +201,12 @@ func AddBot(playerId string) error {
 		}
 	}
 	if bot == nil {
-		return fmt.Errorf("Game is full")
+		return fmt.Errorf("Game %s is full", game.Name)
 	}
 
 	bot.processMessages()
 
-	game.handlePlayerJoined()
+	game.messageAllPlayers("Waiting for more players")
 
 	return nil
 }
@@ -228,25 +228,28 @@ func PlayGame(playerId string, conn SafeConn) error {
 	player.sendPings()
 	player.readMessages(game.msgChan, game.disconnectChan)
 
-	game.handlePlayerJoined()
+	game.messageAllPlayers("Waiting for more players")
 
 	return nil
 }
 
-func (g *Game) handlePlayerJoined() {
-	msg := "Waiting for more players"
-	if g.allPlayersReady() {
-		if g.Disconnected {
-			g.Disconnected = false
-		}
-		if g.Paused {
-			g.startGame()
-		} else {
-			g.startRound(g.Players[0])
-		}
-		msg = "We are ready to play"
+func StartGame(playerId string) error {
+	game, err := GetPlayerGame(playerId)
+	if err != nil {
+		return err
 	}
-	g.messageAllPlayers(msg)
+
+	if game.Disconnected {
+		game.Disconnected = false
+	}
+	if game.Paused {
+		game.startGame()
+	} else {
+		game.startRound(game.Players[0])
+	}
+	game.messageAllPlayers("We are ready to play")
+
+	return nil
 }
 
 func LeaveGame(playerId string) error {
