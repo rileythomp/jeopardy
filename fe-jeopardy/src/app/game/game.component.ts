@@ -96,7 +96,7 @@ export class GameComponent implements OnInit {
 
 			if (this.game.IsPaused()) {
 				this.cancelCountdown()
-				this.modal.displayMessage(`${resp.message}, will resume when 3 players are ready`)
+				this.modal.displayMessage(`${resp.message}, will resume when all ${this.game.Players().length} players are ready`)
 				return
 			}
 

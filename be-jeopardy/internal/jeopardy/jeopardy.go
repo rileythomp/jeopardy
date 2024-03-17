@@ -148,24 +148,25 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 		return &Game{}, "", err
 	}
 
+	if len(game.Players) >= maxPlayers {
+		return &Game{}, "", fmt.Errorf("Game %s is full", gameCode)
+	}
+
 	var player GamePlayer
-	if len(game.Players) < maxPlayers {
-		player = NewPlayer(playerName)
-		game.Players = append(game.Players, player)
-	} else {
-		for _, p := range game.Players {
-			if p.conn() == nil {
-				delete(playerGames, p.id())
-				player = p
-				player.setId(uuid.New().String())
-				player.setName(playerName)
-				break
-			}
+	for _, p := range game.Players {
+		if p.conn() == nil {
+			delete(playerGames, p.id())
+			player = p
+			player.setId(uuid.New().String())
+			player.setName(playerName)
+			break
 		}
 	}
 	if player == nil {
-		return &Game{}, "", fmt.Errorf("Game %s is full", gameCode)
+		player = NewPlayer(playerName)
+		game.Players = append(game.Players, player)
 	}
+
 	playerGames[player.id()] = game
 
 	return game, player.id(), nil
@@ -201,7 +202,7 @@ func AddBot(playerId string) error {
 		}
 	}
 	if bot == nil {
-		return fmt.Errorf("Game %s is full", game.Name)
+		return fmt.Errorf("Game is full")
 	}
 
 	bot.processMessages()
