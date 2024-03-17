@@ -10,7 +10,7 @@ import { Router } from '@angular/router';
 	templateUrl: './config.component.html',
 	styleUrls: ['./config.component.less']
 })
-export class ConfigComponent implements OnInit {
+export class ConfigComponent {
 	@Input() playerName: string
 	protected oneRoundChecked: boolean = true
 	protected twoRoundChecked: boolean = false
@@ -35,9 +35,6 @@ export class ConfigComponent implements OnInit {
 		private router: Router
 	) { }
 
-	ngOnInit(): void {
-	}
-
 	searchCategories() {
 		this.searchLoader = true
 		if (this.categorySearch == '') {
@@ -48,7 +45,6 @@ export class ConfigComponent implements OnInit {
 		}
 		this.apiService.SearchCategories(this.categorySearch, this.twoRoundChecked).subscribe({
 			next: (resp: any) => {
-				console.log(resp)
 				this.searchResults = resp
 				if (resp.length > 0) {
 					document.getElementById('results-dropdown')!.style.borderBottom = '1px solid black';
