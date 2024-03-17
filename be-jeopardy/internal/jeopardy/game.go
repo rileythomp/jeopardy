@@ -705,10 +705,14 @@ func (g *Game) startGame() {
 
 func (g *Game) getAvgScore() float64 {
 	total := 0.0
+	players := 0
 	for _, p := range g.Players {
-		total += float64(p.score())
+		if !p.isBot() {
+			total += float64(p.score())
+			players++
+		}
 	}
-	return total / 3
+	return total / float64(players)
 }
 
 func (g *Game) startSecondRound() {
