@@ -129,7 +129,7 @@ func (p *Bot) processMessage(ctx context.Context, resp Response) {
 			return
 		}
 		scores := sortScores(g.Players)
-		msg.IsPass = p.score() != scores[2]
+		msg.IsPass = p.score() != scores[len(scores)-1]
 		buzzTimeout := min(botBuzzTimeout, time.Duration(g.BuzzTimeout-1)*time.Second)
 		sendBuzzAfter(ctx, g, msg, botPassTimeout, buzzTimeout)
 	case RecvAns:
@@ -179,7 +179,10 @@ func (p *Bot) pickWager(players []GamePlayer, roundMax int) int {
 }
 
 func sortScores(players []GamePlayer) []int {
-	scores := []int{players[0].score(), players[1].score(), players[2].score()}
+	scores := []int{}
+	for _, player := range players {
+		scores = append(scores, player.score())
+	}
 	sort.Slice(scores, func(i, j int) bool {
 		return scores[i] > scores[j]
 	})
