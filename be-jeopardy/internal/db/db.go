@@ -101,6 +101,14 @@ func (db *JeopardyDB) AddAlternative(alternative, answer string) error {
 	return err
 }
 
+//go:embed sql/add_incorrect.sql
+var addIncorrect string
+
+func (db *JeopardyDB) AddIncorrect(incorrect, clue string) error {
+	_, err := db.pool.Exec(context.Background(), addIncorrect, incorrect, clue)
+	return err
+}
+
 type AnalyticsRound struct {
 	Categories []AnalyticsCategory
 	Answers    *int

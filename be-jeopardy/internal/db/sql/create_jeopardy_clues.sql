@@ -8,5 +8,6 @@ create table if not exists jeopardy_clues (
 	question text, 
 	air_date text, 
 	notes text,
-	alternatives text[]
+	alternatives text[],
+	incorrect text[]
 );

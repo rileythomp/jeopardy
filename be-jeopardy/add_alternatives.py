@@ -18,6 +18,13 @@ db.execute(
 
 db.execute(
     '''
+    alter table jeopardy_clues 
+    add column if not exists incorrect text[];
+    '''
+)
+
+db.execute(
+    '''
     update jeopardy_clues 
     set alternatives = ARRAY[question];
     '''

@@ -95,6 +95,11 @@ func (g *Game) startVoteTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelVoteTimeout = cancel
 	g.startTimeout(ctx, g.VoteTimeout, &Player{}, func(_ GamePlayer) error {
+    	if !g.AnsCorrectness {
+	    	if err := g.jeopardyDB.AddIncorrect(g.CurQuestion.CurAns.Answer, g.CurQuestion.Clue); err != nil {
+	      		log.Errorf("Error adding incorrect: %s", err.Error())
+		  	}
+	  	}
 		g.nextQuestion(g.CurQuestion.CurAns.Player, g.AnsCorrectness)
 		return nil
 	})

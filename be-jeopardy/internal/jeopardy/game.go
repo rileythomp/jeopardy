@@ -62,6 +62,7 @@ type (
 		GetQuestions(firstRoundCategories, secondRoundCategories int) ([]db.Question, error)
 		GetCategoryQuestions(category db.Category) ([]db.Question, error)
 		AddAlternative(alternative, answer string) error
+		AddIncorrect(incorrect, clue string) error
 		SaveGameAnalytics(gameID uuid.UUID, createdAt int64, fr db.AnalyticsRound, sr db.AnalyticsRound) error
 		Close()
 	}
@@ -435,6 +436,11 @@ func (g *Game) processVote(player GamePlayer, confirm bool) error {
 	if !g.AnsCorrectness && len(g.Challengers) == 2 {
 		if err := g.jeopardyDB.AddAlternative(g.CurQuestion.CurAns.Answer, g.CurQuestion.Answer); err != nil {
 			log.Errorf("Error adding alternative: %s", err.Error())
+		}
+	}
+	if !isCorrect {
+		if err := g.jeopardyDB.AddIncorrect(g.CurQuestion.CurAns.Answer, g.CurQuestion.Clue); err != nil {
+			log.Errorf("Error adding incorrect: %s", err.Error())
 		}
 	}
 	g.CurQuestion.CurAns.Correct = isCorrect
