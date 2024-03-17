@@ -4,6 +4,7 @@ import { ApiService } from 'src/app/services/api.service';
 import { ModalService } from 'src/app/services/modal.service';
 import { JwtService } from 'src/app/services/jwt.service';
 import { Router } from '@angular/router';
+import { ThisReceiver } from '@angular/compiler';
 
 @Component({
 	selector: 'app-config',
@@ -108,6 +109,14 @@ export class ConfigComponent {
 	}
 
 	createPrivateGame(bots: number) {
+		if (this.playerName == '') {
+			document.getElementById('player-name-config')!.focus()
+			document.getElementById('player-name-config')!.style.border = '1px solid red';
+			setTimeout(() => {
+				document.getElementById('player-name-config')!.style.border = '1px solid grey';
+			}, 1000)
+			return
+		}
 		this.apiService.CreatePrivateGame(
 			this.playerName,
 			bots, this.twoRoundChecked, this.penaltyChecked,

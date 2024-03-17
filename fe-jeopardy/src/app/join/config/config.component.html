@@ -4,7 +4,7 @@
         <div id='config-inputs' class='flex-row'>
             <div class='game-inputs'>
                 <div>
-                    <input type="text" [(ngModel)]="playerName" placeholder="Enter your name">
+                    <input id="player-name-config" type="text" [(ngModel)]="playerName" placeholder="Enter your name">
                 </div>
                 <div>
                     <input type="checkbox" id="one-round-config" [(ngModel)]="oneRoundChecked" (change)="twoRoundChecked = !oneRoundChecked">
