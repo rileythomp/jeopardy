@@ -47,8 +47,6 @@ $ ng serve
 
 ### TODO
 
-- Track incorrect player answers
-
 - Tournament play
 
 - Allow players to import their own questions
