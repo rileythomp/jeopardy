@@ -6,12 +6,36 @@ Play here: https://playjeopardy.netlify.app
 
 <details>
   <summary>Screenshots</summary>
-  
+
+![game](imgs/game.png)
+
+<details>
+  <summary>Home page</summary>
+
 ![home](imgs/home.png)
 
+</details>
+
+<details>
+  <summary>Search page</summary>
+  
 ![search](imgs/search.png)
 
+</details>
+
+<details>
+  <summary>Config page</summary>
+  
 ![config](imgs/config.png)
+
+</details>
+
+<details>
+  <summary>Analytics page</summary>
+  
+![analytics](imgs/analytics.png)
+
+</details>
 
 </details>
 
