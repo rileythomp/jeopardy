@@ -111,36 +111,52 @@ func (p *Bot) processMessage(ctx context.Context, resp Response) {
 			return
 		}
 		msg.CatIdx, msg.ValIdx = g.nextQuestionInCategory()
-		sendMessageAfter(ctx, g, msg, botPickTimeout)
+		wrongAnswer := false
+		for _, ans := range g.CurQuestion.Answers {
+			if !ans.Correct {
+				wrongAnswer = true
+				break
+			}
+		}
+		timeout := botPickTimeout
+		if wrongAnswer {
+			timeout = 10 * time.Second
+		}
+		timeout = min(timeout, time.Duration(g.PickTimeout-1)*time.Second)
+		sendMessageAfter(ctx, g, msg, timeout)
 	case RecvBuzz:
 		if !p.canBuzz() {
 			return
 		}
 		scores := sortScores(g.Players)
 		msg.IsPass = p.score() != scores[2]
-		sendBuzzAfter(ctx, g, msg, botPassTimeout, botBuzzTimeout)
+		buzzTimeout := min(botBuzzTimeout, time.Duration(g.BuzzTimeout-1)*time.Second)
+		sendBuzzAfter(ctx, g, msg, botPassTimeout, buzzTimeout)
 	case RecvAns:
 		if !p.canAnswer() {
 			return
 		}
 		msg.Answer = g.CurQuestion.Answer
-		delay := botAnswerTimeout
+		timeout := botAnswerTimeout
 		if g.CurQuestion.DailyDouble {
-			delay = botDDAnsTimeout
+			timeout = botDDAnsTimeout
 		}
-		sendMessageAfter(ctx, g, msg, delay)
+		timeout = min(timeout, time.Duration(g.AnswerTimeout-1)*time.Second)
+		sendMessageAfter(ctx, g, msg, timeout)
 	case RecvVote:
 		if !p.canVote() {
 			return
 		}
 		msg.Confirm = true
-		sendMessageAfter(ctx, g, msg, botVoteTimeout)
+		timeout := min(botVoteTimeout, time.Duration(g.VoteTimeout-1)*time.Second)
+		sendMessageAfter(ctx, g, msg, timeout)
 	case RecvWager:
 		if !p.canWager() {
 			return
 		}
 		msg.Wager = p.pickWager(g.Players, g.roundMax())
-		sendMessageAfter(ctx, g, msg, botWagerTimeout)
+		timeout := min(botWagerTimeout, time.Duration(g.WagerTimeout-1)*time.Second)
+		sendMessageAfter(ctx, g, msg, timeout)
 	case RecvDispute:
 		if !p.canDispute() {
 			return
