@@ -14,11 +14,11 @@ type GameConfig struct {
 	PickTimeout        int `json:"pickTimeout"`
 	BuzzTimeout        int `json:"buzzTimeout"`
 	AnswerTimeout      int `json:"answerTimeout"`
-	FinalAnswerTimeout int `json:"finalAnswerTimeout"`
 	VoteTimeout        int `json:"voteTimeout"`
-	DisputeTimeout     int `json:"disputeTimeout"`
 	WagerTimeout       int `json:"wagerTimeout"`
 	FinalWagerTimeout  int `json:"finalWagerTimeout"`
+	FinalAnswerTimeout int `json:"finalAnswerTimeout"`
+	DisputeTimeout     int `json:"disputeTimeout"`
 
 	FirstRoundCategories  []db.Category `json:"firstRoundCategories"`
 	SecondRoundCategories []db.Category `json:"secondRoundCategories"`
@@ -60,11 +60,11 @@ func NewConfig(
 		PickTimeout:           pickTimeout,
 		BuzzTimeout:           buzzTimeout,
 		AnswerTimeout:         answerTimeout,
-		FinalAnswerTimeout:    30,
 		VoteTimeout:           voteTimeout,
-		DisputeTimeout:        60,
 		WagerTimeout:          wagerTimeout,
 		FinalWagerTimeout:     30,
+		FinalAnswerTimeout:    30,
+		DisputeTimeout:        60,
 		FirstRoundCategories:  firstRoundCategories,
 		SecondRoundCategories: secondRoundCategories,
 	}, nil

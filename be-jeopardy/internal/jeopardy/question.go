@@ -78,14 +78,8 @@ func (g *Game) setQuestions() error {
 
 	questions := []db.Question{}
 
-	for _, category := range g.FirstRoundCategories {
-		categoryQuestions, err := g.jeopardyDB.GetCategoryQuestions(category)
-		if err != nil {
-			return err
-		}
-		questions = append(questions, categoryQuestions...)
-	}
-	for _, category := range g.SecondRoundCategories {
+	categories := append(g.FirstRoundCategories, g.SecondRoundCategories...)
+	for _, category := range categories {
 		categoryQuestions, err := g.jeopardyDB.GetCategoryQuestions(category)
 		if err != nil {
 			return err
@@ -118,7 +112,9 @@ func (g *Game) setQuestions() error {
 			category = Category{}
 		}
 	}
+
 	g.setDailyDoubles()
+
 	return nil
 }
 

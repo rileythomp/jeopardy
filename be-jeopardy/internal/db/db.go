@@ -20,6 +20,12 @@ type (
 		Alternatives []string `json:"-"`
 	}
 
+	Category struct {
+		Name    string `json:"category"`
+		Round   int    `json:"round"`
+		AirDate string `json:"airDate"`
+	}
+
 	JeopardyDB struct {
 		pool *pgxpool.Pool
 	}
@@ -68,11 +74,7 @@ func (db *JeopardyDB) GetQuestions(firstRoundCategories, secondRoundCategories i
 var getCategoryQuestions string
 
 func (db *JeopardyDB) GetCategoryQuestions(category Category) ([]Question, error) {
-	rows, err := db.pool.Query(
-		context.Background(),
-		getCategoryQuestions,
-		category.Category, category.AirDate, category.Round,
-	)
+	rows, err := db.pool.Query(context.Background(), getCategoryQuestions, category.Name, category.AirDate, category.Round)
 	if err != nil {
 		return nil, err
 	}
@@ -183,12 +185,6 @@ func (db *JeopardyDB) GetAnalytics() (any, error) {
 //go:embed sql/search_categories.sql
 var searchCategories string
 
-type Category struct {
-	Category string `json:"category"`
-	Round    int    `json:"round"`
-	AirDate  string `json:"airDate"`
-}
-
 func (db *JeopardyDB) SearchCategories(query, start string, secondRound int) ([]Category, error) {
 	rows, err := db.pool.Query(context.Background(), searchCategories, query, secondRound, start)
 	if err != nil {
@@ -199,12 +195,7 @@ func (db *JeopardyDB) SearchCategories(query, start string, secondRound int) ([]
 	categories := []Category{}
 	for rows.Next() {
 		var category Category
-		err := rows.Scan(
-			&category.Category,
-			&category.Round,
-			&category.AirDate,
-		)
-		if err != nil {
+		if err := rows.Scan(&category.Name, &category.Round, &category.AirDate); err != nil {
 			return nil, err
 		}
 		categories = append(categories, category)
