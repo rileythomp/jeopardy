@@ -2,15 +2,28 @@
 
 Real-time multi-player Jeopardy game with over 100,000 questions.
 
+Play here: https://playjeopardy.netlify.app
+
+<details>
+  <summary>Screenshots</summary>
+  
+![home](imgs/home.png)
+
+![search](imgs/search.png)
+
+![config](imgs/config.png)
+
+</details>
+
 ### Features
 
 - Game configuration
 
   - Play against other people or against bots
-  - Play in public or private games
+  - Choose the categories you want to play with
   - Play 1 or 2 round games
   - Play with or without penalties for incorrect answers
-  - Choose the categories you want to play with
+  - Play in public or private games
 
 - Game analytics
 
@@ -25,7 +38,7 @@ Real-time multi-player Jeopardy game with over 100,000 questions.
 
 - Handles players disconnecting and rejoining the game
 
-### Usage
+### Development
 
 Server
 

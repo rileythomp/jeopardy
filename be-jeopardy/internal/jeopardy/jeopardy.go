@@ -88,7 +88,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	playerGames[player.Id] = game
 
 	for i := 0; i < game.Bots; i++ {
-		bot := NewBot(genGameCode())
+		bot := NewBot(genBotCode())
 		game.Players = append(game.Players, bot)
 		bot.processMessages()
 	}
@@ -187,13 +187,13 @@ func AddBot(playerId string) error {
 
 	var bot *Bot
 	if len(game.Players) < numPlayers {
-		bot = NewBot(genGameCode())
+		bot = NewBot(genBotCode())
 		game.Players = append(game.Players, bot)
 	} else {
 		for i, p := range game.Players {
 			if p.conn() == nil {
 				delete(playerGames, p.id())
-				bot = NewBot(genGameCode())
+				bot = NewBot(genBotCode())
 				bot.copyState(p)
 				game.Players[i] = bot
 				break
