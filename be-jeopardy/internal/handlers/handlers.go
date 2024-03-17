@@ -35,6 +35,11 @@ var (
 			Handler: CheckHealth,
 		},
 		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/version",
+			Handler: GetVersion,
+		},
+		{
 			Method:  http.MethodPost,
 			Path:    "/jeopardy/games",
 			Handler: CreatePrivateGame,
@@ -443,6 +448,20 @@ func GetPlayerGames(c *gin.Context) {
 func CheckHealth(c *gin.Context) {
 	log.Infof("Received health check")
 	c.String(http.StatusOK, "OK")
+}
+
+func GetVersion(c *gin.Context) {
+	log.Infof("Received version request")
+	info := struct {
+		Name    string `json:"name"`
+		Domain  string `json:"domain"`
+		Version string `json:"version"`
+	}{
+		Name:    os.Getenv("HEROKU_APP_NAME"),
+		Domain:  os.Getenv("HEROKU_APP_DEFAULT_DOMAIN_NAME"),
+		Version: os.Getenv("HEROKU_RELEASE_VERSION"),
+	}
+	c.JSON(http.StatusOK, info)
 }
 
 func parseBody(body io.ReadCloser, v any) error {
