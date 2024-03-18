@@ -58,7 +58,6 @@ func (g *Game) startPickTimeout(player GamePlayer) {
 
 func (g *Game) startBuzzTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
-	g.StartBuzzCountdown = true
 	g.cancelBuzzTimeout = cancel
 	g.startTimeout(ctx, g.BuzzTimeout, &Player{}, func(_ GamePlayer) error {
 		g.skipQuestion()

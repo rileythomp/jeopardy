@@ -23,6 +23,10 @@ export class PlayerService {
 		this.playerSubject.next(this.player);
 	}
 
+	Player(): Player {
+		return this.player;
+	}
+
 	Id(): string {
 		return this.player.id;
 	}
@@ -37,6 +41,12 @@ export class PlayerService {
 
 	CanBuzz(): boolean {
 		return this.player.canBuzz;
+	}
+
+
+	SetCanBuzz(canBuzz: boolean): void {
+		this.player.canBuzz = canBuzz;
+		this.updatePlayer(this.player);
 	}
 
 	CanAnswer(): boolean {
@@ -57,5 +67,13 @@ export class PlayerService {
 
 	FinalWager(): number {
 		return this.player.finalWager;
+	}
+
+	Score(): number {
+		return this.player.score;
+	}
+
+	Conn(): any {
+		return this.player.conn;
 	}
 }

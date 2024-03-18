@@ -25,6 +25,7 @@ import { GameMessageComponent } from './game-message/game-message.component';
 import { ConfigComponent } from './join/config/config.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AnswersComponent } from './answers/answers.component';
+import { PlayerPodiumComponent } from './game/player-podium/player-podium.component';
 
 @NgModule({
   declarations: [
@@ -48,6 +49,7 @@ import { AnswersComponent } from './answers/answers.component';
     GameMessageComponent,
     ConfigComponent,
     AnswersComponent,
+    PlayerPodiumComponent,
   ],
   imports: [
     BrowserModule,

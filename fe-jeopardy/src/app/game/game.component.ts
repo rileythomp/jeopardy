@@ -3,7 +3,7 @@ import { GameStateService } from '../services/game-state.service'
 import { WebsocketService } from '../services/websocket.service'
 import { PlayerService } from '../services/player.service'
 import { JwtService } from '../services/jwt.service'
-import { GameState, Ping } from '../model/model'
+import { GameState, Ping, Player } from '../model/model'
 import { ModalService } from '../services/modal.service'
 import { trigger, state, style, animate, transition } from '@angular/animations';
 
@@ -25,6 +25,7 @@ export class GameComponent implements OnInit {
 	protected gameMessage: string
 	protected questionAnswer: string
 	protected wagerAmt: string
+	protected scoreChanges: any = {}
 
 	showPauseGame: boolean = false
 
@@ -90,6 +91,8 @@ export class GameComponent implements OnInit {
 				return
 			}
 
+			let savedPlayers = this.game.Players()
+
 			this.game.updateGameState(resp.game)
 			this.player.updatePlayer(resp.curPlayer)
 			this.gameMessage = resp.message
@@ -105,6 +108,8 @@ export class GameComponent implements OnInit {
 				this.cancelCountdown()
 				return
 			}
+
+			this.handleScoreChanges(savedPlayers)
 
 			switch (this.game.State()) {
 				case GameState.PreGame:
@@ -126,11 +131,9 @@ export class GameComponent implements OnInit {
 						let buzzDelay = this.game.BuzzDelay()
 						setTimeout(() => {
 							this.game.BlockBuzz(false)
-							if (this.game.StartBuzzCountdown()) {
-								this.startCountdownTimer(this.game.BuzzTimeout() - buzzDelay)
-							}
+							this.startCountdownTimer(this.game.BuzzTimeout() - buzzDelay)
 						}, buzzDelay * 1000)
-					} else if (this.game.StartBuzzCountdown()) {
+					} else {
 						this.startCountdownTimer(this.game.BuzzTimeout())
 					}
 					break
@@ -195,18 +198,27 @@ export class GameComponent implements OnInit {
 		this.jeopardyAudio.nativeElement.pause()
 	}
 
-	abs(num: number): number {
-		if (!num) {
-			return 0
-		}
-		return Math.abs(num)
-	}
-
 	pauseGame(pause: boolean) {
 		this.modal.displayMessage(`Game ${pause ? 'paused' : 'resumed'}`)
 		this.websocketService.Send({
 			state: this.game.State(),
 			pause: pause ? 1 : -1,
 		})
+	}
+
+	handleScoreChanges(savedPlayers: Player[]): void {
+		for (let i = 0; i < savedPlayers.length; i++) {
+			let savedPlayer = savedPlayers[i]
+			for (let j = 0; j < this.game.Players().length; j++) {
+				let curPlayer = this.game.Players()[j]
+				if (savedPlayer.id == curPlayer.id) {
+					this.scoreChanges[curPlayer.id] = curPlayer.score - savedPlayer.score
+				}
+			}
+		}
+
+		setTimeout(() => {
+			this.scoreChanges = {}
+		}, 3000)
 	}
 }

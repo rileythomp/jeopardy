@@ -1,19 +1,9 @@
 <div id='players-container' class='flex-column'>
-	<div class='player-box flex-column' *ngFor="let p of game.Players()">
-		<div class='player-score' [ngStyle]="{'color': p.score < 0 ? 'red' : 'black'}">
-			{{ p.score < 0 ? '-' : '' }}${{ abs(p.score) }}
-		</div>
-		<div class='player-name'>
-			<div>
-				<ion-icon *ngIf="p.id == player.Id()" name="person-outline"></ion-icon>
-			</div>
-			<div>
-				{{ p.conn ? p.name : 'Waiting for player to join' }}
-			</div>
-		</div>
-		<div>
-			<ion-icon *ngIf="!game.BoardIntro() && !game.IsPaused() && (p.canPick || p.canBuzz || p.canAnswer || p.canWager)" name="timer-outline"></ion-icon>
-		</div>
+	<div class='player-box flex-column'>
+		<app-player-podium [player]="player.Player()" [scoreChanges]="scoreChanges"></app-player-podium>
+	</div>
+	<div class='player-box flex-column' *ngFor="let p of game.OtherPlayers()">
+		<app-player-podium [player]="p" [scoreChanges]="scoreChanges"></app-player-podium>
 	</div>
 </div>
 

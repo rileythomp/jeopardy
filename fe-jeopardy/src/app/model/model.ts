@@ -10,7 +10,6 @@ export type Game = {
     ansCorrectness: boolean;
     guessedWrong: string[];
     paused: boolean;
-    startBuzzCountdown: boolean;
     startFinalWagerCountdown: boolean;
     startFinalAnswerCountdown: boolean;
     buzzBlocked: boolean;
@@ -40,6 +39,7 @@ export type Player = {
     canDispute: boolean;
     playAgain: boolean;
     conn: any;
+    imgUrl: string;
 };
 
 type Category = {

@@ -2,6 +2,7 @@ package jeopardy
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
@@ -43,8 +44,8 @@ type (
 		DisputePicker  GamePlayer   `json:"disputePicker"`
 		Disputers      int          `json:"disputes"`
 		NonDisputers   int          `json:"nonDisputes"`
+		imgOffset      int
 
-		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
 		StartFinalWagerCountdown  bool `json:"startFinalWagerCountdown"`
 	}
@@ -135,6 +136,7 @@ func NewGame(db jeopardyDB, config GameConfig) (*Game, error) {
 		Round:      FirstRound,
 		Name:       genGameCode(),
 		LastToPick: &Player{},
+		imgOffset:  rand.Intn(6),
 	}
 	if err := game.setQuestions(); err != nil {
 		return nil, err
@@ -361,13 +363,6 @@ func (g *Game) processBuzz(player GamePlayer, isPass bool) error {
 			g.skipQuestion()
 			return nil
 		}
-		g.StartBuzzCountdown = false
-		_ = player.sendMessage(Response{
-			Code:      socket.Ok,
-			Message:   "You passed",
-			Game:      g,
-			CurPlayer: player,
-		})
 		return nil
 	}
 	g.cancelBuzzTimeout()
@@ -413,7 +408,7 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 	} else {
 		g.NonDisputers++
 	}
-	if g.Disputers != 2 && g.NonDisputers != 2 {
+	if g.Disputers < 2 && g.NonDisputers < 2 {
 		_ = player.sendMessage(Response{
 			Code:      socket.Ok,
 			Message:   "You disputed",
@@ -826,6 +821,20 @@ func (g *Game) validWager(wager, score int) (int, int, bool) {
 		minWager = 0
 	}
 	return minWager, max(score, g.roundMax()), wager >= minWager && wager <= max(score, g.roundMax())
+}
+
+func (g *Game) numBots() int {
+	bots := 0
+	for _, p := range g.Players {
+		if p.isBot() {
+			bots++
+		}
+	}
+	return bots
+}
+
+func (g *Game) nextImg() int {
+	return (len(g.Players) - g.numBots() + g.imgOffset) % len(playerImgs)
 }
 
 func inLists(playerId string, lists ...[]string) bool {
