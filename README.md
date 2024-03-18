@@ -43,8 +43,9 @@ Play here: https://playjeopardy.netlify.app
 
 - Game configuration
 
-  - Play against other people or against bots
   - Choose the categories you want to play with
+  - Play against other people or against bots
+  - Play solo or with up to 6 players
   - Play 1 or 2 round games
   - Play with or without penalties for incorrect answers
   - Play in public or private games

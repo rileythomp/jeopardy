@@ -407,8 +407,15 @@ func (g *Game) processAnswer(player GamePlayer, answer string) error {
 		Bot:     player.isBot(),
 	}
 	g.CurQuestion.Answers = append(g.CurQuestion.Answers, g.CurQuestion.CurAns)
-	g.setState(RecvVote, &Player{})
-	g.messageAllPlayers("Player answered")
+	// g.setState(RecvVote, &Player{})
+	if !isCorrect {
+		if err := g.jeopardyDB.AddIncorrect(g.CurQuestion.CurAns.Answer, g.CurQuestion.Clue); err != nil {
+			log.Errorf("Error adding incorrect: %s", err.Error())
+		}
+	}
+	g.CurQuestion.CurAns.Correct = isCorrect
+	g.nextQuestion(g.CurQuestion.CurAns.Player, isCorrect)
+	// g.messageAllPlayers("Player answered")
 	return nil
 }
 
@@ -422,7 +429,8 @@ func (g *Game) processVote(player GamePlayer, confirm bool) error {
 	} else {
 		g.Challengers = append(g.Challengers, player.id())
 	}
-	if len(g.Confirmers) != 2 && len(g.Challengers) != 2 {
+	majority := len(g.Players) / 2
+	if len(g.Confirmers) != majority+1 && len(g.Challengers) != majority+1 {
 		_ = player.sendMessage(Response{
 			Code:      socket.Ok,
 			Message:   "You voted",
@@ -432,8 +440,10 @@ func (g *Game) processVote(player GamePlayer, confirm bool) error {
 		return nil
 	}
 	g.cancelVoteTimeout()
-	isCorrect := (g.AnsCorrectness && len(g.Confirmers) == 2) || (!g.AnsCorrectness && len(g.Challengers) == 2)
-	if !g.AnsCorrectness && len(g.Challengers) == 2 {
+	correctConfirmed := g.AnsCorrectness && len(g.Confirmers) == majority
+	incorrectChallenged := !g.AnsCorrectness && len(g.Challengers) == majority
+	isCorrect := correctConfirmed || incorrectChallenged
+	if incorrectChallenged {
 		if err := g.jeopardyDB.AddAlternative(g.CurQuestion.CurAns.Answer, g.CurQuestion.Answer); err != nil {
 			log.Errorf("Error adding alternative: %s", err.Error())
 		}
