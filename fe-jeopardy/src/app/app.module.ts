@@ -25,6 +25,7 @@ import { DisputeComponent } from './dispute/dispute.component';
 import { GameMessageComponent } from './game-message/game-message.component';
 import { ConfigComponent } from './join/config/config.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { AnswersComponent } from './answers/answers.component';
 
 @NgModule({
   declarations: [
@@ -48,6 +49,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     DisputeComponent,
     GameMessageComponent,
     ConfigComponent,
+    AnswersComponent,
   ],
   imports: [
     BrowserModule,

@@ -216,6 +216,10 @@ export class GameStateService {
 		return this.game.curQuestion.curAns.answer
 	}
 
+	CurQuestionAnswers(): Answer[] {
+		return this.game.curQuestion.answers
+	}
+
 	AdjustedAnswers(): Answer[] {
 		let adjustments: Answer[] = []
 		let add = false

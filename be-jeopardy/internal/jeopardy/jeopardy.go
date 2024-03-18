@@ -53,7 +53,7 @@ func (g *Game) validateName(name string) error {
 		return fmt.Errorf("Player name must be between 1 and 20 characters")
 	}
 	for _, p := range g.Players {
-		if p.name() == name {
+		if p.name() == name && p.conn() != nil {
 			return fmt.Errorf("Sorry, %s is already taken", name)
 		}
 	}

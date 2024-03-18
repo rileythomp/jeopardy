@@ -1,0 +1,6 @@
+<ul>
+    <li *ngFor="let answer of game.CurQuestionAnswers()">
+        {{ answer.player.name == player.Name() ? 'You' : answer.player.name }} answered {{ answer.correct ? 'corrrectly' : 'incorrectly' }}
+        with <b>{{ answer.answer }}</b> <button id='dispute-button' *ngIf="answer.player.id == player.Id() && game.CanInitDispute(player.Id()) && game.Penalty()" (click)="disputeQuestion()">Dispute</button>
+    </li>
+</ul>    
