@@ -151,11 +151,9 @@ export class GameComponent implements OnInit {
 						let buzzDelay = this.game.BuzzDelay()
 						setTimeout(() => {
 							this.game.BlockBuzz(false)
-							if (this.game.StartBuzzCountdown()) {
-								this.startCountdownTimer(this.game.BuzzTimeout() - buzzDelay)
-							}
+							this.startCountdownTimer(this.game.BuzzTimeout() - buzzDelay)
 						}, buzzDelay * 1000)
-					} else if (this.game.StartBuzzCountdown()) {
+					} else {
 						this.startCountdownTimer(this.game.BuzzTimeout())
 					}
 					break

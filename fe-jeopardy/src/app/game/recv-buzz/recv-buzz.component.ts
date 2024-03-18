@@ -21,6 +21,7 @@ export class RecvBuzzComponent {
                 state: this.game.State(),
                 isPass: pass,
             })
+            this.player.SetCanBuzz(false)
         }
     }
 }

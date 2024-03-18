@@ -10,7 +10,6 @@ export type Game = {
     ansCorrectness: boolean;
     guessedWrong: string[];
     paused: boolean;
-    startBuzzCountdown: boolean;
     startFinalWagerCountdown: boolean;
     startFinalAnswerCountdown: boolean;
     buzzBlocked: boolean;

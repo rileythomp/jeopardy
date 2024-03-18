@@ -43,6 +43,12 @@ export class PlayerService {
 		return this.player.canBuzz;
 	}
 
+
+	SetCanBuzz(canBuzz: boolean): void {
+		this.player.canBuzz = canBuzz;
+		this.updatePlayer(this.player);
+	}
+
 	CanAnswer(): boolean {
 		return this.player.canAnswer;
 	}

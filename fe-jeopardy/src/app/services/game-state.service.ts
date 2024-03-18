@@ -162,9 +162,6 @@ export class GameStateService {
 		return !this.game.guessedWrong || this.game.guessedWrong.length == 0
 	}
 
-	StartBuzzCountdown(): boolean {
-		return this.game.startBuzzCountdown
-	}
 
 	StartFinalWagerCountdown(): boolean {
 		return this.game.startFinalWagerCountdown

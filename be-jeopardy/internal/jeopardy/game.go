@@ -44,7 +44,6 @@ type (
 		Disputers      int          `json:"disputes"`
 		NonDisputers   int          `json:"nonDisputes"`
 
-		StartBuzzCountdown        bool `json:"startBuzzCountdown"`
 		StartFinalAnswerCountdown bool `json:"startFinalAnswerCountdown"`
 		StartFinalWagerCountdown  bool `json:"startFinalWagerCountdown"`
 	}
@@ -361,13 +360,6 @@ func (g *Game) processBuzz(player GamePlayer, isPass bool) error {
 			g.skipQuestion()
 			return nil
 		}
-		g.StartBuzzCountdown = false
-		_ = player.sendMessage(Response{
-			Code:      socket.Ok,
-			Message:   "You passed",
-			Game:      g,
-			CurPlayer: player,
-		})
 		return nil
 	}
 	g.cancelBuzzTimeout()
