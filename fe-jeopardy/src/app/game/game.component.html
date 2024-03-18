@@ -10,8 +10,8 @@
 		</div>
 		<div class='player-score flex-column' [ngStyle]="{'color': player.Score() < 0 ? 'red' : 'black'}">
 			{{ player.Score() < 0 ? '-' : '' }}${{ abs(player.Score()) }}
-			<span *ngIf="scoreChange != 0 && scoreId == player.Id()" [ngStyle]="{'color': scoreChange > 0 ? 'green' : 'red'}">
-				{{scoreChange > 0 ? '+' : '-'}}${{abs(scoreChange)}}
+			<span *ngIf="scoreChange(player.Id())" [ngStyle]="{'color': scoreChange(player.Id()) > 0 ? 'green' : 'red'}">
+				{{scoreChange(player.Id()) > 0 ? '+' : '-'}}${{abs(scoreChange(player.Id()))}}
 			</span>
 		</div>
 		<div class="timer-container">
@@ -29,8 +29,8 @@
 		</div>
 		<div class='player-score flex-column' [ngStyle]="{'color': p.score < 0 ? 'red' : 'black'}">
 			{{ p.score < 0 ? '-' : '' }}${{ abs(p.score) }}
-			<span *ngIf="scoreChange != 0 && scoreId == p.id" [ngStyle]="{'color': scoreChange > 0 ? 'green' : 'red'}">
-				{{scoreChange > 0 ? '+' : '-'}}${{abs(scoreChange)}}
+			<span *ngIf="scoreChange(p.id) > 0" [ngStyle]="{'color': scoreChange(p.id) > 0 ? 'green' : 'red'}">
+				{{scoreChange(p.id) > 0 ? '+' : '-'}}${{abs(scoreChange(p.id))}}
 			</span>
 		</div>
 		<div class="timer-container">

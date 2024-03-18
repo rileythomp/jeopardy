@@ -25,8 +25,7 @@ export class GameComponent implements OnInit {
 	protected gameMessage: string
 	protected questionAnswer: string
 	protected wagerAmt: string
-	protected scoreId: string
-	protected scoreChange: number = 0
+	private scoreChanges: { id: string, change: number }[] = []
 
 	showPauseGame: boolean = false
 
@@ -110,25 +109,27 @@ export class GameComponent implements OnInit {
 				return
 			}
 
-scoreChangeLoop:
 			for (let i = 0; i < savedPlayers.length; i++) {
 				let savedPlayer = savedPlayers[i]
 				for (let j = 0; j < this.game.Players().length; j++) {
 					let curPlayer = this.game.Players()[j]
-					if (savedPlayer.id != curPlayer.id) {
-						continue
+					if (savedPlayer.id == curPlayer.id) {
+						let scoreChange = curPlayer.score - savedPlayer.score
+						if (scoreChange != 0) {
+							this.scoreChanges.push({
+								id: curPlayer.id,
+								change: scoreChange,
+							})
+						}
 					}
-					this.scoreId = curPlayer.id
-					this.scoreChange = curPlayer.score - savedPlayer.score
-					if (this.scoreChange != 0) {
-						setTimeout(() => {
-							this.scoreChange = 0
-						}, 3000)
-						break scoreChangeLoop
-					}
-					break
 				}
 			}
+
+			setTimeout(() => {
+				this.scoreChanges = []
+			}, 3000)
+
+
 
 			switch (this.game.State()) {
 				case GameState.PreGame:
@@ -177,6 +178,15 @@ scoreChangeLoop:
 					break
 			}
 		})
+	}
+
+	scoreChange(id: string): number {
+		for (let i = 0; i < this.scoreChanges.length; i++) {
+			if (this.scoreChanges[i].id == id) {
+				return this.scoreChanges[i].change
+			}
+		}
+		return 0
 	}
 
 	startCountdownTimer(seconds: number): void {
