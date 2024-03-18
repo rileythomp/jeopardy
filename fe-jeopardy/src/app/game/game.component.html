@@ -4,14 +4,14 @@
 			<div>
 				<img src="../../assets/face.jpeg" alt="">
 			</div>
-			<div>
+			<div class="player-name">
 				{{ player.Conn() ? player.Name() : 'Waiting for player to join' }}
 			</div>
 		</div>
 		<div class='player-score flex-column' [ngStyle]="{'color': player.Score() < 0 ? 'red' : 'black'}">
 			{{ player.Score() < 0 ? '-' : '' }}${{ abs(player.Score()) }}
 		</div>
-		<div>
+		<div class="timer-container">
 			<ion-icon *ngIf="!game.BoardIntro() && !game.IsPaused() && player.OnClock()" name="timer-outline"></ion-icon>
 		</div>
 	</div>
@@ -20,7 +20,7 @@
 			<div>
 				<img src="../../assets/face.jpeg" alt="">
 			</div>
-			<div>
+			<div class="player-name">
 				{{ p.conn ? p.name : 'Waiting for player to join' }}
 			</div>
 		</div>

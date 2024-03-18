@@ -185,23 +185,23 @@ func AddBot(playerId string) error {
 		return err
 	}
 
+	if len(game.Players) >= maxPlayers {
+		return fmt.Errorf("Game is full")
+	}
+
 	var bot *Bot
-	if len(game.Players) < maxPlayers {
-		bot = NewBot(genBotCode())
-		game.Players = append(game.Players, bot)
-	} else {
-		for i, p := range game.Players {
-			if p.conn() == nil {
-				delete(playerGames, p.id())
-				bot = NewBot(genBotCode())
-				bot.copyState(p)
-				game.Players[i] = bot
-				break
-			}
+	for i, p := range game.Players {
+		if p.conn() == nil {
+			delete(playerGames, p.id())
+			bot = NewBot(genBotCode())
+			bot.copyState(p)
+			game.Players[i] = bot
+			break
 		}
 	}
 	if bot == nil {
-		return fmt.Errorf("Game is full")
+		bot = NewBot(genBotCode())
+		game.Players = append(game.Players, bot)
 	}
 
 	bot.processMessages()
