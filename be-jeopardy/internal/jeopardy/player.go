@@ -84,6 +84,7 @@ type Player struct {
 	FinalCorrect    bool            `json:"finalCorrect"`
 	FinalProtestors map[string]bool `json:"finalProtestors"`
 	PlayAgain       bool            `json:"playAgain"`
+	ImgUrl          string          `json:"imgUrl"`
 
 	Conn     SafeConn `json:"conn"`
 	ChatConn SafeConn `json:"chatConn"`
@@ -100,7 +101,17 @@ const (
 	ping          = "ping"
 )
 
-func NewPlayer(name string) *Player {
+var playerImgs = []string{
+	"https://i.postimg.cc/Hkp4FnGf/cat.png",
+	"https://i.postimg.cc/KRYhkb1J/deer.png",
+	"https://i.postimg.cc/8fpQbQtk/dragon.png",
+	"https://i.postimg.cc/PNTjHYTG/giraffe.png",
+	"https://i.postimg.cc/cgMGY475/lion.png",
+	"https://i.postimg.cc/nM2thrhX/panda.png",
+}
+
+func NewPlayer(name string, i int) *Player {
+	playerImg := playerImgs[i%len(playerImgs)]
 	return &Player{
 		Id:                  uuid.New().String(),
 		Name:                name,
@@ -110,6 +121,7 @@ func NewPlayer(name string) *Player {
 		CanAnswer:           false,
 		CanWager:            false,
 		FinalProtestors:     map[string]bool{},
+		ImgUrl:              playerImg,
 		CancelAnswerTimeout: func() {},
 		CancelWagerTimeout:  func() {},
 		sendGamePing:        time.NewTicker(pingFrequency),

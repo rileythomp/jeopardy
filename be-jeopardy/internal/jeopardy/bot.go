@@ -23,11 +23,25 @@ const (
 	botDisputeTimeout = 10 * time.Second
 )
 
-func NewBot(name string) *Bot {
+var botConfigs = []struct {
+	name   string
+	imgUrl string
+}{
+	{"eager-eagle", "https://i.postimg.cc/ThsVhR2t/eagle.png"},
+	{"golden-gorilla", "https://i.postimg.cc/nsn7NrTh/gorilla.png"},
+	{"sharp-shark", "https://i.postimg.cc/QHWpTRHh/shark.png"},
+	{"smart-snake", "https://i.postimg.cc/SXV844t7/snake.png"},
+	{"tough-tiger", "https://i.postimg.cc/fVnYjB9X/tiger.png"},
+	// {"big-bear", "https://i.postimg.cc/CRGkvkG2/bear.png"},
+}
+
+func NewBot(name string, i int) *Bot {
+	botConfig := botConfigs[i%len(botConfigs)]
 	bot := &Bot{
-		Player:  NewPlayer(name),
+		Player:  NewPlayer(botConfig.name, i),
 		botChan: make(chan Response),
 	}
+	bot.ImgUrl = botConfig.imgUrl
 	bot.Conn = socket.NewSafeConn(nil) // so bot is treated as connected by frontend
 	return bot
 }
@@ -40,13 +54,10 @@ func (p *Bot) sendMessage(msg Response) error {
 func (p *Bot) processMessages() {
 	go func() {
 		ctx, cancel := context.WithCancel(context.Background())
-		for {
-			select {
-			case msg := <-p.botChan:
-				cancel()
-				ctx, cancel = context.WithCancel(context.Background())
-				go p.processMessage(ctx, msg)
-			}
+		for msg := range p.botChan {
+			cancel()
+			ctx, cancel = context.WithCancel(context.Background())
+			go p.processMessage(ctx, msg)
 		}
 	}()
 }

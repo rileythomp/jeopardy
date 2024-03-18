@@ -82,12 +82,12 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 		return &Game{}, "", err, socket.BadRequest
 	}
 
-	player := NewPlayer(req.PlayerName)
+	player := NewPlayer(req.PlayerName, game.nextImg())
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
 
 	for i := 0; i < game.Bots; i++ {
-		bot := NewBot(genBotCode())
+		bot := NewBot(genBotCode(), i)
 		game.Players = append(game.Players, bot)
 		bot.processMessages()
 	}
@@ -127,7 +127,7 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 		return &Game{}, "", err, socket.BadRequest
 	}
 
-	player := NewPlayer(req.PlayerName)
+	player := NewPlayer(req.PlayerName, game.nextImg())
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
 
@@ -162,7 +162,7 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 		}
 	}
 	if player == nil {
-		player = NewPlayer(playerName)
+		player = NewPlayer(playerName, game.nextImg())
 		game.Players = append(game.Players, player)
 	}
 
@@ -193,14 +193,14 @@ func AddBot(playerId string) error {
 	for i, p := range game.Players {
 		if p.conn() == nil {
 			delete(playerGames, p.id())
-			bot = NewBot(genBotCode())
+			bot = NewBot(genBotCode(), game.numBots())
 			bot.copyState(p)
 			game.Players[i] = bot
 			break
 		}
 	}
 	if bot == nil {
-		bot = NewBot(genBotCode())
+		bot = NewBot(genBotCode(), game.numBots())
 		game.Players = append(game.Players, bot)
 	}
 

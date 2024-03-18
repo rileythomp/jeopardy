@@ -39,6 +39,7 @@ export type Player = {
     canDispute: boolean;
     playAgain: boolean;
     conn: any;
+    imgUrl: string;
 };
 
 type Category = {
