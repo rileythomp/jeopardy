@@ -109,19 +109,7 @@ export class GameComponent implements OnInit {
 				return
 			}
 
-			for (let i = 0; i < savedPlayers.length; i++) {
-				let savedPlayer = savedPlayers[i]
-				for (let j = 0; j < this.game.Players().length; j++) {
-					let curPlayer = this.game.Players()[j]
-					if (savedPlayer.id == curPlayer.id) {
-						this.scoreChanges[curPlayer.id] = curPlayer.score - savedPlayer.score
-					}
-				}
-			}
-
-			setTimeout(() => {
-				this.scoreChanges = {}
-			}, 3000)
+			this.handleScoreChanges(savedPlayers)
 
 			switch (this.game.State()) {
 				case GameState.PreGame:
@@ -216,5 +204,21 @@ export class GameComponent implements OnInit {
 			state: this.game.State(),
 			pause: pause ? 1 : -1,
 		})
+	}
+
+	handleScoreChanges(savedPlayers: Player[]): void {
+		for (let i = 0; i < savedPlayers.length; i++) {
+			let savedPlayer = savedPlayers[i]
+			for (let j = 0; j < this.game.Players().length; j++) {
+				let curPlayer = this.game.Players()[j]
+				if (savedPlayer.id == curPlayer.id) {
+					this.scoreChanges[curPlayer.id] = curPlayer.score - savedPlayer.score
+				}
+			}
+		}
+
+		setTimeout(() => {
+			this.scoreChanges = {}
+		}, 3000)
 	}
 }
