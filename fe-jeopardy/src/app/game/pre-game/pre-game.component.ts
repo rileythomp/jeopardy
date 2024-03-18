@@ -39,6 +39,7 @@ export class PreGameComponent {
 	startGame(): void {
 		this.apiService.StartGame().subscribe(this.handleResp())
 	}
+
 	private handleResp(): Partial<Observer<any>> {
 		return {
 			next: () => { },
