@@ -1,0 +1,17 @@
+<div class='player-info flex-row'>
+    <div>
+        <img src="../../assets/face.jpeg" alt="">
+    </div>
+    <div class="player-name">
+        {{ player.conn ? player.name : 'Waiting for player to join' }}
+    </div>
+</div>
+<div class='player-score flex-column' [ngStyle]="{'color': player.score < 0 ? 'red' : 'black'}">
+    {{ player.score < 0 ? '-' : '' }}${{ abs(player.score) }}
+    <span *ngIf="scoreChange() != 0" [ngStyle]="{'color': scoreChange() > 0 ? 'green' : 'red'}">
+        {{scoreChange() > 0 ? '+' : '-'}}${{abs(scoreChange())}}
+    </span>
+</div>
+<div class="timer-container">
+    <ion-icon *ngIf="!game.BoardIntro() && !game.IsPaused() && onClock(player)" name="timer-outline"></ion-icon>
+</div>

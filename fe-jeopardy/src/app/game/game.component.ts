@@ -25,7 +25,7 @@ export class GameComponent implements OnInit {
 	protected gameMessage: string
 	protected questionAnswer: string
 	protected wagerAmt: string
-	private scoreChanges: { id: string, change: number }[] = []
+	protected scoreChanges: any = {}
 
 	showPauseGame: boolean = false
 
@@ -114,22 +114,14 @@ export class GameComponent implements OnInit {
 				for (let j = 0; j < this.game.Players().length; j++) {
 					let curPlayer = this.game.Players()[j]
 					if (savedPlayer.id == curPlayer.id) {
-						let scoreChange = curPlayer.score - savedPlayer.score
-						if (scoreChange != 0) {
-							this.scoreChanges.push({
-								id: curPlayer.id,
-								change: scoreChange,
-							})
-						}
+						this.scoreChanges[curPlayer.id] = curPlayer.score - savedPlayer.score
 					}
 				}
 			}
 
 			setTimeout(() => {
-				this.scoreChanges = []
+				this.scoreChanges = {}
 			}, 3000)
-
-
 
 			switch (this.game.State()) {
 				case GameState.PreGame:
@@ -178,15 +170,6 @@ export class GameComponent implements OnInit {
 		})
 	}
 
-	scoreChange(id: string): number {
-		for (let i = 0; i < this.scoreChanges.length; i++) {
-			if (this.scoreChanges[i].id == id) {
-				return this.scoreChanges[i].change
-			}
-		}
-		return 0
-	}
-
 	startCountdownTimer(seconds: number): void {
 		this.cancelCountdown()
 		if (this.game.IsPaused()) {
@@ -227,22 +210,11 @@ export class GameComponent implements OnInit {
 		this.jeopardyAudio.nativeElement.pause()
 	}
 
-	abs(num: number): number {
-		if (!num) {
-			return 0
-		}
-		return Math.abs(num)
-	}
-
 	pauseGame(pause: boolean) {
 		this.modal.displayMessage(`Game ${pause ? 'paused' : 'resumed'}`)
 		this.websocketService.Send({
 			state: this.game.State(),
 			pause: pause ? 1 : -1,
 		})
-	}
-
-	onClock(player: Player): boolean {
-		return player.canPick || player.canAnswer || player.canWager
 	}
 }
