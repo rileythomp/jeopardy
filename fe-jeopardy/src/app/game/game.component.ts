@@ -3,7 +3,7 @@ import { GameStateService } from '../services/game-state.service'
 import { WebsocketService } from '../services/websocket.service'
 import { PlayerService } from '../services/player.service'
 import { JwtService } from '../services/jwt.service'
-import { GameState, Ping } from '../model/model'
+import { GameState, Ping, Player } from '../model/model'
 import { ModalService } from '../services/modal.service'
 import { trigger, state, style, animate, transition } from '@angular/animations';
 
@@ -208,5 +208,9 @@ export class GameComponent implements OnInit {
 			state: this.game.State(),
 			pause: pause ? 1 : -1,
 		})
+	}
+
+	onClock(player: Player): boolean {
+		return player.canPick || player.canAnswer || player.canWager
 	}
 }

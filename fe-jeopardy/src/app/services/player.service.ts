@@ -23,6 +23,10 @@ export class PlayerService {
 		this.playerSubject.next(this.player);
 	}
 
+	Player(): Player {
+		return this.player;
+	}
+
 	Id(): string {
 		return this.player.id;
 	}
@@ -65,9 +69,5 @@ export class PlayerService {
 
 	Conn(): any {
 		return this.player.conn;
-	}
-
-	OnClock() {
-		return this.player.canPick || this.player.canBuzz || this.player.canAnswer || this.player.canWager
 	}
 }

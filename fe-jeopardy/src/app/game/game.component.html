@@ -12,7 +12,7 @@
 			{{ player.Score() < 0 ? '-' : '' }}${{ abs(player.Score()) }}
 		</div>
 		<div class="timer-container">
-			<ion-icon *ngIf="!game.BoardIntro() && !game.IsPaused() && player.OnClock()" name="timer-outline"></ion-icon>
+			<ion-icon *ngIf="!game.BoardIntro() && !game.IsPaused() && onClock(player.Player())" name="timer-outline"></ion-icon>
 		</div>
 	</div>
 	<div class='player-box flex-column' *ngFor="let p of game.OtherPlayers()">
@@ -27,7 +27,9 @@
 		<div class='player-score flex-column' [ngStyle]="{'color': p.score < 0 ? 'red' : 'black'}">
 			{{ p.score < 0 ? '-' : '' }}${{ abs(p.score) }}
 		</div>
-		<div></div>
+		<div class="timer-container">
+			<ion-icon *ngIf="!game.BoardIntro() && !game.IsPaused() && onClock(p)" name="timer-outline"></ion-icon>
+		</div>
 	</div>
 </div>
 
