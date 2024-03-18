@@ -407,7 +407,6 @@ func (g *Game) processAnswer(player GamePlayer, answer string) error {
 		Bot:     player.isBot(),
 	}
 	g.CurQuestion.Answers = append(g.CurQuestion.Answers, g.CurQuestion.CurAns)
-	// g.setState(RecvVote, &Player{})
 	if !isCorrect {
 		if err := g.jeopardyDB.AddIncorrect(g.CurQuestion.CurAns.Answer, g.CurQuestion.Clue); err != nil {
 			log.Errorf("Error adding incorrect: %s", err.Error())
@@ -415,7 +414,6 @@ func (g *Game) processAnswer(player GamePlayer, answer string) error {
 	}
 	g.CurQuestion.CurAns.Correct = isCorrect
 	g.nextQuestion(g.CurQuestion.CurAns.Player, isCorrect)
-	// g.messageAllPlayers("Player answered")
 	return nil
 }
 
