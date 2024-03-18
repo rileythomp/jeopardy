@@ -25,6 +25,8 @@ export class GameComponent implements OnInit {
 	protected gameMessage: string
 	protected questionAnswer: string
 	protected wagerAmt: string
+	protected scoreId: string
+	protected scoreChange: number = 0
 
 	showPauseGame: boolean = false
 
@@ -90,6 +92,8 @@ export class GameComponent implements OnInit {
 				return
 			}
 
+			let savedPlayers = this.game.Players()
+
 			this.game.updateGameState(resp.game)
 			this.player.updatePlayer(resp.curPlayer)
 			this.gameMessage = resp.message
@@ -104,6 +108,26 @@ export class GameComponent implements OnInit {
 			if (this.game.IsPaused()) {
 				this.cancelCountdown()
 				return
+			}
+
+scoreChangeLoop:
+			for (let i = 0; i < savedPlayers.length; i++) {
+				let savedPlayer = savedPlayers[i]
+				for (let j = 0; j < this.game.Players().length; j++) {
+					let curPlayer = this.game.Players()[j]
+					if (savedPlayer.id != curPlayer.id) {
+						continue
+					}
+					this.scoreId = curPlayer.id
+					this.scoreChange = curPlayer.score - savedPlayer.score
+					if (this.scoreChange != 0) {
+						setTimeout(() => {
+							this.scoreChange = 0
+						}, 3000)
+						break scoreChangeLoop
+					}
+					break
+				}
 			}
 
 			switch (this.game.State()) {

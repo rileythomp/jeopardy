@@ -69,6 +69,26 @@
                 object-fit: cover;
             }
         }
+
+        .player-score {
+            span {
+                @keyframes move-up-fade-out {
+                    0% {
+                        transform: translateY(0);
+                        opacity: 1;
+                    }
+                    50% {
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: translateY(-3em);
+                        opacity: 0;
+                    }
+                }
+
+                animation: move-up-fade-out 3s;
+            }
+        }
     }
 }
 
