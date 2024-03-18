@@ -256,7 +256,7 @@ func (g *Game) processMsg(msg Message) error {
 			log.Infof("Player %s disputed the previous question", player.name())
 			err = g.initDispute(player)
 		} else {
-			log.Infof("Player %s picked", player.name())
+			log.Debugf("Player %s picked", player.name())
 			err = g.processPick(player, msg.CatIdx, msg.ValIdx)
 		}
 	case RecvBuzz:
@@ -264,23 +264,23 @@ func (g *Game) processMsg(msg Message) error {
 		if msg.IsPass {
 			action = "passed"
 		}
-		log.Infof("Player %s %s", player.name(), action)
+		log.Debugf("Player %s %s", player.name(), action)
 		err = g.processBuzz(player, msg.IsPass)
 	case RecvAns:
-		log.Infof("Player %s answered", player.name())
+		log.Debugf("Player %s answered", player.name())
 		err = g.processAnswer(player, msg.Answer)
 	case RecvWager:
-		log.Infof("Player %s wagered", player.name())
+		log.Debugf("Player %s wagered", player.name())
 		err = g.processWager(player, msg.Wager)
 	case RecvDispute:
 		action := "confirmed"
 		if !msg.Dispute {
 			action = "disputed"
 		}
-		log.Infof("Player %s %s the question", player.name(), action)
+		log.Debugf("Player %s %s the question", player.name(), action)
 		err = g.processDispute(player, msg.Dispute)
 	case PostGame:
-		log.Infof("Player %s protested", player.name())
+		log.Debugf("Player %s protested", player.name())
 		err = g.processProtest(player, msg.ProtestFor)
 	case PreGame:
 		err = fmt.Errorf("received unexpected message")
