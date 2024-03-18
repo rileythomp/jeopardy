@@ -29,8 +29,8 @@ func NewConfig(
 	pickTimeout, buzzTimeout, answerTimeout, voteTimeout, wagerTimeout int,
 	firstRoundCategories, secondRoundCategories []db.Category,
 ) (GameConfig, error) {
-	if bots < 0 || bots > 2 {
-		return GameConfig{}, fmt.Errorf("Bots must be between 0 and 2, got: %d", bots)
+	if bots < 0 || bots > maxPlayers-1 {
+		return GameConfig{}, fmt.Errorf("Bots must be between 0 and %d, got: %d", maxPlayers-1, bots)
 	}
 	if pickTimeout < 3 || pickTimeout > 60 {
 		return GameConfig{}, fmt.Errorf("Pick timeout must be between 3 and 60 seconds, got: %d", pickTimeout)
