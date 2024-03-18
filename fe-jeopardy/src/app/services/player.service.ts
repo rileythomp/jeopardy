@@ -58,4 +58,16 @@ export class PlayerService {
 	FinalWager(): number {
 		return this.player.finalWager;
 	}
+
+	Score(): number {
+		return this.player.score;
+	}
+
+	Conn(): any {
+		return this.player.conn;
+	}
+
+	OnClock() {
+		return this.player.canPick || this.player.canBuzz || this.player.canAnswer || this.player.canWager
+	}
 }
