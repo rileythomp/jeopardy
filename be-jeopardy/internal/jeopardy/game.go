@@ -115,7 +115,7 @@ const (
 	FinalRound
 )
 
-const numPlayers = 3
+var maxPlayers = 6
 
 func NewGame(db jeopardyDB, config GameConfig) (*Game, error) {
 	game := &Game{
@@ -559,7 +559,7 @@ func (g *Game) processProtest(protestByPlayer GamePlayer, protestFor string) err
 		return nil
 	}
 	protestForPlayer.addFinalProtestor(protestByPlayer.id())
-	if len(protestForPlayer.finalProtestors()) != numPlayers/2+1 {
+	if len(protestForPlayer.finalProtestors()) != len(g.Players)/2+1 {
 		_ = protestByPlayer.sendMessage(Response{
 			Code:      socket.Ok,
 			Message:   "You protested for " + protestForPlayer.name(),
@@ -705,10 +705,14 @@ func (g *Game) startGame() {
 
 func (g *Game) getAvgScore() float64 {
 	total := 0.0
+	players := 0
 	for _, p := range g.Players {
-		total += float64(p.score())
+		if !p.isBot() {
+			total += float64(p.score())
+			players++
+		}
 	}
-	return total / 3
+	return total / float64(players)
 }
 
 func (g *Game) startSecondRound() {
@@ -818,18 +822,8 @@ func (g *Game) getPlayerById(id string) (GamePlayer, error) {
 	return &Player{}, fmt.Errorf("Player not found in game %s", g.Name)
 }
 
-func (g *Game) allPlayersReady() bool {
-	ready := 0
-	for _, p := range g.Players {
-		if p.conn() != nil {
-			ready++
-		}
-	}
-	return ready == numPlayers
-}
-
 func (g *Game) noPlayerCanBuzz() bool {
-	return len(g.Passed)+len(g.GuessedWrong) == numPlayers
+	return len(g.Passed)+len(g.GuessedWrong) == len(g.Players)
 }
 
 func (g *Game) roundEnded() bool {

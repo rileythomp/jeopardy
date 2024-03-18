@@ -1,5 +1,5 @@
 <div id='pre-game-container'>
-    <h2>Waiting for more players</h2>
+    <h2>Waiting to start</h2>
 
     <p>
         Link to join: <span id='joinLink' (click)="openJoinLink()">{{gameLink}}/join/{{game.Name()}}</span>&nbsp;
@@ -7,11 +7,8 @@
     </p>
 
     <div>
-        <p>
-            Other players taking too long? Add a Jeopardy bot to the game to play against.
-        </p>
-        <button (click)="addBot()">
-            Add bot
-        </button>
+        <button id='start-game' (click)="startGame()">Start game</button>
+        <button (click)="addBot()">Add bot</button>
+        <p>Other players taking too long? Add a Jeopardy bot to the game to play against.</p>
     </div>
 </div>

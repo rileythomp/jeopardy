@@ -7,7 +7,7 @@ import (
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 )
 
-const boardIntroTimeout = 25
+const boardIntroTimeout = 27
 
 type GameTimeouts struct {
 	cancelBoardIntroTimeout context.CancelFunc

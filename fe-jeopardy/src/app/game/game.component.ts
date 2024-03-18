@@ -5,11 +5,18 @@ import { PlayerService } from '../services/player.service'
 import { JwtService } from '../services/jwt.service'
 import { GameState, Ping } from '../model/model'
 import { ModalService } from '../services/modal.service'
+import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
 	selector: 'app-game',
 	templateUrl: './game.component.html',
 	styleUrls: ['./game.component.less'],
+	animations: [
+		trigger('boardIntroFade', [
+			state('void', style({ opacity: 0 })),
+			transition('void => *', animate(2000)),
+		]),
+	]
 })
 export class GameComponent implements OnInit {
 	private jwt: string
@@ -96,7 +103,6 @@ export class GameComponent implements OnInit {
 
 			if (this.game.IsPaused()) {
 				this.cancelCountdown()
-				this.modal.displayMessage(`${resp.message}, will resume when 3 players are ready`)
 				return
 			}
 

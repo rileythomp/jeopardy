@@ -2,6 +2,9 @@ import { Component, Input } from '@angular/core';
 import { GameStateService } from '../../services/game-state.service';
 import { environment } from '../../../environments/environment';
 import { ApiService } from '../../services/api.service';
+import { ModalService } from '../../services/modal.service';
+import { ServerUnavailableMsg } from '../../model/model';
+import { Observer } from 'rxjs';
 
 @Component({
 	selector: 'app-pre-game',
@@ -14,7 +17,8 @@ export class PreGameComponent {
 
 	constructor(
 		protected game: GameStateService,
-		private apiService: ApiService
+		private apiService: ApiService,
+		private modal: ModalService
 	) {
 		this.gameLink = environment.gameLink
 	}
@@ -29,6 +33,20 @@ export class PreGameComponent {
 	}
 
 	addBot(): void {
-		this.apiService.AddBot().subscribe()
+		this.apiService.AddBot().subscribe(this.handleResp())
+	}
+
+	startGame(): void {
+		this.apiService.StartGame().subscribe(this.handleResp())
+	}
+
+	private handleResp(): Partial<Observer<any>> {
+		return {
+			next: () => { },
+			error: (err: any) => {
+				let msg = err.status != 0 ? err.error.message : ServerUnavailableMsg;
+				this.modal.displayMessage(msg)
+			}
+		}
 	}
 }

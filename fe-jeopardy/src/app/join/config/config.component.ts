@@ -28,6 +28,7 @@ export class ConfigComponent {
 	protected categorySearch: string = ''
 	protected searchLoader = false
 	protected questionMode: string = 'cyo'
+	private maxPlayers: number = 6
 
 	constructor(
 		private apiService: ApiService,
@@ -81,7 +82,7 @@ export class ConfigComponent {
 	}
 
 	validateBotConfig() {
-		this.botConfig = Math.min(Math.max(this.botConfig, 0), 2)
+		this.botConfig = Math.min(Math.max(this.botConfig, 0), this.maxPlayers - 1)
 	}
 
 	validatePickConfig() {

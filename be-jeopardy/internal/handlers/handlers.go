@@ -109,6 +109,11 @@ var (
 			Path:    "/jeopardy/categories",
 			Handler: SearchCategories,
 		},
+		{
+			Method:  http.MethodPut,
+			Path:    "/jeopardy/games/start",
+			Handler: StartGame,
+		},
 	}
 
 	upgrader = websocket.Upgrader{
@@ -425,6 +430,25 @@ func SearchCategories(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, categories)
+}
+
+func StartGame(c *gin.Context) {
+	log.Infof("Received request to start game")
+
+	token := c.Request.Header.Get("Access-Token")
+	playerId, err := auth.GetJWTSubject(token)
+	if err != nil {
+		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
+		respondWithError(c, http.StatusForbidden, ErrInvalidAuthCredMsg)
+		return
+	}
+
+	err = jeopardy.StartGame(playerId)
+	if err != nil {
+		log.Errorf("Error starting game: %s", err.Error())
+		respondWithError(c, http.StatusBadRequest, "Unable to start game: %s", err.Error())
+		return
+	}
 }
 
 func GetPrivateGames(c *gin.Context) {

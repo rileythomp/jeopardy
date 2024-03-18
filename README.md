@@ -84,6 +84,8 @@ $ ng serve
 
 ### TODO
 
+- Support teams
+
 - Tournament play
 
 - Allow players to import their own questions

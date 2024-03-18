@@ -20,28 +20,30 @@ export class BoardIntroComponent implements OnInit {
 
 	ngOnInit() {
 		let questionValues = document.getElementsByClassName('question-value') as HTMLCollectionOf<HTMLElement>
-		let indexes = Array.from({length: 30}, (v, i) => i) 
+		let indexes = Array.from({ length: 30 }, (v, i) => i)
 		let revealGroups: any[] = []
 		for (let i = 0; i < 6; i++) {
 			let revealGroup = []
 			for (let j = 0; j < 5; j++) {
 				let index = Math.floor(Math.random() * indexes.length);
-			    let num = indexes.splice(index, 1)[0];
+				let num = indexes.splice(index, 1)[0];
 				revealGroup.push(num)
 			}
 			revealGroups.push(revealGroup)
 		}
-		let i = 0
-		let valuesInterval = setInterval(() => {
-			if (i < revealGroups.length) {
-				for (let j = 0; j < revealGroups[i].length; j++) {
-					questionValues[revealGroups[i][j]].style.color = 'var(--jeopardy-yellow)'
+		setTimeout(() => {
+			let i = 0
+			let valuesInterval = setInterval(() => {
+				if (i < revealGroups.length) {
+					for (let j = 0; j < revealGroups[i].length; j++) {
+						questionValues[revealGroups[i][j]].style.color = 'var(--jeopardy-yellow)'
+					}
+					i++
+				} else {
+					clearInterval(valuesInterval)
 				}
-				i++
-			} else {
-				clearInterval(valuesInterval)
-			}
-		}, 1000)
+			}, 1000)
+		}, 2000)
 		setTimeout(() => {
 			let categoryTitles = document.getElementsByClassName('category-title') as HTMLCollectionOf<HTMLElement>
 			let j = 0
@@ -53,6 +55,6 @@ export class BoardIntroComponent implements OnInit {
 					clearInterval(titlesInterval)
 				}
 			}, 2500)
-		}, 5000)
+		}, 7000)
 	}
 }
