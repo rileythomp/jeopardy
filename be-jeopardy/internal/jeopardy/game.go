@@ -413,7 +413,7 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 	} else {
 		g.NonDisputers++
 	}
-	if g.Disputers != 2 && g.NonDisputers != 2 {
+	if g.Disputers < 2 && g.NonDisputers < 2 {
 		_ = player.sendMessage(Response{
 			Code:      socket.Ok,
 			Message:   "You disputed",
