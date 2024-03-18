@@ -34,9 +34,6 @@ export class GameStateService {
 		if (!this.game.players) {
 			this.game.players = []
 		}
-		while (this.game.players.length < 2) {
-			this.game.players.push(<Player>{})
-		}
 		return this.game.players
 	}
 
