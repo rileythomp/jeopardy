@@ -24,6 +24,7 @@ import { InstructionsComponent } from './instructions/instructions.component';
 import { DisputeComponent } from './dispute/dispute.component';
 import { GameMessageComponent } from './game-message/game-message.component';
 import { ConfigComponent } from './join/config/config.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
@@ -53,6 +54,7 @@ import { ConfigComponent } from './join/config/config.component';
     AppRoutingModule,
     FormsModule,
     HttpClientModule,
+    BrowserAnimationsModule,
   ],
   providers: [],
   bootstrap: [AppComponent],

@@ -207,7 +207,7 @@ func AddBot(playerId string) error {
 
 	bot.processMessages()
 
-	game.messageAllPlayers("Waiting for more players")
+	game.messageAllPlayers("Waiting to start")
 
 	return nil
 }
@@ -229,7 +229,7 @@ func PlayGame(playerId string, conn SafeConn) error {
 	player.sendPings()
 	player.readMessages(game.msgChan, game.disconnectChan)
 
-	game.messageAllPlayers("Waiting for more players")
+	game.messageAllPlayers("Waiting to start")
 
 	return nil
 }

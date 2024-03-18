@@ -19,8 +19,8 @@
 
 <div id='game-container'>
 	<div id='game-state'>
-		<app-board-intro *ngIf="game.BoardIntro()"></app-board-intro>
 		<app-pre-game *ngIf="game.PreGame()" [gameName]="game.Name()"></app-pre-game>
+		<app-board-intro [@boardIntroFade] *ngIf="game.BoardIntro()"></app-board-intro>
 		<app-recv-pick *ngIf="game.RecvPick()"></app-recv-pick>
 		<app-recv-buzz *ngIf="game.RecvBuzz()"></app-recv-buzz>
 		<app-recv-ans *ngIf="game.RecvAns()"></app-recv-ans>
