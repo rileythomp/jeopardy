@@ -16,14 +16,37 @@
             position: absolute;
             bottom: 1em;
             right: 1em;
+
+            ion-icon {
+                font-size: 2.5em;
+            }
+
+            @keyframes shake-rotate {
+                10% {
+                    transform: translate(0, 0) rotate(-10deg);
+                }
+                20% {
+                    transform: translate(0, 0) rotate(15deg);
+                }
+                30% {
+                    transform: translate(0, 0) rotate(-15deg);
+                }
+                40% {
+                    transform: translate(0, 0) rotate(10deg);
+                }
+                0%, 50%, 100% {
+                    transform: translate(0, 0) rotate(0);
+                }
+            }
+
+            animation-name: shake-rotate;
+            animation-duration: 2s;
+            animation-timing-function: ease-in-out;
+            animation-iteration-count: infinite;
         }
         
         div {
             flex: 0 0 auto;
-        }
-
-        ion-icon {
-            font-size: 2em;
         }
 
         .player-info {
