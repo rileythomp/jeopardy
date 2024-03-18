@@ -84,8 +84,6 @@ $ ng serve
 
 ### TODO
 
-- Support > 3 players
-
 - Support teams
 
 - Tournament play
