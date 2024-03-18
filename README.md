@@ -85,6 +85,8 @@ $ ng serve
 
 ### TODO
 
+- Handle many players on UI better
+
 - Support teams
 
 - Tournament play

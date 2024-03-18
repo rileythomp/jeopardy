@@ -39,7 +39,19 @@ export class JoinComponent {
 		}
 	}
 
+	private showInvalidName() {
+		document.getElementById('player-name-join')!.focus()
+		document.getElementById('player-name-join')!.style.border = '1px solid red';
+		setTimeout(() => {
+			document.getElementById('player-name-join')!.style.border = '1px solid grey';
+		}, 1000)
+	}
+
 	createPrivateGame(bots: number) {
+		if (this.playerName == '') {
+			this.showInvalidName()
+			return
+		}
 		this.apiService.CreatePrivateGame(
 			this.playerName,
 			bots,
@@ -50,10 +62,18 @@ export class JoinComponent {
 	}
 
 	joinGameByCode() {
+		if (this.playerName == '') {
+			this.showInvalidName()
+			return
+		}
 		this.apiService.JoinGameByCode(this.playerName, this.gameCode).subscribe(this.joinResp())
 	}
 
 	joinPublicGame() {
+		if (this.playerName == '') {
+			this.showInvalidName()
+			return
+		}
 		this.apiService.JoinPublicGame(this.playerName).subscribe(this.joinResp())
 	}
 
