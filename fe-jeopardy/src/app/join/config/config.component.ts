@@ -20,7 +20,6 @@ export class ConfigComponent {
 	protected pickConfig: number = 30
 	protected buzzConfig: number = 30
 	protected answerConfig: number = 15
-	protected voteConfig: number = 10
 	protected wagerConfig: number = 30
 	protected firstRoundCategories: any[] = []
 	protected secondRoundCategories: any[] = []
@@ -97,10 +96,6 @@ export class ConfigComponent {
 		this.answerConfig = Math.min(Math.max(this.answerConfig, 3), 60)
 	}
 
-	validateVoteConfig() {
-		this.voteConfig = Math.min(Math.max(this.voteConfig, 3), 60)
-	}
-
 	validateWagerConfig() {
 		this.wagerConfig = Math.min(Math.max(this.wagerConfig, 3), 60)
 	}
@@ -121,7 +116,7 @@ export class ConfigComponent {
 		this.apiService.CreatePrivateGame(
 			this.playerName,
 			bots, this.twoRoundChecked, this.penaltyChecked,
-			this.pickConfig, this.buzzConfig, this.answerConfig, this.voteConfig, this.wagerConfig,
+			this.pickConfig, this.buzzConfig, this.answerConfig, this.wagerConfig,
 			this.firstRoundCategories, this.secondRoundCategories
 		).subscribe({
 			next: (resp: any) => {

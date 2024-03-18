@@ -47,10 +47,6 @@ export class PlayerService {
 		return this.player.canWager;
 	}
 
-	CanVote(): boolean {
-		return this.player.canVote;
-	}
-
 	CanDispute(): boolean {
 		return this.player.canDispute;
 	}

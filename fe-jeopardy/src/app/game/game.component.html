@@ -12,7 +12,7 @@
 			</div>
 		</div>
 		<div>
-			<ion-icon *ngIf="!game.BoardIntro() && !game.IsPaused() && (p.canPick || p.canBuzz || p.canAnswer || p.canVote || p.canWager)" name="timer-outline"></ion-icon>
+			<ion-icon *ngIf="!game.BoardIntro() && !game.IsPaused() && (p.canPick || p.canBuzz || p.canAnswer || p.canWager)" name="timer-outline"></ion-icon>
 		</div>
 	</div>
 </div>
@@ -24,7 +24,6 @@
 		<app-recv-pick *ngIf="game.RecvPick()"></app-recv-pick>
 		<app-recv-buzz *ngIf="game.RecvBuzz()"></app-recv-buzz>
 		<app-recv-ans *ngIf="game.RecvAns()"></app-recv-ans>
-		<app-recv-vote *ngIf="game.RecvVote()"></app-recv-vote>
 		<app-recv-wager *ngIf="game.RecvWager()"></app-recv-wager>
 		<app-post-game *ngIf="game.PostGame()"></app-post-game>
 

@@ -28,7 +28,6 @@ type GamePlayer interface {
 	canPick() bool
 	canBuzz() bool
 	canAnswer() bool
-	canVote() bool
 	canWager() bool
 	canDispute() bool
 	finalWager() int
@@ -43,7 +42,6 @@ type GamePlayer interface {
 	setChatConn(SafeConn)
 	setCanBuzz(bool)
 	setCanAnswer(bool)
-	setCanVote(bool)
 	setCanWager(bool)
 	setCanDispute(bool)
 	setFinalWager(int)
@@ -58,7 +56,7 @@ type GamePlayer interface {
 
 	sendMessage(Response) error
 	sendChatMessage(ChatMessage) error
-	updateActions(pick, buzz, answer, wager, vote bool)
+	updateActions(pick, buzz, answer, wager bool)
 	updateScore(val int, isCorrect, penalty bool, round RoundState)
 	addFinalProtestor(string)
 	addToScore(int)
@@ -80,7 +78,6 @@ type Player struct {
 	CanBuzz         bool            `json:"canBuzz"`
 	CanAnswer       bool            `json:"canAnswer"`
 	CanWager        bool            `json:"canWager"`
-	CanVote         bool            `json:"canVote"`
 	CanDispute      bool            `json:"canDispute"`
 	FinalWager      int             `json:"finalWager"`
 	FinalAnswer     string          `json:"finalAnswer"`
@@ -112,7 +109,6 @@ func NewPlayer(name string) *Player {
 		CanBuzz:             false,
 		CanAnswer:           false,
 		CanWager:            false,
-		CanVote:             false,
 		FinalProtestors:     map[string]bool{},
 		CancelAnswerTimeout: func() {},
 		CancelWagerTimeout:  func() {},
@@ -182,7 +178,7 @@ func (p *Player) pausePlayer() {
 
 func (p *Player) resetPlayer() {
 	p.Score = 0
-	p.updateActions(false, false, false, false, false)
+	p.updateActions(false, false, false, false)
 	p.FinalWager = 0
 	p.FinalAnswer = ""
 	p.FinalCorrect = false
@@ -190,12 +186,11 @@ func (p *Player) resetPlayer() {
 	p.PlayAgain = false
 }
 
-func (p *Player) updateActions(pick, buzz, answer, wager, vote bool) {
+func (p *Player) updateActions(pick, buzz, answer, wager bool) {
 	p.CanPick = pick
 	p.CanBuzz = buzz
 	p.CanAnswer = answer
 	p.CanWager = wager
-	p.CanVote = vote
 }
 
 func (p *Player) updateScore(val int, isCorrect, penalty bool, round RoundState) {
@@ -241,10 +236,6 @@ func (p *Player) canBuzz() bool {
 
 func (p *Player) canAnswer() bool {
 	return p.CanAnswer
-}
-
-func (p *Player) canVote() bool {
-	return p.CanVote
 }
 
 func (p *Player) canWager() bool {
@@ -297,10 +288,6 @@ func (p *Player) setCanBuzz(canBuzz bool) {
 
 func (p *Player) setCanAnswer(canAnswer bool) {
 	p.CanAnswer = canAnswer
-}
-
-func (p *Player) setCanVote(canVote bool) {
-	p.CanVote = canVote
 }
 
 func (p *Player) setCanWager(canWager bool) {

@@ -56,7 +56,7 @@ func TestPickQuestion(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create questionDB: %s", err)
 		}
-		config, err := NewConfig(true, true, 0, 30, 30, 30, 30, 30, nil, nil)
+		config, err := NewConfig(true, true, 0, 30, 30, 30, 30, nil, nil)
 		if err != nil {
 			t.Fatalf("Failed to create config: %s", err)
 		}

@@ -379,7 +379,7 @@ func PlayAgain(c *gin.Context) {
 
 	c.JSON(http.StatusOK, jeopardy.Response{
 		Code:    http.StatusOK,
-		Message: "Voted to play again",
+		Message: "Asked to play again",
 	})
 }
 

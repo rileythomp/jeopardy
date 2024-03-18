@@ -20,7 +20,6 @@ export type Game = {
     pickTimeout: number;
     buzzTimeout: number;
     answerTimeout: number;
-    voteTimeout: number;
     wagerTimeout: number;
     finalAnswerTimeout: number;
     finalWagerTimeout: number;
@@ -38,7 +37,6 @@ export type Player = {
     canBuzz: boolean;
     canAnswer: boolean;
     canWager: boolean;
-    canVote: boolean;
     canDispute: boolean;
     playAgain: boolean;
     conn: any;
@@ -77,7 +75,6 @@ export enum GameState {
     RecvBuzz,
     RecvWager,
     RecvAns,
-    RecvVote,
     RecvDispute,
     PostGame,
     Error,

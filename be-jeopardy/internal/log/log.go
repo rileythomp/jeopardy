@@ -6,8 +6,12 @@ import (
 	"os"
 )
 
+var debug = os.Getenv("GIN_MODE") == "debug"
+
 func Debugf(s string, args ...any) {
-	log.Printf("[DEBUG] %s\n", fmt.Sprintf(s, args...))
+	if debug {
+		log.Printf("[DEBUG] %s\n", fmt.Sprintf(s, args...))
+	}
 }
 
 func Infof(s string, args ...any) {

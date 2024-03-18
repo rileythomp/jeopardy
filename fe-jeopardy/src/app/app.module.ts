@@ -11,7 +11,6 @@ import { PreGameComponent } from './game/pre-game/pre-game.component';
 import { RecvPickComponent } from './game/recv-pick/recv-pick.component';
 import { RecvBuzzComponent } from './game/recv-buzz/recv-buzz.component';
 import { RecvAnsComponent } from './game/recv-ans/recv-ans.component';
-import { RecvVoteComponent } from './game/recv-vote/recv-vote.component';
 import { RecvWagerComponent } from './game/recv-wager/recv-wager.component';
 import { PostGameComponent } from './game/post-game/post-game.component';
 import { LinkJoinComponent } from './link-join/link-join.component';
@@ -25,6 +24,7 @@ import { DisputeComponent } from './dispute/dispute.component';
 import { GameMessageComponent } from './game-message/game-message.component';
 import { ConfigComponent } from './join/config/config.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { AnswersComponent } from './answers/answers.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +35,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     RecvPickComponent,
     RecvBuzzComponent,
     RecvAnsComponent,
-    RecvVoteComponent,
     RecvWagerComponent,
     PostGameComponent,
     LinkJoinComponent,
@@ -48,6 +47,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     DisputeComponent,
     GameMessageComponent,
     ConfigComponent,
+    AnswersComponent,
   ],
   imports: [
     BrowserModule,

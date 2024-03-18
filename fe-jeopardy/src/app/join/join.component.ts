@@ -45,7 +45,7 @@ export class JoinComponent {
 			bots,
 			this.twoRoundChecked,
 			this.penaltyChecked,
-			30, 30, 15, 10, 30, [], []
+			30, 30, 15, 30, [], []
 		).subscribe(this.joinResp())
 	}
 
