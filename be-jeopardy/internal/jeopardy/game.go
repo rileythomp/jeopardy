@@ -33,8 +33,6 @@ type (
 		AnsCorrectness bool         `json:"ansCorrectness"`
 		GuessedWrong   []string     `json:"guessedWrong"`
 		Passed         []string     `json:"passed"`
-		Confirmers     []string     `json:"confirmations"`
-		Challengers    []string     `json:"challenges"`
 		NumFinalWagers int          `json:"numFinalWagers"`
 		FinalWagers    []string     `json:"finalWagers"`
 		FinalAnswers   []string     `json:"finalAnswers"`
@@ -182,8 +180,6 @@ func (g *Game) restartGame() {
 	g.AnsCorrectness = false
 	g.GuessedWrong = []string{}
 	g.Passed = []string{}
-	g.Confirmers = []string{}
-	g.Challengers = []string{}
 	g.Disputers = 0
 	g.NonDisputers = 0
 	g.NumFinalWagers = 0
@@ -723,8 +719,6 @@ func (g *Game) nextQuestion(player GamePlayer, isCorrect bool) {
 		g.setState(RecvPick, player)
 		msg = "Question is complete"
 	} else {
-		g.Confirmers = []string{}
-		g.Challengers = []string{}
 		g.Disputers = 0
 		g.NonDisputers = 0
 		g.setState(RecvBuzz, &Player{})
@@ -750,8 +744,6 @@ func (g *Game) skipQuestion() {
 func (g *Game) resetGuesses() {
 	g.GuessedWrong = []string{}
 	g.Passed = []string{}
-	g.Confirmers = []string{}
-	g.Challengers = []string{}
 	g.Disputers = 0
 	g.NonDisputers = 0
 }
