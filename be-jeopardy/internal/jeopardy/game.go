@@ -102,7 +102,6 @@ const (
 	RecvBuzz
 	RecvWager
 	RecvAns
-	RecvVote
 	RecvDispute
 	PostGame
 )
@@ -130,7 +129,6 @@ func NewGame(db jeopardyDB, config GameConfig) (*Game, error) {
 			cancelBoardIntroTimeout: func() {},
 			cancelPickTimeout:       func() {},
 			cancelBuzzTimeout:       func() {},
-			cancelVoteTimeout:       func() {},
 			cancelDisputeTimeout:    func() {},
 		},
 		jeopardyDB: db,
@@ -206,7 +204,6 @@ func (g *Game) pauseGame() {
 	g.cancelBoardIntroTimeout()
 	g.cancelPickTimeout()
 	g.cancelBuzzTimeout()
-	g.cancelVoteTimeout()
 	for _, p := range g.Players {
 		p.pausePlayer()
 	}
@@ -276,13 +273,6 @@ func (g *Game) processMsg(msg Message) error {
 	case RecvAns:
 		log.Infof("Player %s answered", player.name())
 		err = g.processAnswer(player, msg.Answer)
-	case RecvVote:
-		action := "accepted"
-		if !msg.Confirm {
-			action = "challenged"
-		}
-		log.Infof("Player %s %s", player.name(), action)
-		err = g.processVote(player, msg.Confirm)
 	case RecvWager:
 		log.Infof("Player %s wagered", player.name())
 		err = g.processWager(player, msg.Wager)
@@ -407,45 +397,6 @@ func (g *Game) processAnswer(player GamePlayer, answer string) error {
 		Bot:     player.isBot(),
 	}
 	g.CurQuestion.Answers = append(g.CurQuestion.Answers, g.CurQuestion.CurAns)
-	if !isCorrect {
-		if err := g.jeopardyDB.AddIncorrect(g.CurQuestion.CurAns.Answer, g.CurQuestion.Clue); err != nil {
-			log.Errorf("Error adding incorrect: %s", err.Error())
-		}
-	}
-	g.CurQuestion.CurAns.Correct = isCorrect
-	g.nextQuestion(g.CurQuestion.CurAns.Player, isCorrect)
-	return nil
-}
-
-func (g *Game) processVote(player GamePlayer, confirm bool) error {
-	if !player.canVote() {
-		return fmt.Errorf("player cannot vote")
-	}
-	player.setCanVote(false)
-	if confirm {
-		g.Confirmers = append(g.Confirmers, player.id())
-	} else {
-		g.Challengers = append(g.Challengers, player.id())
-	}
-	majority := len(g.Players) / 2
-	if len(g.Confirmers) != majority+1 && len(g.Challengers) != majority+1 {
-		_ = player.sendMessage(Response{
-			Code:      socket.Ok,
-			Message:   "You voted",
-			Game:      g,
-			CurPlayer: player,
-		})
-		return nil
-	}
-	g.cancelVoteTimeout()
-	correctConfirmed := g.AnsCorrectness && len(g.Confirmers) == majority
-	incorrectChallenged := !g.AnsCorrectness && len(g.Challengers) == majority
-	isCorrect := correctConfirmed || incorrectChallenged
-	if incorrectChallenged {
-		if err := g.jeopardyDB.AddAlternative(g.CurQuestion.CurAns.Answer, g.CurQuestion.Answer); err != nil {
-			log.Errorf("Error adding alternative: %s", err.Error())
-		}
-	}
 	if !isCorrect {
 		if err := g.jeopardyDB.AddIncorrect(g.CurQuestion.CurAns.Answer, g.CurQuestion.Clue); err != nil {
 			log.Errorf("Error adding incorrect: %s", err.Error())
@@ -616,17 +567,17 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 	switch state {
 	case BoardIntro:
 		for _, p := range g.Players {
-			p.updateActions(p.id() == player.id(), false, false, false, false)
+			p.updateActions(p.id() == player.id(), false, false, false)
 		}
 		g.startBoardIntroTimeout()
 	case RecvPick:
 		for _, p := range g.Players {
-			p.updateActions(p.id() == player.id(), false, false, false, false)
+			p.updateActions(p.id() == player.id(), false, false, false)
 		}
 		g.startPickTimeout(player)
 	case RecvBuzz:
 		for _, p := range g.Players {
-			p.updateActions(false, !inLists(p.id(), g.GuessedWrong, g.Passed), false, false, false)
+			p.updateActions(false, !inLists(p.id(), g.GuessedWrong, g.Passed), false, false)
 		}
 		g.startBuzzTimeout()
 	case RecvAns:
@@ -635,7 +586,7 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 			if g.Round == FinalRound {
 				canAnswer = p.score() > 0 && !inLists(p.id(), g.FinalAnswers)
 			}
-			p.updateActions(false, false, canAnswer, false, false)
+			p.updateActions(false, false, canAnswer, false)
 		}
 		for _, p := range g.Players {
 			if !p.canAnswer() {
@@ -643,18 +594,13 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 			}
 			g.startAnswerTimeout(p)
 		}
-	case RecvVote:
-		for _, p := range g.Players {
-			p.updateActions(false, false, false, false, !inLists(p.id(), g.Confirmers, g.Challengers))
-		}
-		g.startVoteTimeout()
 	case RecvWager:
 		for _, p := range g.Players {
 			canWager := p.id() == player.id()
 			if g.Round == FinalRound {
 				canWager = p.score() > 0 && !inLists(p.id(), g.FinalWagers)
 			}
-			p.updateActions(false, false, false, canWager, false)
+			p.updateActions(false, false, false, canWager)
 		}
 		for _, p := range g.Players {
 			if !p.canWager() {
@@ -664,13 +610,13 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 		}
 	case RecvDispute:
 		for _, p := range g.Players {
-			p.updateActions(false, false, false, false, false)
+			p.updateActions(false, false, false, false)
 			p.setCanDispute(p.id() != player.id())
 		}
 		g.startDisputeTimeout()
 	case PreGame, PostGame:
 		for _, p := range g.Players {
-			p.updateActions(false, false, false, false, false)
+			p.updateActions(false, false, false, false)
 		}
 	}
 	g.State = state

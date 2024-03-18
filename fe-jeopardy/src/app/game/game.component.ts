@@ -141,11 +141,6 @@ export class GameComponent implements OnInit {
 						this.startCountdownTimer(this.game.FinalAnswerTimeout())
 					}
 					break
-				case GameState.RecvVote:
-					if (this.player.CanVote()) {
-						this.startCountdownTimer(this.game.VoteTimeout())
-					}
-					break
 				case GameState.RecvWager:
 					if (!this.game.FinalRound()) {
 						this.startCountdownTimer(this.game.WagerTimeout())

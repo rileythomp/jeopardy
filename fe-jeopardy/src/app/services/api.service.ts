@@ -19,12 +19,12 @@ export class ApiService {
 
     CreatePrivateGame(
         playName: string, bots: number, fullGame: boolean, penalty: boolean,
-        pickConfig: number, buzzConfig: number, answerConfig: number, voteConfig: number, wagerConfig: number,
+        pickConfig: number, buzzConfig: number, answerConfig: number, wagerConfig: number,
         firstRoundCategories: any[], secondRoundCategories: any[]
     ): Observable<any> {
         return this.post('games', {
             playerName: playName, bots: bots, fullGame: fullGame, penalty: penalty,
-            pickConfig: pickConfig, buzzConfig: buzzConfig, answerConfig: answerConfig, voteConfig: voteConfig, wagerConfig: wagerConfig,
+            pickConfig: pickConfig, buzzConfig: buzzConfig, answerConfig: answerConfig, wagerConfig: wagerConfig,
             firstRoundCategories: firstRoundCategories, secondRoundCategories: secondRoundCategories,
         })
     }

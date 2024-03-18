@@ -105,10 +105,6 @@ export class GameStateService {
 		return this.game.state == GameState.RecvAns
 	}
 
-	RecvVote(): boolean {
-		return this.game.state == GameState.RecvVote
-	}
-
 	RecvWager(): boolean {
 		return this.game.state == GameState.RecvWager
 	}
@@ -256,10 +252,6 @@ export class GameStateService {
 
 	AnswerTimeout(): number {
 		return this.game.answerTimeout
-	}
-
-	VoteTimeout(): number {
-		return this.game.voteTimeout
 	}
 
 	WagerTimeout(): number {

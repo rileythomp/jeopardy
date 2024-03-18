@@ -19,7 +19,6 @@ const (
 	botBuzzTimeout    = 20 * time.Second
 	botAnswerTimeout  = 5 * time.Second
 	botDDAnsTimeout   = 10 * time.Second
-	botVoteTimeout    = 5 * time.Second
 	botWagerTimeout   = 5 * time.Second
 	botDisputeTimeout = 10 * time.Second
 )
@@ -143,13 +142,6 @@ func (p *Bot) processMessage(ctx context.Context, resp Response) {
 		}
 		timeout = min(timeout, time.Duration(g.AnswerTimeout-1)*time.Second)
 		sendMessageAfter(ctx, g, msg, timeout)
-	case RecvVote:
-		if !p.canVote() {
-			return
-		}
-		msg.Confirm = true
-		timeout := min(botVoteTimeout, time.Duration(g.VoteTimeout-1)*time.Second)
-		sendMessageAfter(ctx, g, msg, timeout)
 	case RecvWager:
 		if !p.canWager() {
 			return
@@ -194,7 +186,6 @@ func (p *Bot) copyState(player GamePlayer) {
 	p.CanPick = player.canPick()
 	p.CanBuzz = player.canBuzz()
 	p.CanAnswer = player.canAnswer()
-	p.CanVote = player.canVote()
 	p.CanWager = player.canWager()
 	p.CanDispute = player.canDispute()
 	p.FinalWager = player.finalWager()

@@ -20,7 +20,6 @@ type GameRequest struct {
 	PickConfig            int           `json:"pickConfig"`
 	BuzzConfig            int           `json:"buzzConfig"`
 	AnswerConfig          int           `json:"answerConfig"`
-	VoteConfig            int           `json:"voteConfig"`
 	WagerConfig           int           `json:"wagerConfig"`
 	FirstRoundCategories  []db.Category `json:"firstRoundCategories"`
 	SecondRoundCategories []db.Category `json:"secondRoundCategories"`
@@ -67,7 +66,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	}
 	config, err := NewConfig(
 		req.FullGame, req.Penalty, req.Bots,
-		req.PickConfig, req.BuzzConfig, req.AnswerConfig, req.VoteConfig, req.WagerConfig,
+		req.PickConfig, req.BuzzConfig, req.AnswerConfig, req.WagerConfig,
 		req.FirstRoundCategories, req.SecondRoundCategories,
 	)
 	if err != nil {
@@ -111,7 +110,7 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 		}
 		config, err := NewConfig(
 			req.FullGame, req.Penalty, req.Bots,
-			req.PickConfig, req.BuzzConfig, req.AnswerConfig, req.VoteConfig, req.WagerConfig,
+			req.PickConfig, req.BuzzConfig, req.AnswerConfig, req.WagerConfig,
 			req.FirstRoundCategories, req.SecondRoundCategories,
 		)
 		if err != nil {

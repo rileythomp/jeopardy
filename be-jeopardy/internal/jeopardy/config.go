@@ -14,7 +14,6 @@ type GameConfig struct {
 	PickTimeout        int `json:"pickTimeout"`
 	BuzzTimeout        int `json:"buzzTimeout"`
 	AnswerTimeout      int `json:"answerTimeout"`
-	VoteTimeout        int `json:"voteTimeout"`
 	WagerTimeout       int `json:"wagerTimeout"`
 	FinalWagerTimeout  int `json:"finalWagerTimeout"`
 	FinalAnswerTimeout int `json:"finalAnswerTimeout"`
@@ -26,7 +25,7 @@ type GameConfig struct {
 
 func NewConfig(
 	fullGame, penalty bool, bots int,
-	pickTimeout, buzzTimeout, answerTimeout, voteTimeout, wagerTimeout int,
+	pickTimeout, buzzTimeout, answerTimeout, wagerTimeout int,
 	firstRoundCategories, secondRoundCategories []db.Category,
 ) (GameConfig, error) {
 	if bots < 0 || bots > maxPlayers-1 {
@@ -40,9 +39,6 @@ func NewConfig(
 	}
 	if answerTimeout < 3 || answerTimeout > 60 {
 		return GameConfig{}, fmt.Errorf("Answer timeout must be between 3 and 60 seconds, got: %d", answerTimeout)
-	}
-	if voteTimeout < 3 || voteTimeout > 60 {
-		return GameConfig{}, fmt.Errorf("Vote timeout must be between 3 and 60 seconds, got: %d", voteTimeout)
 	}
 	if wagerTimeout < 3 || wagerTimeout > 60 {
 		return GameConfig{}, fmt.Errorf("Wager timeout must be between 3 and 60 seconds, got: %d", wagerTimeout)
@@ -60,7 +56,6 @@ func NewConfig(
 		PickTimeout:           pickTimeout,
 		BuzzTimeout:           buzzTimeout,
 		AnswerTimeout:         answerTimeout,
-		VoteTimeout:           voteTimeout,
 		WagerTimeout:          wagerTimeout,
 		FinalWagerTimeout:     30,
 		FinalAnswerTimeout:    30,

@@ -11,7 +11,6 @@ import { PreGameComponent } from './game/pre-game/pre-game.component';
 import { RecvPickComponent } from './game/recv-pick/recv-pick.component';
 import { RecvBuzzComponent } from './game/recv-buzz/recv-buzz.component';
 import { RecvAnsComponent } from './game/recv-ans/recv-ans.component';
-import { RecvVoteComponent } from './game/recv-vote/recv-vote.component';
 import { RecvWagerComponent } from './game/recv-wager/recv-wager.component';
 import { PostGameComponent } from './game/post-game/post-game.component';
 import { LinkJoinComponent } from './link-join/link-join.component';
@@ -36,7 +35,6 @@ import { AnswersComponent } from './answers/answers.component';
     RecvPickComponent,
     RecvBuzzComponent,
     RecvAnsComponent,
-    RecvVoteComponent,
     RecvWagerComponent,
     PostGameComponent,
     LinkJoinComponent,
