@@ -147,10 +147,6 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 		return &Game{}, "", err
 	}
 
-	if len(game.Players) >= maxPlayers {
-		return &Game{}, "", fmt.Errorf("Game %s is full", gameCode)
-	}
-
 	var player GamePlayer
 	for _, p := range game.Players {
 		if p.conn() == nil {
@@ -160,6 +156,9 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 			player.setName(playerName)
 			break
 		}
+	}
+	if len(game.Players) >= maxPlayers {
+		return &Game{}, "", fmt.Errorf("Game %s is full", gameCode)
 	}
 	if player == nil {
 		player = NewPlayer(playerName, game.nextImg())
@@ -185,10 +184,6 @@ func AddBot(playerId string) error {
 		return err
 	}
 
-	if len(game.Players) >= maxPlayers {
-		return fmt.Errorf("Game is full")
-	}
-
 	var bot *Bot
 	for i, p := range game.Players {
 		if p.conn() == nil {
@@ -198,6 +193,9 @@ func AddBot(playerId string) error {
 			game.Players[i] = bot
 			break
 		}
+	}
+	if len(game.Players) >= maxPlayers {
+		return fmt.Errorf("Game is full")
 	}
 	if bot == nil {
 		bot = NewBot(genBotCode(), game.numBots())
