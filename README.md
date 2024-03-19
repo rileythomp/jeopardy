@@ -85,16 +85,16 @@ $ ng serve
 
 ### TODO
 
-- Support teams
-
-- Tournament play
-
-- Allow players to import their own questions
-
-- Allow players to select bot difficulty
+- Accounts with user stats
 
 - Leaderboards
 
-- Accounts with user stats
+- Allow players to select bot difficulty
+
+- Tournament play
+
+- Support teams
+
+- Allow players to import their own questions
 
 - Look into pion for voice chat

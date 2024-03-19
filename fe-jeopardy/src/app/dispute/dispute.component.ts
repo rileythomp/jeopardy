@@ -16,9 +16,12 @@ export class DisputeComponent {
 	) { }
 
 	disputeQuestion(dispute: boolean) {
-		this.websocket.Send({
-			state: this.game.State(),
-			dispute: dispute,
-		})
+		if (this.player.CanDispute()) {
+			this.websocket.Send({
+				state: this.game.State(),
+				dispute: dispute,
+			})
+			this.player.SetCanDispute(false)
+		}
 	}
 }

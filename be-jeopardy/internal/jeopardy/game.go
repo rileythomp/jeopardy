@@ -408,18 +408,14 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 	} else {
 		g.NonDisputers++
 	}
-	if g.Disputers < 2 && g.NonDisputers < 2 {
-		_ = player.sendMessage(Response{
-			Code:      socket.Ok,
-			Message:   "You disputed",
-			Game:      g,
-			CurPlayer: player,
-		})
+	accepted := (g.numPlayers() / 2) + 1
+	declined := (g.numPlayers() + 1) / 2
+	if g.Disputers < accepted && g.NonDisputers < declined {
 		return nil
 	}
 	g.cancelDisputeTimeout()
 	nextPicker := g.DisputePicker
-	if g.Disputers > g.NonDisputers {
+	if g.Disputers >= accepted {
 		g.CurQuestion.CurDisputed.Overturned = true
 		g.CurQuestion.CurDisputed.Correct = true
 		for i, ans := range g.CurQuestion.Answers {
@@ -456,6 +452,17 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 	g.setState(RecvPick, nextPicker)
 	g.messageAllPlayers("Dispute resolved")
 	return nil
+}
+
+func (g *Game) numPlayers() int {
+	players := 0
+	for _, p := range g.Players {
+		if p.conn() != nil {
+			players++
+		}
+	}
+	return players
+
 }
 
 func (g *Game) processWager(player GamePlayer, wager int) error {

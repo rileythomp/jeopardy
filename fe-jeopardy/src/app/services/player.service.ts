@@ -76,4 +76,9 @@ export class PlayerService {
 	Conn(): any {
 		return this.player.conn;
 	}
+
+	SetCanDispute(canDispute: boolean): void {
+		this.player.canDispute = canDispute;
+		this.updatePlayer(this.player);
+	}
 }
