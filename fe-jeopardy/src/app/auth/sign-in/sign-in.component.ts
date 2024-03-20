@@ -11,8 +11,8 @@ export class SignInComponent {
 
 	constructor(private auth: AuthService) { }
 
-	async googleSignIn() {
-		if (await this.auth.SignIn()) {
+	async signIn(provider: string) {
+		if (await this.auth.SignIn(provider)) {
 			this.signInError.emit(true)
 		}
 	}

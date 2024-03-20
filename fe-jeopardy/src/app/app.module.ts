@@ -28,6 +28,7 @@ import { ConfigComponent } from './join/config/config.component';
 import { JoinComponent } from './join/join.component';
 import { LinkJoinComponent } from './link-join/link-join.component';
 import { WarningComponent } from './warning/warning.component';
+import { AuthButtonComponent } from './auth/auth-button/auth-button.component';
 
 @NgModule({
   declarations: [
@@ -54,6 +55,7 @@ import { WarningComponent } from './warning/warning.component';
     PlayerPodiumComponent,
     SignOutComponent,
     SignInComponent,
+    AuthButtonComponent,
   ],
   imports: [
     BrowserModule,

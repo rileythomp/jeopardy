@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { SupabaseClient, createClient } from '@supabase/supabase-js';
+import { Provider, SupabaseClient, createClient } from '@supabase/supabase-js';
 import { Observable, Subject } from 'rxjs';
 import { User } from '../model/model';
 
@@ -30,9 +30,9 @@ export class AuthService {
 		this.userSubject.next(user)
 	}
 
-	public async SignIn(): Promise<Error | null> {
+	public async SignIn(provider: string): Promise<Error | null> {
 		let { data, error } = await this.supabase.auth.signInWithOAuth({
-			provider: 'google',
+			provider: provider as Provider,
 			options: {
 				redirectTo: 'http://localhost:4200/join',
 			}
