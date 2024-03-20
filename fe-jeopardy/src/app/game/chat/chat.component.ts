@@ -18,19 +18,19 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 	private goToBottom = false
 
 	constructor(
-		private chatService: ChatService,
+		private chat: ChatService,
 		protected player: PlayerService,
-		protected jwtService: JwtService,
+		private jwt: JwtService,
 	) { }
 
 	ngOnInit(): void {
-		this.chatService.Connect()
+		this.chat.Connect()
 
-		this.chatService.OnOpen(() => {
-			this.chatService.Send({ token: this.jwtService.GetJWT() })
+		this.chat.OnOpen(() => {
+			this.chat.Send({ token: this.jwt.GetJWT() })
 		})
 
-		this.chatService.OnMessage((event: { data: string }) => {
+		this.chat.OnMessage((event: { data: string }) => {
 			let resp = JSON.parse(event.data)
 
 			if (resp.code >= 4400) {
@@ -74,7 +74,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 		if (!this.message) {
 			return
 		}
-		this.chatService.Send({ message: this.message })
+		this.chat.Send({ message: this.message })
 		this.message = ''
 	}
 

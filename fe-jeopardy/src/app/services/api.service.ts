@@ -14,7 +14,7 @@ export class ApiService {
 
     constructor(
         private http: HttpClient,
-        private jwtService: JwtService,
+        private jwt: JwtService,
     ) { }
 
     CreatePrivateGame(
@@ -102,7 +102,7 @@ export class ApiService {
             headers: new HttpHeaders({
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'Access-Token': this.jwtService.GetJWT(),
+                'Access-Token': this.jwt.GetJWT(),
             })
         }
 

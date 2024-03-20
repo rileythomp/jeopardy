@@ -13,11 +13,11 @@ export class AnswersComponent {
 	constructor(
 		protected game: GameStateService,
 		protected player: PlayerService,
-		private websocketService: WebsocketService,
+		private websocket: WebsocketService,
 	) { }
 
 	disputeQuestion() {
-		this.websocketService.Send({
+		this.websocket.Send({
 			state: this.game.State(),
 			initDispute: true,
 		})

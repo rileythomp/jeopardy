@@ -1,10 +1,10 @@
 import { Component, Input } from '@angular/core';
-import { GameStateService } from '../../services/game-state.service';
-import { environment } from '../../../environments/environment';
-import { ApiService } from '../../services/api.service';
-import { ModalService } from '../../services/modal.service';
-import { ServerUnavailableMsg } from '../../model/model';
 import { Observer } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { ServerUnavailableMsg } from '../../model/model';
+import { ApiService } from '../../services/api.service';
+import { GameStateService } from '../../services/game-state.service';
+import { ModalService } from '../../services/modal.service';
 
 @Component({
 	selector: 'app-pre-game',
@@ -17,7 +17,7 @@ export class PreGameComponent {
 
 	constructor(
 		protected game: GameStateService,
-		private apiService: ApiService,
+		private api: ApiService,
 		private modal: ModalService
 	) {
 		this.gameLink = environment.gameLink
@@ -33,11 +33,11 @@ export class PreGameComponent {
 	}
 
 	addBot(): void {
-		this.apiService.AddBot().subscribe(this.handleResp())
+		this.api.AddBot().subscribe(this.handleResp())
 	}
 
 	startGame(): void {
-		this.apiService.StartGame().subscribe(this.handleResp())
+		this.api.StartGame().subscribe(this.handleResp())
 	}
 
 	private handleResp(): Partial<Observer<any>> {

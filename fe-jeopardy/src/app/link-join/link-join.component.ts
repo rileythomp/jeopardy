@@ -19,8 +19,8 @@ export class LinkJoinComponent {
     constructor(
         private route: ActivatedRoute,
         private router: Router,
-        private apiService: ApiService,
-        private jwtService: JwtService,
+        private api: ApiService,
+        private jwt: JwtService,
         private modal: ModalService,
         private auth: AuthService,
     ) {
@@ -36,9 +36,9 @@ export class LinkJoinComponent {
     }
 
     joinGame() {
-        this.apiService.JoinGameByCode(this.playerName, this.playerImg, this.joinCode).subscribe({
+        this.api.JoinGameByCode(this.playerName, this.playerImg, this.joinCode).subscribe({
             next: (resp: any) => {
-                this.jwtService.SetJWT(resp.token);
+                this.jwt.SetJWT(resp.token);
                 this.router.navigate([`/game/${resp.game.name}`]);
             },
             error: (err: any) => {

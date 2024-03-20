@@ -24,8 +24,8 @@ export class JoinComponent implements OnInit {
 
 	constructor(
 		private router: Router,
-		private jwtService: JwtService,
-		private apiService: ApiService,
+		private jwt: JwtService,
+		private api: ApiService,
 		protected modal: ModalService,
 		private auth: AuthService,
 	) { }
@@ -41,7 +41,7 @@ export class JoinComponent implements OnInit {
 	private joinResp(): Partial<Observer<any>> {
 		return {
 			next: (resp: any) => {
-				this.jwtService.SetJWT(resp.token)
+				this.jwt.SetJWT(resp.token)
 				this.router.navigate([`/game/${resp.game.name}`])
 			},
 			error: (err: any) => {
@@ -64,7 +64,7 @@ export class JoinComponent implements OnInit {
 			this.showInvalidName()
 			return
 		}
-		this.apiService.CreatePrivateGame(
+		this.api.CreatePrivateGame(
 			this.playerName, this.playerImg,
 			bots, this.twoRoundChecked, this.penaltyChecked,
 			30, 30, 15, 30, [], []
@@ -76,7 +76,7 @@ export class JoinComponent implements OnInit {
 			this.showInvalidName()
 			return
 		}
-		this.apiService.JoinGameByCode(this.playerName, this.playerImg, this.joinCode).subscribe(this.joinResp())
+		this.api.JoinGameByCode(this.playerName, this.playerImg, this.joinCode).subscribe(this.joinResp())
 	}
 
 	joinPublicGame() {
@@ -84,11 +84,11 @@ export class JoinComponent implements OnInit {
 			this.showInvalidName()
 			return
 		}
-		this.apiService.JoinPublicGame(this.playerName, this.playerImg).subscribe(this.joinResp())
+		this.api.JoinPublicGame(this.playerName, this.playerImg).subscribe(this.joinResp())
 	}
 
 	rejoin() {
-		this.apiService.GetPlayerGame().subscribe({
+		this.api.GetPlayerGame().subscribe({
 			next: (resp: any) => {
 				this.router.navigate([`/game/${resp.game.name}`])
 			},

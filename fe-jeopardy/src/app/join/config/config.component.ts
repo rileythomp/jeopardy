@@ -31,9 +31,9 @@ export class ConfigComponent {
 	private maxPlayers: number = 6
 
 	constructor(
-		private apiService: ApiService,
+		private api: ApiService,
 		private modal: ModalService,
-		private jwtService: JwtService,
+		private jwt: JwtService,
 		private router: Router,
 		private auth: AuthService,
 	) { }
@@ -52,7 +52,7 @@ export class ConfigComponent {
 			this.searchLoader = false
 			return
 		}
-		this.apiService.SearchCategories(this.categorySearch, this.twoRoundChecked).subscribe({
+		this.api.SearchCategories(this.categorySearch, this.twoRoundChecked).subscribe({
 			next: (resp: any) => {
 				this.searchResults = resp
 				if (resp.length > 0) {
@@ -121,14 +121,14 @@ export class ConfigComponent {
 			}, 1000)
 			return
 		}
-		this.apiService.CreatePrivateGame(
+		this.api.CreatePrivateGame(
 			this.playerName, this.playerImg,
 			bots, this.twoRoundChecked, this.penaltyChecked,
 			this.pickConfig, this.buzzConfig, this.answerConfig, this.wagerConfig,
 			this.firstRoundCategories, this.secondRoundCategories
 		).subscribe({
 			next: (resp: any) => {
-				this.jwtService.SetJWT(resp.token)
+				this.jwt.SetJWT(resp.token)
 				this.router.navigate([`/game/${resp.game.name}`])
 			},
 			error: (err: any) => {

@@ -12,14 +12,14 @@ export class RecvAnsComponent {
     questionAnswer: string;
 
     constructor(
-        private websocketService: WebsocketService,
+        private websocket: WebsocketService,
         protected game: GameStateService,
         protected player: PlayerService,
     ) { }
 
     handleAnswer() {
         if (this.questionAnswer && this.player.CanAnswer()) {
-            this.websocketService.Send({
+            this.websocket.Send({
                 state: this.game.State(),
                 answer: this.questionAnswer,
             })

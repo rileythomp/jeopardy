@@ -33,8 +33,8 @@ export class GameComponent implements OnInit {
 	protected showMusicInfo: boolean = false
 
 	constructor(
-		private websocketService: WebsocketService,
-		private jwtService: JwtService,
+		private websocket: WebsocketService,
+		private jwt: JwtService,
 		protected game: GameStateService,
 		protected player: PlayerService,
 		private modal: ModalService,
@@ -59,16 +59,16 @@ export class GameComponent implements OnInit {
 			localStorage.setItem('showPauseGame', 'shown')
 		}
 
-		this.websocketService.Connect('play')
+		this.websocket.Connect('play')
 
-		this.websocketService.OnOpen(() => {
-			this.websocketService.Send({
+		this.websocket.OnOpen(() => {
+			this.websocket.Send({
 				state: GameState.PreGame,
-				token: this.jwtService.GetJWT(),
+				token: this.jwt.GetJWT(),
 			})
 		})
 
-		this.websocketService.OnMessage((event: { data: string }) => {
+		this.websocket.OnMessage((event: { data: string }) => {
 			let resp = JSON.parse(event.data)
 
 			if (resp.code >= 4400) {
@@ -195,7 +195,7 @@ export class GameComponent implements OnInit {
 
 	pauseGame(pause: boolean) {
 		this.modal.displayMessage(`Game ${pause ? 'paused' : 'resumed'}`)
-		this.websocketService.Send({
+		this.websocket.Send({
 			state: this.game.State(),
 			pause: pause ? 1 : -1,
 		})
