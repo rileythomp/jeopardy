@@ -10,8 +10,8 @@ import { ModalService } from './services/modal.service';
 	styleUrls: ['./app.component.less']
 })
 export class AppComponent implements OnInit, AfterViewInit {
-	protected showLoginOptions: boolean = false
-	protected showLogoutOptions: boolean = false
+	protected showSignInOptions: boolean = false
+	protected showSignOutOptions: boolean = false
 	protected userAuthenticated: boolean = false
 	protected userImg: string = ''
 
@@ -58,13 +58,13 @@ Please report any issues at https://github.com/rileythomp/jeopardy/issues/new
 		}
 	}
 
-	handleLoginError() {
-		this.showLoginOptions = false
+	handleSignInError() {
+		this.showSignInOptions = false
 		this.modal.displayMessage('Uh oh, there was an unexpected error signing in. Please try again.')
 	}
 
-	handleLogoutError() {
-		this.showLogoutOptions = false
-		this.modal.displayMessage('Uh oh, there was an unexpected error logging out. Please try again.')
+	handleSignOutError() {
+		this.showSignOutOptions = false
+		this.modal.displayMessage('Uh oh, there was an unexpected error signing out. Please try again.')
 	}
 }

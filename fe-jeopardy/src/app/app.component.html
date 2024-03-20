@@ -15,14 +15,14 @@
 			</a>
 		</div>
 		<div style='position: relative;'>
-			<ion-icon *ngIf="!userAuthenticated" (click)="showLoginOptions = !showLoginOptions" name="log-in-outline"></ion-icon>
-			<img *ngIf="userAuthenticated" (click)="showLogoutOptions = !showLogoutOptions" [src]="userImg" alt="">
+			<ion-icon *ngIf="!userAuthenticated" (click)="showSignInOptions = !showSignInOptions" name="log-in-outline"></ion-icon>
+			<img *ngIf="userAuthenticated" (click)="showSignOutOptions = !showSignOutOptions" [src]="userImg" alt="">
 			<div>
-				<div  *ngIf="showLoginOptions" class='auth-options'>
-					<app-login (signInError)="handleLoginError()"></app-login>
+				<div  *ngIf="showSignInOptions" class='auth-options'>
+					<app-sign-in (signInError)="handleSignInError()"></app-sign-in>
 				</div>
-				<div  *ngIf="showLogoutOptions" class='auth-options'>
-					<app-logout (signOutError)="handleLogoutError()"></app-logout>
+				<div  *ngIf="showSignOutOptions" class='auth-options'>
+					<app-sign-out (signOutError)="handleSignOutError()"></app-sign-out>
 				</div>
 			</div>
 		</div>

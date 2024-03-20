@@ -2,16 +2,16 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
-	selector: 'app-logout',
-	templateUrl: './logout.component.html',
-	styleUrls: ['./logout.component.less']
+	selector: 'app-sign-out',
+	templateUrl: './sign-out.component.html',
+	styleUrls: ['./sign-out.component.less']
 })
-export class LogoutComponent {
+export class SignOutComponent {
 	@Output() signOutError = new EventEmitter<boolean>();
 
 	constructor(private auth: AuthService) { }
 
-	async googleLogout() {
+	async googleSignOut() {
 		if (await this.auth.SignOut()) {
 			this.signOutError.emit(true);
 		} else {
