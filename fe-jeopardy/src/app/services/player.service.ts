@@ -14,10 +14,6 @@ export class PlayerService {
 		this.player = <Player>{};
 	}
 
-	onPlayerChange() {
-		return this.playerSubject.asObservable();
-	}
-
 	updatePlayer(newPlayer: Player) {
 		this.player = newPlayer;
 		this.playerSubject.next(this.player);
