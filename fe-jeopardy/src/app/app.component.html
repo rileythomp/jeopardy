@@ -19,10 +19,10 @@
 			<img *ngIf="userAuthenticated" (click)="showLogoutOptions = !showLogoutOptions" [src]="userImg" alt="">
 			<div>
 				<div  *ngIf="showLoginOptions" class='auth-options'>
-					<app-login></app-login>
+					<app-login (signInError)="handleLoginError()"></app-login>
 				</div>
 				<div  *ngIf="showLogoutOptions" class='auth-options'>
-					<app-logout></app-logout>
+					<app-logout (signOutError)="handleLogoutError()"></app-logout>
 				</div>
 			</div>
 		</div>

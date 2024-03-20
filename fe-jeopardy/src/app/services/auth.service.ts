@@ -18,25 +18,19 @@ export class AuthService {
 	}
 
 	public async GetUser() {
-		console.log('getting user')
 		let { data, error } = await this.supabase.auth.getUser();
 		if (error) {
-			console.log(error)
-			console.log('user is not signed in')
-		} else {
-			console.log(data)
-			console.log('user is signed in')
-			let user: User = {
-				imgUrl: data.user?.user_metadata['avatar_url'],
-				authenticated: true,
-				name: data.user?.user_metadata['full_name']
-			}
-			this.userSubject.next(user)
+			return
 		}
+		let user: User = {
+			imgUrl: data.user?.user_metadata['avatar_url'],
+			authenticated: true,
+			name: data.user?.user_metadata['full_name']
+		}
+		this.userSubject.next(user)
 	}
 
-	public async SignIn() {
-		console.log('signing in')
+	public async SignIn(): Promise<Error | null> {
 		let { data, error } = await this.supabase.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
@@ -44,22 +38,18 @@ export class AuthService {
 			}
 		})
 		if (error) {
-			console.log(error)
-			console.log('there was an error signing in')
-		} else {
-			console.log(data)
-			console.log('signed in successfully')
+			console.error(error)
+			return error
 		}
+		return null
 	}
 
-	public async SignOut() {
-		console.log('signing out')
+	public async SignOut(): Promise<Error | null> {
 		let { error } = await this.supabase.auth.signOut();
 		if (error) {
-			console.log(error)
-			console.log('there was an error signing out')
-		} else {
-			console.log('signed out successfully')
+			console.error(error)
+			return error
 		}
+		return null
 	}
 }

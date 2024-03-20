@@ -57,4 +57,14 @@ Please report any issues at https://github.com/rileythomp/jeopardy/issues/new
 			this.modal.displayInstructions()
 		}
 	}
+
+	handleLoginError() {
+		this.showLoginOptions = false
+		this.modal.displayMessage('Uh oh, there was an unexpected error signing in. Please try again.')
+	}
+
+	handleLogoutError() {
+		this.showLogoutOptions = false
+		this.modal.displayMessage('Uh oh, there was an unexpected error logging out. Please try again.')
+	}
 }
