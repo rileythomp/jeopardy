@@ -12,6 +12,7 @@ import { ModalService } from 'src/app/services/modal.service';
 	styleUrls: ['./config.component.less']
 })
 export class ConfigComponent {
+	private userImg: string = ''
 	@Input() playerName: string
 	@Input() oneRoundChecked: boolean = true
 	@Input() twoRoundChecked: boolean = false
@@ -34,8 +35,14 @@ export class ConfigComponent {
 		private modal: ModalService,
 		private jwtService: JwtService,
 		private router: Router,
-		private user: AuthService,
+		private auth: AuthService,
 	) { }
+
+	ngOnInit() {
+		this.auth.user.subscribe(user => {
+			this.userImg = user.imgUrl
+		})
+	}
 
 	searchCategories() {
 		this.searchLoader = true
@@ -106,11 +113,6 @@ export class ConfigComponent {
 	}
 
 	createPrivateGame(bots: number) {
-		let playerImg = ''
-		if (this.user.Authenticated()) {
-			this.playerName = this.user.Name()
-			playerImg = this.user.ImgUrl()
-		}
 		if (this.playerName == '') {
 			document.getElementById('player-name-config')!.focus()
 			document.getElementById('player-name-config')!.style.border = '1px solid red';
@@ -120,7 +122,7 @@ export class ConfigComponent {
 			return
 		}
 		this.apiService.CreatePrivateGame(
-			this.playerName, playerImg,
+			this.playerName, this.userImg,
 			bots, this.twoRoundChecked, this.penaltyChecked,
 			this.pickConfig, this.buzzConfig, this.answerConfig, this.wagerConfig,
 			this.firstRoundCategories, this.secondRoundCategories

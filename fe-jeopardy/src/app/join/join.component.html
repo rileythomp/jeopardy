@@ -1,7 +1,7 @@
 <div class='join-container flex-column'>
     <div class='flex-column gap15'>
-        <input *ngIf="!user.Authenticated()" id="player-name-join" type="text" [(ngModel)]="playerName" placeholder="Enter your name">
-        <p style='margin: 0;' *ngIf="user.Authenticated()">Welcome, {{user.Name()}}</p>
+        <input *ngIf="!userAuthenticated" id="player-name-join" type="text" [(ngModel)]="playerName" placeholder="Enter your name">
+        <p style='margin: 0;' *ngIf="userAuthenticated">Welcome, {{playerName}}</p>
 
         <div class='flex-row gap15'>
             <!-- <button (click)="joinPublicGame()">Join public game</button> -->

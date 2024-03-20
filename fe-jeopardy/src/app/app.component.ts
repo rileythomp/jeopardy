@@ -12,11 +12,13 @@ import { ModalService } from './services/modal.service';
 export class AppComponent implements OnInit, AfterViewInit {
 	protected showLoginOptions: boolean = false
 	protected showLogoutOptions: boolean = false
+	protected userAuthenticated: boolean = false
+	protected userImg: string = ''
 
 	constructor(
 		private router: Router,
 		protected modal: ModalService,
-		protected user: AuthService,
+		protected auth: AuthService,
 	) { }
 
 	ngOnInit() {
@@ -37,7 +39,12 @@ Please report any issues at https://github.com/rileythomp/jeopardy/issues/new
 `
 		console.log(jeopardy)
 
-		this.user.GetUser()
+		this.auth.user.subscribe(user => {
+			this.userAuthenticated = user.authenticated
+			this.userImg = user.imgUrl
+		})
+
+		this.auth.GetUser()
 	}
 
 	ngAfterViewInit() {

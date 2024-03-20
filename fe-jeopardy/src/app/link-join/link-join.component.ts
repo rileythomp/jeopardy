@@ -14,6 +14,7 @@ import { ModalService } from '../services/modal.service';
 export class LinkJoinComponent {
     protected gameCode: string;
     protected playerName: string;
+    private userImg: string = '';
 
     constructor(
         private route: ActivatedRoute,
@@ -21,18 +22,19 @@ export class LinkJoinComponent {
         private apiService: ApiService,
         private jwtService: JwtService,
         private modal: ModalService,
-        private user: AuthService,
+        private auth: AuthService,
     ) {
         this.gameCode = this.route.snapshot.paramMap.get('gameCode') ?? '';
     }
 
+    ngOnInit() {
+        this.auth.user.subscribe(user => {
+            this.userImg = user.imgUrl
+        })
+    }
+
     joinGame() {
-        let playerImg = ''
-        if (this.user.Authenticated()) {
-            this.playerName = this.user.Name()
-            playerImg = this.user.ImgUrl()
-        }
-        this.apiService.JoinGameByCode(this.playerName, playerImg, this.gameCode).subscribe({
+        this.apiService.JoinGameByCode(this.playerName, this.userImg, this.gameCode).subscribe({
             next: (resp: any) => {
                 this.jwtService.SetJWT(resp.token);
                 this.router.navigate([`/game/${resp.game.name}`]);
