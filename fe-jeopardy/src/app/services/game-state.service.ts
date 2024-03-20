@@ -14,10 +14,6 @@ export class GameStateService {
 		this.game = <Game>{}
 	}
 
-	onGameStateChange() {
-		return this.gameStateSubject.asObservable()
-	}
-
 	updateGameState(newState: Game) {
 		this.game = newState
 		this.gameStateSubject.next(this.game)

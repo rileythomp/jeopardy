@@ -38,6 +38,7 @@ type GamePlayer interface {
 
 	setId(string)
 	setName(string)
+	setImg(string)
 	setConn(SafeConn)
 	setChatConn(SafeConn)
 	setCanBuzz(bool)
@@ -110,8 +111,7 @@ var playerImgs = []string{
 	"https://i.postimg.cc/6q6J6KZw/lion.png",
 }
 
-func NewPlayer(name string, i int) *Player {
-	playerImg := playerImgs[i%len(playerImgs)]
+func NewPlayer(name string, imgUrl string) *Player {
 	return &Player{
 		Id:                  uuid.New().String(),
 		Name:                name,
@@ -121,7 +121,7 @@ func NewPlayer(name string, i int) *Player {
 		CanAnswer:           false,
 		CanWager:            false,
 		FinalProtestors:     map[string]bool{},
-		ImgUrl:              playerImg,
+		ImgUrl:              imgUrl,
 		CancelAnswerTimeout: func() {},
 		CancelWagerTimeout:  func() {},
 		sendGamePing:        time.NewTicker(pingFrequency),
@@ -284,6 +284,10 @@ func (p *Player) setId(id string) {
 
 func (p *Player) setName(name string) {
 	p.Name = name
+}
+
+func (p *Player) setImg(img string) {
+	p.ImgUrl = img
 }
 
 func (p *Player) setConn(conn SafeConn) {

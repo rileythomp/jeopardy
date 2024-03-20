@@ -10,14 +10,14 @@ import { WebsocketService } from 'src/app/services/websocket.service';
 })
 export class RecvBuzzComponent {
     constructor(
-        private websocketService: WebsocketService,
+        private websocket: WebsocketService,
         protected game: GameStateService,
         protected player: PlayerService
     ) { }
 
     handleBuzz(pass: boolean) {
         if (this.player.CanBuzz()) {
-            this.websocketService.Send({
+            this.websocket.Send({
                 state: this.game.State(),
                 isPass: pass,
             })

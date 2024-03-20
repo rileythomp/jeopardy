@@ -8,7 +8,7 @@ import { GameStateService } from 'src/app/services/game-state.service';
 	styleUrls: ['./player-podium.component.less']
 })
 export class PlayerPodiumComponent {
-	@Input() player: Player; 
+	@Input() player: Player;
 	@Input() scoreChanges: any = {}
 
 	constructor(protected game: GameStateService) { }

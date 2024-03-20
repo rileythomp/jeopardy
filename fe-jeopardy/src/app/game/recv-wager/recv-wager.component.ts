@@ -12,14 +12,14 @@ export class RecvWagerComponent {
     wagerAmt: string
 
     constructor(
-        private websocketService: WebsocketService,
+        private websocket: WebsocketService,
         protected game: GameStateService,
         protected player: PlayerService,
     ) { }
 
     handleWager() {
         if (this.wagerAmt != null && this.wagerAmt !== '' && this.player.CanWager()) {
-            this.websocketService.Send({
+            this.websocket.Send({
                 state: this.game.State(),
                 wager: this.wagerAmt,
             })

@@ -1,11 +1,12 @@
 <div class='join-container flex-column'>
     <div class='flex-column gap15'>
-        <input id="player-name-join" type="text" [(ngModel)]="playerName" placeholder="Enter your name">
+        <input *ngIf="!userAuthenticated" id="player-name-join" type="text" [(ngModel)]="playerName" placeholder="Enter your name">
+        <p style='margin: 0;' *ngIf="userAuthenticated">Welcome, {{playerName}}</p>
 
         <div class='flex-row gap15'>
             <!-- <button (click)="joinPublicGame()">Join public game</button> -->
             <button (click)="createPrivateGame(0)">Start a new game</button>
-            <button (click)="toggleGameCodeInput()">Join game by code</button>
+            <button (click)="toggleJoinCodeInput()">Join game by code</button>
         </div>
         <div class='flex-row gap15'>
             <div class='flex-column game-inputs'>
@@ -24,7 +25,7 @@
                 </div>
             </div>
             <div>
-                <input id="game-code" *ngIf="showGameCodeInput" (keydown.enter)="joinGameByCode()" type="text" [(ngModel)]="gameCode" placeholder="Game code">
+                <input id="game-code" *ngIf="showJoinCodeInput" (keydown.enter)="joinGameByCode()" type="text" [(ngModel)]="joinCode" placeholder="Game code">
             </div>
         </div>
     </div>

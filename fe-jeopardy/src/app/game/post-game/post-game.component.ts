@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { GameStateService } from '../../services/game-state.service';
-import { Player, ServerUnavailableMsg } from '../../model/model';
-import { PlayerService } from '../../services/player.service';
-import { WebsocketService } from '../../services/websocket.service';
-import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
 import { ModalService } from 'src/app/services/modal.service';
+import { Player, ServerUnavailableMsg } from '../../model/model';
+import { ApiService } from '../../services/api.service';
+import { GameStateService } from '../../services/game-state.service';
+import { PlayerService } from '../../services/player.service';
+import { WebsocketService } from '../../services/websocket.service';
 
 @Component({
 	selector: 'app-post-game',
@@ -16,8 +16,8 @@ export class PostGameComponent {
 
 	constructor(
 		private router: Router,
-		private apiService: ApiService,
-		private websocketService: WebsocketService,
+		private api: ApiService,
+		private websocket: WebsocketService,
 		protected game: GameStateService,
 		protected player: PlayerService,
 		private modal: ModalService,
@@ -28,14 +28,14 @@ export class PostGameComponent {
 	}
 
 	protestFinalCorrectness(playerId: string) {
-		this.websocketService.Send({
+		this.websocket.Send({
 			state: this.game.State(),
 			protestFor: playerId
 		});
 	}
 
 	playAgain() {
-		return this.apiService.PlayAgain().subscribe({
+		return this.api.PlayAgain().subscribe({
 			next: (resp: any) => {
 				console.log(resp)
 			},
@@ -47,7 +47,7 @@ export class PostGameComponent {
 	}
 
 	leaveGame() {
-		return this.apiService.LeaveGame().subscribe({
+		return this.api.LeaveGame().subscribe({
 			next: (resp: any) => {
 				this.router.navigate(['/'])
 			},

@@ -17,12 +17,12 @@ export class AnalyticsComponent implements OnInit {
 	secondRoundCorrRate: number
 
 	constructor(
-		private apiService: ApiService,
+		private api: ApiService,
 		protected modal: ModalService,
 	) { }
 
 	ngOnInit() {
-		this.apiService.GetAnalytics().subscribe((resp: any) => {
+		this.api.GetAnalytics().subscribe((resp: any) => {
 			this.gamesPlayed = resp.gamesPlayed
 			this.firstRoundScore = resp.firstRoundScore
 			this.secondRoundScore = resp.secondRoundScore

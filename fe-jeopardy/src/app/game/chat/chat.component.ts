@@ -1,9 +1,8 @@
-import { Component, OnInit, AfterViewChecked } from '@angular/core'
-import { Message } from '../../model/model'
-import { PlayerService } from 'src/app/services/player.service'
-import { JwtService } from 'src/app/services/jwt.service'
+import { AfterViewChecked, Component, OnInit } from '@angular/core'
 import { ChatService } from 'src/app/services/chat.service'
-import { Ping } from '../../model/model'
+import { JwtService } from 'src/app/services/jwt.service'
+import { PlayerService } from 'src/app/services/player.service'
+import { Message, Ping } from '../../model/model'
 
 
 @Component({
@@ -12,7 +11,6 @@ import { Ping } from '../../model/model'
 	styleUrls: ['./chat.component.less']
 })
 export class ChatComponent implements OnInit, AfterViewChecked {
-	private jwt: string
 	protected messages: Message[] = []
 	protected message: string
 	protected hideChat = true
@@ -20,23 +18,19 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 	private goToBottom = false
 
 	constructor(
-		private chatService: ChatService,
+		private chat: ChatService,
 		protected player: PlayerService,
-		protected jwtService: JwtService,
+		private jwt: JwtService,
 	) { }
 
 	ngOnInit(): void {
-		this.jwtService.jwt$.subscribe(jwt => {
-			this.jwt = jwt
+		this.chat.Connect()
+
+		this.chat.OnOpen(() => {
+			this.chat.Send({ token: this.jwt.GetJWT() })
 		})
 
-		this.chatService.Connect()
-
-		this.chatService.OnOpen(() => {
-			this.chatService.Send({ token: this.jwt })
-		})
-
-		this.chatService.OnMessage((event: { data: string }) => {
+		this.chat.OnMessage((event: { data: string }) => {
 			let resp = JSON.parse(event.data)
 
 			if (resp.code >= 4400) {
@@ -80,7 +74,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 		if (!this.message) {
 			return
 		}
-		this.chatService.Send({ message: this.message })
+		this.chat.Send({ message: this.message })
 		this.message = ''
 	}
 

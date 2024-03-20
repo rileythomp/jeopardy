@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { ServerUnavailableMsg } from 'src/app/model/model';
 import { ApiService } from 'src/app/services/api.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { JwtService } from 'src/app/services/jwt.service';
 import { ModalService } from 'src/app/services/modal.service';
 
@@ -11,6 +12,7 @@ import { ModalService } from 'src/app/services/modal.service';
 	styleUrls: ['./config.component.less']
 })
 export class ConfigComponent {
+	private playerImg: string = ''
 	@Input() playerName: string
 	@Input() oneRoundChecked: boolean = true
 	@Input() twoRoundChecked: boolean = false
@@ -29,11 +31,18 @@ export class ConfigComponent {
 	private maxPlayers: number = 6
 
 	constructor(
-		private apiService: ApiService,
+		private api: ApiService,
 		private modal: ModalService,
-		private jwtService: JwtService,
-		private router: Router
+		private jwt: JwtService,
+		private router: Router,
+		private auth: AuthService,
 	) { }
+
+	ngOnInit() {
+		this.auth.user.subscribe(user => {
+			this.playerImg = user.imgUrl
+		})
+	}
 
 	searchCategories() {
 		this.searchLoader = true
@@ -43,7 +52,7 @@ export class ConfigComponent {
 			this.searchLoader = false
 			return
 		}
-		this.apiService.SearchCategories(this.categorySearch, this.twoRoundChecked).subscribe({
+		this.api.SearchCategories(this.categorySearch, this.twoRoundChecked).subscribe({
 			next: (resp: any) => {
 				this.searchResults = resp
 				if (resp.length > 0) {
@@ -112,14 +121,14 @@ export class ConfigComponent {
 			}, 1000)
 			return
 		}
-		this.apiService.CreatePrivateGame(
-			this.playerName,
+		this.api.CreatePrivateGame(
+			this.playerName, this.playerImg,
 			bots, this.twoRoundChecked, this.penaltyChecked,
 			this.pickConfig, this.buzzConfig, this.answerConfig, this.wagerConfig,
 			this.firstRoundCategories, this.secondRoundCategories
 		).subscribe({
 			next: (resp: any) => {
-				this.jwtService.SetJWT(resp.token)
+				this.jwt.SetJWT(resp.token)
 				this.router.navigate([`/game/${resp.game.name}`])
 			},
 			error: (err: any) => {

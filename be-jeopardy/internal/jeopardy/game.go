@@ -842,8 +842,8 @@ func (g *Game) numBots() int {
 	return bots
 }
 
-func (g *Game) nextImg() int {
-	return (len(g.Players) - g.numBots() + g.imgOffset) % len(playerImgs)
+func (g *Game) nextImg() string {
+	return playerImgs[(len(g.Players)-g.numBots()+g.imgOffset)%len(playerImgs)]
 }
 
 func inLists(playerId string, lists ...[]string) bool {

@@ -1,17 +1,31 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { Router } from '@angular/router'
+import { animate, state, style, transition, trigger } from '@angular/animations';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
+import { AuthService } from './services/auth.service';
 import { ModalService } from './services/modal.service';
 
 @Component({
 	selector: 'app-root',
 	templateUrl: './app.component.html',
-	styleUrls: ['./app.component.less']
+	styleUrls: ['./app.component.less'],
+	animations: [
+		trigger('slideDownUp', [
+			state('void', style({ transform: 'scaleY(0)' })),
+			state('*', style({ transform: 'scaleY(1)' })),
+			transition('* <=> void', animate('0.3s')),
+		]),
+	],
 })
 export class AppComponent implements OnInit, AfterViewInit {
+	protected showAuthOptions: boolean = false
+	protected userAuthenticated: boolean = false
+	protected playerImg: string = ''
+
 	constructor(
 		private router: Router,
 		protected modal: ModalService,
+		private auth: AuthService,
 	) { }
 
 	ngOnInit() {
@@ -31,6 +45,13 @@ export class AppComponent implements OnInit, AfterViewInit {
 Please report any issues at https://github.com/rileythomp/jeopardy/issues/new
 `
 		console.log(jeopardy)
+
+		this.auth.user.subscribe(user => {
+			this.userAuthenticated = user.authenticated
+			this.playerImg = user.imgUrl
+		})
+
+		this.auth.GetUser()
 	}
 
 	ngAfterViewInit() {
@@ -42,5 +63,24 @@ Please report any issues at https://github.com/rileythomp/jeopardy/issues/new
 			localStorage.setItem('showJeopardyInfo', 'shown')
 			this.modal.displayInstructions()
 		}
+	}
+
+	async signIn(provider: string) {
+		if (await this.auth.SignIn(provider)) {
+			this.handleAuthError('Uh oh, there was an unexpected error signing in. Please try again.')
+		}
+	}
+
+	async signOut() {
+		if (await this.auth.SignOut()) {
+			this.handleAuthError('Uh oh, there was an unexpected error signing out. Please try again.')
+		} else {
+			location.reload();
+		}
+	}
+
+	handleAuthError(msg: string) {
+		this.showAuthOptions = false
+		this.modal.displayMessage(msg)
 	}
 }

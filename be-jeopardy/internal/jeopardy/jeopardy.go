@@ -13,7 +13,8 @@ import (
 
 type GameRequest struct {
 	PlayerName            string        `json:"playerName"`
-	GameCode              string        `json:"gameCode"`
+	PlayerImg             string        `json:"playerImg"`
+	JoinCode              string        `json:"joinCode"`
 	Bots                  int           `json:"bots"`
 	FullGame              bool          `json:"fullGame"`
 	Penalty               bool          `json:"penalty"`
@@ -50,8 +51,8 @@ func GetPlayerGames() map[string]string {
 }
 
 func (g *Game) validateName(name string) error {
-	if len(name) < 1 || len(name) > 20 {
-		return fmt.Errorf("Player name must be between 1 and 20 characters")
+	if len(name) < 1 || len(name) > 50 {
+		return fmt.Errorf("Invalid player name")
 	}
 	for _, p := range g.Players {
 		if p.name() == name && p.conn() != nil {
@@ -84,7 +85,11 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 		return &Game{}, "", err, socket.BadRequest
 	}
 
-	player := NewPlayer(req.PlayerName, game.nextImg())
+	imgUrl := req.PlayerImg
+	if imgUrl == "" {
+		imgUrl = game.nextImg()
+	}
+	player := NewPlayer(req.PlayerName, imgUrl)
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
 
@@ -128,35 +133,38 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 	if err := game.validateName(req.PlayerName); err != nil {
 		return &Game{}, "", err, socket.BadRequest
 	}
-
-	player := NewPlayer(req.PlayerName, game.nextImg())
+	imgUrl := req.PlayerImg
+	if imgUrl == "" {
+		imgUrl = game.nextImg()
+	}
+	player := NewPlayer(req.PlayerName, imgUrl)
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
 
 	return game, player.Id, nil, socket.Ok
 }
 
-func findGame(gameCode string) *Game {
+func findGame(joinCode string) *Game {
 	for _, g := range publicGames {
-		if g.Name == gameCode || g.Code == gameCode {
+		if strings.EqualFold(g.Name, joinCode) || strings.EqualFold(g.Code, joinCode) {
 			return g
 		}
 	}
 	for _, g := range privateGames {
-		if g.Name == gameCode || g.Code == gameCode {
+		if strings.EqualFold(g.Name, joinCode) || strings.EqualFold(g.Code, joinCode) {
 			return g
 		}
 	}
 	return nil
 }
 
-func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
-	game := findGame(gameCode)
+func JoinGameByCode(req GameRequest) (*Game, string, error) {
+	game := findGame(req.JoinCode)
 	if game == nil {
 		return &Game{}, "", fmt.Errorf("Game not found")
 	}
 
-	if err := game.validateName(playerName); err != nil {
+	if err := game.validateName(req.PlayerName); err != nil {
 		return &Game{}, "", err
 	}
 
@@ -166,7 +174,8 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 			delete(playerGames, p.id())
 			player = p
 			player.setId(uuid.New().String())
-			player.setName(playerName)
+			player.setName(req.PlayerName)
+			player.setImg(req.PlayerImg)
 			break
 		}
 	}
@@ -174,7 +183,11 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 		if len(game.Players) >= maxPlayers {
 			return &Game{}, "", GameFull
 		}
-		player = NewPlayer(playerName, game.nextImg())
+		imgUrl := req.PlayerImg
+		if imgUrl == "" {
+			imgUrl = game.nextImg()
+		}
+		player = NewPlayer(req.PlayerName, imgUrl)
 		game.Players = append(game.Players, player)
 	}
 

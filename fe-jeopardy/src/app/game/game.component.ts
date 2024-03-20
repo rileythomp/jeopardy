@@ -1,11 +1,11 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core'
-import { GameStateService } from '../services/game-state.service'
-import { WebsocketService } from '../services/websocket.service'
-import { PlayerService } from '../services/player.service'
-import { JwtService } from '../services/jwt.service'
+import { animate, state, style, transition, trigger } from '@angular/animations'
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core'
 import { GameState, Ping, Player } from '../model/model'
+import { GameStateService } from '../services/game-state.service'
+import { JwtService } from '../services/jwt.service'
 import { ModalService } from '../services/modal.service'
-import { trigger, state, style, animate, transition } from '@angular/animations';
+import { PlayerService } from '../services/player.service'
+import { WebsocketService } from '../services/websocket.service'
 
 @Component({
 	selector: 'app-game',
@@ -19,7 +19,6 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
 	]
 })
 export class GameComponent implements OnInit {
-	private jwt: string
 	private countdownInterval: NodeJS.Timeout
 	protected gameLink: string
 	protected gameMessage: string
@@ -34,18 +33,14 @@ export class GameComponent implements OnInit {
 	protected showMusicInfo: boolean = false
 
 	constructor(
-		private websocketService: WebsocketService,
-		private jwtService: JwtService,
+		private websocket: WebsocketService,
+		private jwt: JwtService,
 		protected game: GameStateService,
 		protected player: PlayerService,
 		private modal: ModalService,
 	) { }
 
 	ngOnInit(): void {
-		this.jwtService.jwt$.subscribe(jwt => {
-			this.jwt = jwt
-		})
-
 		let showJeopardyMusicInfo = localStorage.getItem('showJeopardyMusicInfo')
 		if (showJeopardyMusicInfo === null) {
 			this.showMusicInfo = true
@@ -64,16 +59,16 @@ export class GameComponent implements OnInit {
 			localStorage.setItem('showPauseGame', 'shown')
 		}
 
-		this.websocketService.Connect('play')
+		this.websocket.Connect('play')
 
-		this.websocketService.OnOpen(() => {
-			this.websocketService.Send({
+		this.websocket.OnOpen(() => {
+			this.websocket.Send({
 				state: GameState.PreGame,
-				token: this.jwt,
+				token: this.jwt.GetJWT(),
 			})
 		})
 
-		this.websocketService.OnMessage((event: { data: string }) => {
+		this.websocket.OnMessage((event: { data: string }) => {
 			let resp = JSON.parse(event.data)
 
 			if (resp.code >= 4400) {
@@ -200,7 +195,7 @@ export class GameComponent implements OnInit {
 
 	pauseGame(pause: boolean) {
 		this.modal.displayMessage(`Game ${pause ? 'paused' : 'resumed'}`)
-		this.websocketService.Send({
+		this.websocket.Send({
 			state: this.game.State(),
 			pause: pause ? 1 : -1,
 		})

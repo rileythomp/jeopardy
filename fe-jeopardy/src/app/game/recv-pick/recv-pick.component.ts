@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { Question } from 'src/app/model/model';
+import { GameStateService } from 'src/app/services/game-state.service';
 import { PlayerService } from 'src/app/services/player.service';
 import { WebsocketService } from 'src/app/services/websocket.service';
-import { GameStateService } from 'src/app/services/game-state.service';
 
 @Component({
 	selector: 'app-recv-pick',
@@ -14,7 +14,7 @@ export class RecvPickComponent {
 	questionRows: Question[][];
 
 	constructor(
-		private websocketService: WebsocketService,
+		private websocket: WebsocketService,
 		protected game: GameStateService,
 		protected player: PlayerService,
 	) {
@@ -31,7 +31,7 @@ export class RecvPickComponent {
 	handlePick(catIdx: number, valIdx: number) {
 		if (this.player.CanPick() && this.game.QuestionCanBePicked(catIdx, valIdx)) {
 			document.body.style.cursor = 'default'
-			this.websocketService.Send({
+			this.websocket.Send({
 				state: this.game.State(),
 				catIdx: catIdx,
 				valIdx: valIdx,

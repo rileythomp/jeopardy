@@ -2,12 +2,33 @@
 	<div>
 		<h2>Jeopardy!</h2>
 	</div>
-	<div>
-		<a target="_blank" href='https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhdsgNksr8lDUO3hHhVwaIqeO9asIhBWsroNfYZW4Q/viewform'>
-			<ion-icon name="pencil-outline"></ion-icon>
-		</a>
-		<ion-icon (click)="modal.displayAnalytics()" name="bar-chart-outline"></ion-icon>
-		<ion-icon (click)="modal.displayInstructions()" name="information-circle-outline"></ion-icon>
+	<div id='header-icons' class='flex-row'>
+		<div>
+			<ion-icon (click)="modal.displayInstructions()" name="information-circle-outline"></ion-icon>
+		</div>
+		<div>
+			<ion-icon (click)="modal.displayAnalytics()" name="bar-chart-outline"></ion-icon>
+		</div>
+		<div>
+			<a target="_blank" href='https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhdsgNksr8lDUO3hHhVwaIqeO9asIhBWsroNfYZW4Q/viewform'>
+				<ion-icon name="pencil-outline"></ion-icon>
+			</a>
+		</div>
+		<div style='position: relative;'>
+			<div (click)="showAuthOptions = !showAuthOptions">
+				<ion-icon *ngIf="!userAuthenticated" name="log-in-outline"></ion-icon>
+				<img *ngIf="userAuthenticated" [src]="playerImg" alt="">
+			</div>
+			<div *ngIf="showAuthOptions" id="auth-options" [@slideDownUp]>
+				<div *ngIf="!userAuthenticated"  class='flex-column'>
+					<app-auth-button (click)="signIn('google')"  [buttonText]="'Sign in with Google'" [imgUrl]="'../../../assets/google.png'"></app-auth-button>
+					<app-auth-button (click)="signIn('github')"  [buttonText]="'Sign in with GitHub'" [imgUrl]="'../../../assets/github.png'"></app-auth-button>
+				</div>
+				<div *ngIf="userAuthenticated">
+					<app-auth-button (click)="signOut()" [buttonText]="'Sign out'" [imgUrl]="''"></app-auth-button>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
 

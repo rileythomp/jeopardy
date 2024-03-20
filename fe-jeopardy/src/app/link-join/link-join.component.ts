@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
-import { ApiService } from '../services/api.service';
-import { JwtService } from '../services/jwt.service';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ServerUnavailableMsg } from '../model/model';
+import { ApiService } from '../services/api.service';
+import { AuthService } from '../services/auth.service';
+import { JwtService } from '../services/jwt.service';
 import { ModalService } from '../services/modal.service';
 
 @Component({
@@ -11,23 +12,33 @@ import { ModalService } from '../services/modal.service';
     styleUrls: ['./link-join.component.less']
 })
 export class LinkJoinComponent {
-    protected gameCode: string;
+    protected joinCode: string;
     protected playerName: string;
+    private playerImg: string = '';
 
     constructor(
         private route: ActivatedRoute,
         private router: Router,
-        private apiService: ApiService,
-        private jwtService: JwtService,
+        private api: ApiService,
+        private jwt: JwtService,
         private modal: ModalService,
+        private auth: AuthService,
     ) {
-        this.gameCode = this.route.snapshot.paramMap.get('gameCode') ?? '';
+        this.joinCode = this.route.snapshot.paramMap.get('joinCode') ?? '';
     }
 
-    joinGame(playerName: string, gameCode: string) {
-        this.apiService.JoinGameByCode(playerName, gameCode).subscribe({
+    ngOnInit() {
+        this.auth.user.subscribe(user => {
+            this.playerImg = user.imgUrl
+            this.playerName = user.name
+            this.joinGame()
+        })
+    }
+
+    joinGame() {
+        this.api.JoinGameByCode(this.playerName, this.playerImg, this.joinCode).subscribe({
             next: (resp: any) => {
-                this.jwtService.SetJWT(resp.token);
+                this.jwt.SetJWT(resp.token);
                 this.router.navigate([`/game/${resp.game.name}`]);
             },
             error: (err: any) => {
