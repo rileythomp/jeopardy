@@ -1,9 +1,8 @@
-import { Component, OnInit, AfterViewChecked } from '@angular/core'
-import { Message } from '../../model/model'
-import { PlayerService } from 'src/app/services/player.service'
-import { JwtService } from 'src/app/services/jwt.service'
+import { AfterViewChecked, Component, OnInit } from '@angular/core'
 import { ChatService } from 'src/app/services/chat.service'
-import { Ping } from '../../model/model'
+import { JwtService } from 'src/app/services/jwt.service'
+import { PlayerService } from 'src/app/services/player.service'
+import { Message, Ping } from '../../model/model'
 
 
 @Component({
@@ -12,7 +11,6 @@ import { Ping } from '../../model/model'
 	styleUrls: ['./chat.component.less']
 })
 export class ChatComponent implements OnInit, AfterViewChecked {
-	private jwt: string
 	protected messages: Message[] = []
 	protected message: string
 	protected hideChat = true
@@ -26,14 +24,10 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 	) { }
 
 	ngOnInit(): void {
-		this.jwtService.jwt$.subscribe(jwt => {
-			this.jwt = jwt
-		})
-
 		this.chatService.Connect()
 
 		this.chatService.OnOpen(() => {
-			this.chatService.Send({ token: this.jwt })
+			this.chatService.Send({ token: this.jwtService.GetJWT() })
 		})
 
 		this.chatService.OnMessage((event: { data: string }) => {

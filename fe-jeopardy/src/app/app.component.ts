@@ -25,7 +25,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	constructor(
 		private router: Router,
 		protected modal: ModalService,
-		protected auth: AuthService,
+		private auth: AuthService,
 	) { }
 
 	ngOnInit() {

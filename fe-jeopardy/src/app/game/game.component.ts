@@ -1,11 +1,11 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core'
-import { GameStateService } from '../services/game-state.service'
-import { WebsocketService } from '../services/websocket.service'
-import { PlayerService } from '../services/player.service'
-import { JwtService } from '../services/jwt.service'
+import { animate, state, style, transition, trigger } from '@angular/animations'
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core'
 import { GameState, Ping, Player } from '../model/model'
+import { GameStateService } from '../services/game-state.service'
+import { JwtService } from '../services/jwt.service'
 import { ModalService } from '../services/modal.service'
-import { trigger, state, style, animate, transition } from '@angular/animations';
+import { PlayerService } from '../services/player.service'
+import { WebsocketService } from '../services/websocket.service'
 
 @Component({
 	selector: 'app-game',
@@ -19,7 +19,6 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
 	]
 })
 export class GameComponent implements OnInit {
-	private jwt: string
 	private countdownInterval: NodeJS.Timeout
 	protected gameLink: string
 	protected gameMessage: string
@@ -42,10 +41,6 @@ export class GameComponent implements OnInit {
 	) { }
 
 	ngOnInit(): void {
-		this.jwtService.jwt$.subscribe(jwt => {
-			this.jwt = jwt
-		})
-
 		let showJeopardyMusicInfo = localStorage.getItem('showJeopardyMusicInfo')
 		if (showJeopardyMusicInfo === null) {
 			this.showMusicInfo = true
@@ -69,7 +64,7 @@ export class GameComponent implements OnInit {
 		this.websocketService.OnOpen(() => {
 			this.websocketService.Send({
 				state: GameState.PreGame,
-				token: this.jwt,
+				token: this.jwtService.GetJWT(),
 			})
 		})
 

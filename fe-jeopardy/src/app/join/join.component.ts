@@ -27,7 +27,7 @@ export class JoinComponent implements OnInit {
 		private jwtService: JwtService,
 		private apiService: ApiService,
 		protected modal: ModalService,
-		protected auth: AuthService,
+		private auth: AuthService,
 	) { }
 
 	ngOnInit() {
