@@ -8,18 +8,26 @@
     --question-box-padding: 30px;
 }
 
-input, button {
-    padding: 10px; 
+input,
+button {
+    padding: 10px;
     border-radius: 5px;
     border: 1px solid grey;
 }
 
-input:focus, button:focus {
+input:focus {
     outline: 1px solid grey;
 }
 
+button {
+    background-color: #f0f0f0;
+}
+
 button:hover {
-    background-color: lightgrey;
+    background-color: #f4f4f4;
+    cursor: pointer;
+    -webkit-box-shadow: 0 1px 1px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+    box-shadow: 0 1px 1px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
 }
 
 .flex-row {
@@ -80,7 +88,7 @@ button:hover {
             text-align: center;
             background-color: var(--jeopardy-blue);
             font-weight: bold;
-    
+
             .question-board-box {
                 width: 125px;
                 text-align: center;
@@ -98,7 +106,7 @@ button:hover {
             color: var(--jeopardy-yellow);
             line-height: 30px;
             height: 40px;
-    
+
             span {
                 font-weight: bolder;
                 font-size: 2em;
@@ -111,6 +119,7 @@ button:hover {
     from {
         transform: translate(-50%, calc(-1*var(--header-height)))
     }
+
     to {
         transform: translate(-50%, 0);
     }
@@ -131,7 +140,8 @@ button:hover {
 
     .modal-message {
 
-        h3, p {
+        h3,
+        p {
             margin: 0;
             margin-bottom: 1em;
         }
