@@ -53,7 +53,7 @@
         }
     }
 
-    .auth-options {
+    #auth-options {
         position: absolute;
         top: calc(100% + 0.5em + 4px);
         right: 0;
@@ -62,5 +62,10 @@
         border: 1px solid var(--jeopardy-blue);
         border-radius: 0.5em;
         z-index: 1;
+        transform-origin: top;
+
+        .flex-column {
+            gap: 1em;
+        }
     }
 }

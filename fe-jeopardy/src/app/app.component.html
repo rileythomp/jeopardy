@@ -15,14 +15,17 @@
 			</a>
 		</div>
 		<div style='position: relative;'>
-			<ion-icon *ngIf="!userAuthenticated" (click)="showSignInOptions = !showSignInOptions" name="log-in-outline"></ion-icon>
-			<img *ngIf="userAuthenticated" (click)="showSignOutOptions = !showSignOutOptions" [src]="userImg" alt="">
-			<div>
-				<div  *ngIf="showSignInOptions" class='auth-options'>
-					<app-sign-in (signInError)="handleSignInError()"></app-sign-in>
+			<div (click)="showAuthOptions = !showAuthOptions">
+				<ion-icon *ngIf="!userAuthenticated" name="log-in-outline"></ion-icon>
+				<img *ngIf="userAuthenticated" [src]="userImg" alt="">
+			</div>
+			<div *ngIf="showAuthOptions" id="auth-options" [@slideDownUp]>
+				<div  *ngIf="!userAuthenticated"  class='flex-column'>
+					<app-auth-button (click)="signIn('google')"  [buttonText]="'Sign in with Google'" [imgUrl]="'../../../assets/google.png'"></app-auth-button>
+					<app-auth-button (click)="signIn('github')"  [buttonText]="'Sign in with GitHub'" [imgUrl]="'../../../assets/github.png'"></app-auth-button>
 				</div>
-				<div  *ngIf="showSignOutOptions" class='auth-options'>
-					<app-sign-out (signOutError)="handleSignOutError()"></app-sign-out>
+				<div  *ngIf="userAuthenticated">
+					<app-auth-button (click)="signOut()" [buttonText]="'Sign out'" [imgUrl]="''"></app-auth-button>
 				</div>
 			</div>
 		</div>

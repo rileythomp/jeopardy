@@ -8,8 +8,7 @@ import { AnalyticsComponent } from './analytics/analytics.component';
 import { AnswersComponent } from './answers/answers.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { SignInComponent } from './auth/sign-in/sign-in.component';
-import { SignOutComponent } from './auth/sign-out/sign-out.component';
+import { AuthButtonComponent } from './auth/auth-button/auth-button.component';
 import { DisputeComponent } from './dispute/dispute.component';
 import { GameMessageComponent } from './game-message/game-message.component';
 import { BoardIntroComponent } from './game/board-intro/board-intro.component';
@@ -28,7 +27,6 @@ import { ConfigComponent } from './join/config/config.component';
 import { JoinComponent } from './join/join.component';
 import { LinkJoinComponent } from './link-join/link-join.component';
 import { WarningComponent } from './warning/warning.component';
-import { AuthButtonComponent } from './auth/auth-button/auth-button.component';
 
 @NgModule({
   declarations: [
@@ -53,8 +51,6 @@ import { AuthButtonComponent } from './auth/auth-button/auth-button.component';
     ConfigComponent,
     AnswersComponent,
     PlayerPodiumComponent,
-    SignOutComponent,
-    SignInComponent,
     AuthButtonComponent,
   ],
   imports: [

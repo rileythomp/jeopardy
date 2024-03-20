@@ -1,3 +1,4 @@
+import { animate, state, style, transition, trigger } from '@angular/animations';
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
@@ -7,11 +8,17 @@ import { ModalService } from './services/modal.service';
 @Component({
 	selector: 'app-root',
 	templateUrl: './app.component.html',
-	styleUrls: ['./app.component.less']
+	styleUrls: ['./app.component.less'],
+	animations: [
+		trigger('slideDownUp', [
+			state('void', style({ transform: 'scaleY(0)' })),
+			state('*', style({ transform: 'scaleY(1)' })),
+			transition('* <=> void', animate('0.3s')),
+		]),
+	],
 })
 export class AppComponent implements OnInit, AfterViewInit {
-	protected showSignInOptions: boolean = false
-	protected showSignOutOptions: boolean = false
+	protected showAuthOptions: boolean = false
 	protected userAuthenticated: boolean = false
 	protected userImg: string = ''
 
@@ -58,13 +65,22 @@ Please report any issues at https://github.com/rileythomp/jeopardy/issues/new
 		}
 	}
 
-	handleSignInError() {
-		this.showSignInOptions = false
-		this.modal.displayMessage('Uh oh, there was an unexpected error signing in. Please try again.')
+	async signIn(provider: string) {
+		if (await this.auth.SignIn(provider)) {
+			this.handleAuthError('Uh oh, there was an unexpected error signing in. Please try again.')
+		}
 	}
 
-	handleSignOutError() {
-		this.showSignOutOptions = false
-		this.modal.displayMessage('Uh oh, there was an unexpected error signing out. Please try again.')
+	async signOut() {
+		if (await this.auth.SignOut()) {
+			this.handleAuthError('Uh oh, there was an unexpected error signing out. Please try again.')
+		} else {
+			location.reload();
+		}
+	}
+
+	handleAuthError(msg: string) {
+		this.showAuthOptions = false
+		this.modal.displayMessage(msg)
 	}
 }
