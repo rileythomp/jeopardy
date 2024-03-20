@@ -27,12 +27,11 @@ var botConfigs = []struct {
 	name   string
 	imgUrl string
 }{
-	{"eager-eagle", "https://i.postimg.cc/ThsVhR2t/eagle.png"},
-	{"golden-gorilla", "https://i.postimg.cc/nsn7NrTh/gorilla.png"},
-	{"sharp-shark", "https://i.postimg.cc/QHWpTRHh/shark.png"},
-	{"smart-snake", "https://i.postimg.cc/SXV844t7/snake.png"},
-	{"tough-tiger", "https://i.postimg.cc/fVnYjB9X/tiger.png"},
-	// {"big-bear", "https://i.postimg.cc/CRGkvkG2/bear.png"},
+	{"eager-eagle", "https://i.postimg.cc/8kwgKF8C/eagle.png"},
+	{"golden-gorilla", "https://i.postimg.cc/QtJZrCH0/gorilla.png"},
+	{"sharp-shark", "https://i.postimg.cc/YqsK7JCK/shark.png"},
+	{"smart-snake", "https://i.postimg.cc/3x0Mxnky/snake.png"},
+	{"tough-tiger", "https://i.postimg.cc/13kknwFv/tiger.png"},
 }
 
 func NewBot(name string, i int) *Bot {

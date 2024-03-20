@@ -395,8 +395,7 @@ func LeaveGame(c *gin.Context) {
 	}
 
 	if err = jeopardy.LeaveGame(playerId); err != nil {
-		respondWithError(c, socket.BadRequest, "Unable to leave game: %s", err.Error())
-		return
+		log.Errorf("Error leaving game: %s", err.Error())
 	}
 
 	c.JSON(http.StatusOK, jeopardy.Response{
@@ -418,8 +417,6 @@ func GetAnalytics(c *gin.Context) {
 }
 
 func SearchCategories(c *gin.Context) {
-	log.Infof("Received request to search categories")
-
 	category := c.Query("category")
 	rounds := c.Query("rounds")
 

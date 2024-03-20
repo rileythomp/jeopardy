@@ -102,12 +102,12 @@ const (
 )
 
 var playerImgs = []string{
-	"https://i.postimg.cc/Hkp4FnGf/cat.png",
-	"https://i.postimg.cc/KRYhkb1J/deer.png",
-	"https://i.postimg.cc/8fpQbQtk/dragon.png",
-	"https://i.postimg.cc/PNTjHYTG/giraffe.png",
-	"https://i.postimg.cc/cgMGY475/lion.png",
-	"https://i.postimg.cc/nM2thrhX/panda.png",
+	"https://i.postimg.cc/RFBx8KVW/cat.png",
+	"https://i.postimg.cc/pr0NpSQj/deer.png",
+	"https://i.postimg.cc/4NdkrJZQ/dragon.png",
+	"https://i.postimg.cc/fbXhBBZ4/giraffe.png",
+	"https://i.postimg.cc/t48j38Kt/panda.png",
+	"https://i.postimg.cc/6q6J6KZw/lion.png",
 }
 
 func NewPlayer(name string, i int) *Player {
