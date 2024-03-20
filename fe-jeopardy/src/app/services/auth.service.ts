@@ -35,7 +35,7 @@ export class AuthService {
 		let { data, error } = await this.supabase.auth.signInWithOAuth({
 			provider: provider as Provider,
 			options: {
-				redirectTo: 'http://localhost:4200/join',
+				redirectTo: environment.redirectUrl,
 			}
 		})
 		if (error) {
