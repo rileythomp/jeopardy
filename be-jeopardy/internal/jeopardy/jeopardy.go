@@ -14,7 +14,7 @@ import (
 type GameRequest struct {
 	PlayerName            string        `json:"playerName"`
 	PlayerImg             string        `json:"playerImg"`
-	GameCode              string        `json:"gameCode"`
+	JoinCode              string        `json:"joinCode"`
 	Bots                  int           `json:"bots"`
 	FullGame              bool          `json:"fullGame"`
 	Penalty               bool          `json:"penalty"`
@@ -51,8 +51,8 @@ func GetPlayerGames() map[string]string {
 }
 
 func (g *Game) validateName(name string) error {
-	if len(name) < 1 || len(name) > 20 {
-		return fmt.Errorf("Player name must be between 1 and 20 characters")
+	if len(name) < 1 || len(name) > 50 {
+		return fmt.Errorf("Invalid player name")
 	}
 	for _, p := range g.Players {
 		if p.name() == name && p.conn() != nil {
@@ -144,14 +144,14 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 	return game, player.Id, nil, socket.Ok
 }
 
-func findGame(gameCode string) *Game {
+func findGame(joinCode string) *Game {
 	for _, g := range publicGames {
-		if g.Name == gameCode || g.Code == gameCode {
+		if strings.EqualFold(g.Name, joinCode) || strings.EqualFold(g.Code, joinCode) {
 			return g
 		}
 	}
 	for _, g := range privateGames {
-		if g.Name == gameCode || g.Code == gameCode {
+		if strings.EqualFold(g.Name, joinCode) || strings.EqualFold(g.Code, joinCode) {
 			return g
 		}
 	}
@@ -159,7 +159,7 @@ func findGame(gameCode string) *Game {
 }
 
 func JoinGameByCode(req GameRequest) (*Game, string, error) {
-	game := findGame(req.GameCode)
+	game := findGame(req.JoinCode)
 	if game == nil {
 		return &Game{}, "", fmt.Errorf("Game not found")
 	}

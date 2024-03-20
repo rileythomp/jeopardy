@@ -12,7 +12,7 @@ import { ModalService } from '../services/modal.service';
     styleUrls: ['./link-join.component.less']
 })
 export class LinkJoinComponent {
-    protected gameCode: string;
+    protected joinCode: string;
     protected playerName: string;
     private userImg: string = '';
 
@@ -24,7 +24,7 @@ export class LinkJoinComponent {
         private modal: ModalService,
         private auth: AuthService,
     ) {
-        this.gameCode = this.route.snapshot.paramMap.get('gameCode') ?? '';
+        this.joinCode = this.route.snapshot.paramMap.get('joinCode') ?? '';
     }
 
     ngOnInit() {
@@ -34,7 +34,7 @@ export class LinkJoinComponent {
     }
 
     joinGame() {
-        this.apiService.JoinGameByCode(this.playerName, this.userImg, this.gameCode).subscribe({
+        this.apiService.JoinGameByCode(this.playerName, this.userImg, this.joinCode).subscribe({
             next: (resp: any) => {
                 this.jwtService.SetJWT(resp.token);
                 this.router.navigate([`/game/${resp.game.name}`]);

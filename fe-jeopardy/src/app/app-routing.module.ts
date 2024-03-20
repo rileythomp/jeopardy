@@ -8,8 +8,8 @@ import { WarningComponent } from './warning/warning.component';
 const routes: Routes = [
 	{ path: '', component: JoinComponent },
 	{ path: 'join', component: JoinComponent },
-	{ path: 'join/:gameCode', component: LinkJoinComponent },
-	{ path: 'game/:gameCode', component: GameComponent },
+	{ path: 'join/:joinCode', component: LinkJoinComponent },
+	{ path: 'game/:joinCode', component: GameComponent },
 	{ path: 'warning', component: WarningComponent },
 ];
 

@@ -51,7 +51,7 @@ var (
 		},
 		{
 			Method:  http.MethodPut,
-			Path:    "/jeopardy/games/:gameCode",
+			Path:    "/jeopardy/games/:joinCode",
 			Handler: JoinGameByCode,
 		},
 		{

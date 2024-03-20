@@ -29,11 +29,11 @@ export class ApiService {
         })
     }
 
-    JoinGameByCode(playerName: string, playerImg: string, gameCode: string): Observable<any> {
-        return this.put(`games/${gameCode}`, {
+    JoinGameByCode(playerName: string, playerImg: string, joinCode: string): Observable<any> {
+        return this.put(`games/${joinCode}`, {
             playerName: playerName,
             playerImg: playerImg,
-            gameCode: gameCode,
+            joinCode: joinCode,
         })
     }
 

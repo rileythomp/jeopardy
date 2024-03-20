@@ -16,8 +16,8 @@ export class JoinComponent implements OnInit {
 	protected playerName: string = ''
 	private playerImg: string = ''
 	protected userAuthenticated: boolean = false
-	protected gameCode: string = ''
-	protected showGameCodeInput: boolean = false
+	protected joinCode: string = ''
+	protected showJoinCodeInput: boolean = false
 	protected oneRoundChecked: boolean = true
 	protected twoRoundChecked: boolean = false
 	protected penaltyChecked: boolean = true
@@ -76,7 +76,7 @@ export class JoinComponent implements OnInit {
 			this.showInvalidName()
 			return
 		}
-		this.apiService.JoinGameByCode(this.playerName, this.playerImg, this.gameCode).subscribe(this.joinResp())
+		this.apiService.JoinGameByCode(this.playerName, this.playerImg, this.joinCode).subscribe(this.joinResp())
 	}
 
 	joinPublicGame() {
@@ -99,11 +99,11 @@ export class JoinComponent implements OnInit {
 		})
 	}
 
-	toggleGameCodeInput() {
-		if (this.showGameCodeInput && this.gameCode && this.playerName) {
+	toggleJoinCodeInput() {
+		if (this.showJoinCodeInput && this.joinCode && this.playerName) {
 			this.joinGameByCode()
 			return
 		}
-		this.showGameCodeInput = !this.showGameCodeInput
+		this.showJoinCodeInput = !this.showJoinCodeInput
 	}
 }
