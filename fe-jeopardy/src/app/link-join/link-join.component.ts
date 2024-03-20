@@ -30,6 +30,8 @@ export class LinkJoinComponent {
     ngOnInit() {
         this.auth.user.subscribe(user => {
             this.playerImg = user.imgUrl
+            this.playerName = user.name
+            this.joinGame()
         })
     }
 
