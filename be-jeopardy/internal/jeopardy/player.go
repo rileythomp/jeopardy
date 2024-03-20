@@ -110,8 +110,7 @@ var playerImgs = []string{
 	"https://i.postimg.cc/6q6J6KZw/lion.png",
 }
 
-func NewPlayer(name string, i int) *Player {
-	playerImg := playerImgs[i%len(playerImgs)]
+func NewPlayer(name string, imgUrl string) *Player {
 	return &Player{
 		Id:                  uuid.New().String(),
 		Name:                name,
@@ -121,7 +120,7 @@ func NewPlayer(name string, i int) *Player {
 		CanAnswer:           false,
 		CanWager:            false,
 		FinalProtestors:     map[string]bool{},
-		ImgUrl:              playerImg,
+		ImgUrl:              imgUrl,
 		CancelAnswerTimeout: func() {},
 		CancelWagerTimeout:  func() {},
 		sendGamePing:        time.NewTicker(pingFrequency),

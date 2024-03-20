@@ -37,10 +37,9 @@ var botConfigs = []struct {
 func NewBot(name string, i int) *Bot {
 	botConfig := botConfigs[i%len(botConfigs)]
 	bot := &Bot{
-		Player:  NewPlayer(botConfig.name, i),
+		Player:  NewPlayer(botConfig.name, botConfig.imgUrl),
 		botChan: make(chan Response),
 	}
-	bot.ImgUrl = botConfig.imgUrl
 	bot.Conn = socket.NewSafeConn(nil) // so bot is treated as connected by frontend
 	return bot
 }

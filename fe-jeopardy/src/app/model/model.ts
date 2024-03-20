@@ -1,6 +1,7 @@
 export type User = {
     imgUrl: string;
     authenticated: boolean;
+    name: string;
 }
 
 export type Game = {

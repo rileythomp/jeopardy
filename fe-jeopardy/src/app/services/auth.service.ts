@@ -25,7 +25,8 @@ export class AuthService {
 			console.log('user is signed in')
 			let user: User = {
 				imgUrl: data.user?.user_metadata['avatar_url'],
-				authenticated: true
+				authenticated: true,
+				name: data.user?.user_metadata['full_name']
 			}
 			this.user = user
 		}
@@ -64,6 +65,10 @@ export class AuthService {
 	}
 
 	public ImgUrl(): string {
-		return this.user.imgUrl
+		return this.user?.imgUrl
+	}
+
+	public Name(): string {
+		return this.user?.name
 	}
 }

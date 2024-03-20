@@ -1,10 +1,10 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { Router } from '@angular/router';
 import { ServerUnavailableMsg } from 'src/app/model/model';
 import { ApiService } from 'src/app/services/api.service';
-import { ModalService } from 'src/app/services/modal.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { JwtService } from 'src/app/services/jwt.service';
-import { Router } from '@angular/router';
-import { ThisReceiver } from '@angular/compiler';
+import { ModalService } from 'src/app/services/modal.service';
 
 @Component({
 	selector: 'app-config',
@@ -33,7 +33,8 @@ export class ConfigComponent {
 		private apiService: ApiService,
 		private modal: ModalService,
 		private jwtService: JwtService,
-		private router: Router
+		private router: Router,
+		private user: AuthService,
 	) { }
 
 	searchCategories() {
@@ -105,6 +106,11 @@ export class ConfigComponent {
 	}
 
 	createPrivateGame(bots: number) {
+		let playerImg = ''
+		if (this.user.Authenticated()) {
+			this.playerName = this.user.Name()
+			playerImg = this.user.ImgUrl()
+		}
 		if (this.playerName == '') {
 			document.getElementById('player-name-config')!.focus()
 			document.getElementById('player-name-config')!.style.border = '1px solid red';
@@ -114,7 +120,7 @@ export class ConfigComponent {
 			return
 		}
 		this.apiService.CreatePrivateGame(
-			this.playerName,
+			this.playerName, playerImg,
 			bots, this.twoRoundChecked, this.penaltyChecked,
 			this.pickConfig, this.buzzConfig, this.answerConfig, this.wagerConfig,
 			this.firstRoundCategories, this.secondRoundCategories

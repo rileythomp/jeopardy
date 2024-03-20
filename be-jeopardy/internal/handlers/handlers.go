@@ -203,7 +203,7 @@ func JoinGameByCode(c *gin.Context) {
 		return
 	}
 
-	game, playerId, err := jeopardy.JoinGameByCode(req.PlayerName, req.GameCode)
+	game, playerId, err := jeopardy.JoinGameByCode(req)
 	if err != nil {
 		log.Errorf("Error joining game by code: %s", err.Error())
 		respondWithError(c, http.StatusBadRequest, "Unable to join game: %s", err.Error())

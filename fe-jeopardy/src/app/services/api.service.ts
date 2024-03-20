@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { environment } from '../../environments/environment';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { JwtService } from './jwt.service';
 
 const apiAddr = environment.apiServerUrl;
@@ -18,27 +18,29 @@ export class ApiService {
     ) { }
 
     CreatePrivateGame(
-        playName: string, bots: number, fullGame: boolean, penalty: boolean,
+        playName: string, playerImg: string, bots: number, fullGame: boolean, penalty: boolean,
         pickConfig: number, buzzConfig: number, answerConfig: number, wagerConfig: number,
         firstRoundCategories: any[], secondRoundCategories: any[]
     ): Observable<any> {
         return this.post('games', {
-            playerName: playName, bots: bots, fullGame: fullGame, penalty: penalty,
+            playerName: playName, playerImg: playerImg, bots: bots, fullGame: fullGame, penalty: penalty,
             pickConfig: pickConfig, buzzConfig: buzzConfig, answerConfig: answerConfig, wagerConfig: wagerConfig,
             firstRoundCategories: firstRoundCategories, secondRoundCategories: secondRoundCategories,
         })
     }
 
-    JoinGameByCode(playerName: string, gameCode: string): Observable<any> {
+    JoinGameByCode(playerName: string, playerImg: string, gameCode: string): Observable<any> {
         return this.put(`games/${gameCode}`, {
             playerName: playerName,
+            playerImg: playerImg,
             gameCode: gameCode,
         })
     }
 
-    JoinPublicGame(playerName: string): Observable<any> {
+    JoinPublicGame(playerName: string, playerImg: string): Observable<any> {
         return this.put('games', {
             playerName: playerName,
+            playerImg: playerImg,
             fullGame: true,
         })
     }
