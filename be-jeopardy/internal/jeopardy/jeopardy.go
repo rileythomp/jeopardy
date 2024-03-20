@@ -175,6 +175,7 @@ func JoinGameByCode(req GameRequest) (*Game, string, error) {
 			player = p
 			player.setId(uuid.New().String())
 			player.setName(req.PlayerName)
+			player.setImg(req.PlayerImg)
 			break
 		}
 	}

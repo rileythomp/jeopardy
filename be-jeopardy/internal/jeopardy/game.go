@@ -217,6 +217,7 @@ func (g *Game) disconnectPlayer(player GamePlayer) {
 	}
 	player.endConnections()
 	player.setPlayAgain(false)
+	player.setImg(g.nextImg())
 	g.messageAllPlayers("Player %s disconnected from the game", player.name())
 	endGame := true
 	for _, p := range g.Players {

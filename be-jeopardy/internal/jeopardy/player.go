@@ -38,6 +38,7 @@ type GamePlayer interface {
 
 	setId(string)
 	setName(string)
+	setImg(string)
 	setConn(SafeConn)
 	setChatConn(SafeConn)
 	setCanBuzz(bool)
@@ -283,6 +284,10 @@ func (p *Player) setId(id string) {
 
 func (p *Player) setName(name string) {
 	p.Name = name
+}
+
+func (p *Player) setImg(img string) {
+	p.ImgUrl = img
 }
 
 func (p *Player) setConn(conn SafeConn) {
