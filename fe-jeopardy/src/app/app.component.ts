@@ -1,6 +1,8 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { Router } from '@angular/router'
+import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { User } from 'src/app/model/model';
 import { environment } from 'src/environments/environment';
+import { AuthService } from './services/auth.service';
 import { ModalService } from './services/modal.service';
 
 @Component({
@@ -9,9 +11,14 @@ import { ModalService } from './services/modal.service';
 	styleUrls: ['./app.component.less']
 })
 export class AppComponent implements OnInit, AfterViewInit {
+	protected user: User | null
+	protected showLoginOptions: boolean = false
+	protected showLogoutOptions: boolean = false
+
 	constructor(
 		private router: Router,
 		protected modal: ModalService,
+		protected auth: AuthService,
 	) { }
 
 	ngOnInit() {
@@ -31,6 +38,12 @@ export class AppComponent implements OnInit, AfterViewInit {
 Please report any issues at https://github.com/rileythomp/jeopardy/issues/new
 `
 		console.log(jeopardy)
+
+		this.auth.user.subscribe(user => {
+			this.user = user
+		})
+
+		this.auth.GetUser()
 	}
 
 	ngAfterViewInit() {

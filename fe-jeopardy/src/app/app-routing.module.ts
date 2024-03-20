@@ -10,8 +10,7 @@ const routes: Routes = [
 	{ path: 'join', component: JoinComponent },
 	{ path: 'join/:gameCode', component: LinkJoinComponent },
 	{ path: 'game/:gameCode', component: GameComponent },
-	{ path: 'warning', component: WarningComponent }
-
+	{ path: 'warning', component: WarningComponent },
 ];
 
 @NgModule({

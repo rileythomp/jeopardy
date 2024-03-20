@@ -2,12 +2,30 @@
 	<div>
 		<h2>Jeopardy!</h2>
 	</div>
-	<div>
-		<a target="_blank" href='https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhdsgNksr8lDUO3hHhVwaIqeO9asIhBWsroNfYZW4Q/viewform'>
-			<ion-icon name="pencil-outline"></ion-icon>
-		</a>
-		<ion-icon (click)="modal.displayAnalytics()" name="bar-chart-outline"></ion-icon>
-		<ion-icon (click)="modal.displayInstructions()" name="information-circle-outline"></ion-icon>
+	<div id='header-icons' class='flex-row'>
+		<div>
+			<ion-icon (click)="modal.displayInstructions()" name="information-circle-outline"></ion-icon>
+		</div>
+		<div>
+			<ion-icon (click)="modal.displayAnalytics()" name="bar-chart-outline"></ion-icon>
+		</div>
+		<div>
+			<a target="_blank" href='https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhdsgNksr8lDUO3hHhVwaIqeO9asIhBWsroNfYZW4Q/viewform'>
+				<ion-icon name="pencil-outline"></ion-icon>
+			</a>
+		</div>
+		<div style='position: relative;'>
+			<ion-icon *ngIf="user == null" (click)="showLoginOptions = !showLoginOptions" name="log-in-outline"></ion-icon>
+			<img *ngIf="user != null" (click)="showLogoutOptions = !showLogoutOptions" [src]="user.imgUrl" alt="">
+			<div>
+				<div  *ngIf="showLoginOptions" class='auth-options'>
+					<app-login></app-login>
+				</div>
+				<div  *ngIf="showLogoutOptions" class='auth-options'>
+					<app-logout></app-logout>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
 

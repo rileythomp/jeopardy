@@ -17,22 +17,49 @@
     background-color: var(--jeopardy-blue);
     color: white;
 
-    a {
-        color: white;
-    }
-
     h2 {
         margin-left: 1em;
     }
 
-    ion-icon {
-        float: right;
-        margin-right: 1em;
-        font-size: 2em;
+    #header-icons {
+        gap: 2em;
+        margin-right: 2em;
+        justify-content: flex-end;
+
+        div {
+            flex-grow: 0;
+        }
+
+        a {
+            color: white;
+        }
+
+        ion-icon {
+            font-size: 2em;
+        }
+
+        ion-icon:hover,
+        img:hover {
+            cursor: pointer;
+            transform: scale(1.1);
+        }
+
+        img {
+            width: 2em;
+            height: 2em;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+        }
     }
 
-    ion-icon:hover {
-        cursor: pointer;
-        transform: scale(1.1);
+    .auth-options {
+        position: absolute;
+        top: calc(100% + 0.5em + 4px);
+        right: 0;
+        padding: 1em;
+        background-color: var(--jeopardy-lightblue);
+        border: 1px solid var(--jeopardy-blue);
+        border-radius: 0.5em;
     }
 }
