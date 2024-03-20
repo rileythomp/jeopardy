@@ -13,9 +13,9 @@ import { ModalService } from 'src/app/services/modal.service';
 })
 export class ConfigComponent {
 	@Input() playerName: string
-	protected oneRoundChecked: boolean = true
-	protected twoRoundChecked: boolean = false
-	protected penaltyChecked: boolean = true
+	@Input() oneRoundChecked: boolean = true
+	@Input() twoRoundChecked: boolean = false
+	@Input() penaltyChecked: boolean = true
 	protected botConfig: number = 0
 	protected pickConfig: number = 30
 	protected buzzConfig: number = 30
