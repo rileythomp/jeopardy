@@ -11,7 +11,7 @@ export class SignOutComponent {
 
 	constructor(private auth: AuthService) { }
 
-	async googleSignOut() {
+	async signOut() {
 		if (await this.auth.SignOut()) {
 			this.signOutError.emit(true);
 		} else {

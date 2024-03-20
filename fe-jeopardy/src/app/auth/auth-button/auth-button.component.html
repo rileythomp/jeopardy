@@ -1,7 +1,8 @@
 <button class="gsi-material-button">
 	<div class="gsi-material-button-content-wrapper">
 		<div class='center-image'>
-			<img [src]="imgUrl" alt="">
+			<img *ngIf="imgUrl != ''" [src]="imgUrl" alt="">
+			<ion-icon *ngIf="imgUrl == ''" name="log-out-outline"></ion-icon>
 		</div>
 		<div>
 			<span>{{buttonText}}</span>
