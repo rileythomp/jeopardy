@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Provider, SupabaseClient, createClient } from '@supabase/supabase-js';
 import { Observable, Subject } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { User } from '../model/model';
 
 @Injectable({
@@ -12,7 +13,7 @@ export class AuthService {
 	public user: Observable<User>
 
 	constructor() {
-		this.supabase = createClient('https://xdlhyjzjygansfeoguvs.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkbGh5anpqeWdhbnNmZW9ndXZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDY5OTUwMjksImV4cCI6MjAyMjU3MTAyOX0.ystMHS-Tic8W3rHqXTwW1F90WvxfVHpLJ5bkimn81PM');
+		this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
 		this.userSubject = new Subject<User>();
 		this.user = this.userSubject.asObservable();
 	}
