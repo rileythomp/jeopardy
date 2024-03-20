@@ -1,10 +1,13 @@
 <div id='pre-game-container'>
     <h2>Waiting to start</h2>
 
-    <p>
-        Link to join: <span id='joinLink' (click)="openJoinLink()">{{gameLink}}/join/{{game.Name()}}</span>&nbsp;
-        <ion-icon name="copy-outline" id="copyLink" (click)="copyJoinLink()"></ion-icon>
-    </p>
+    <div id='share-join'>
+        <p>Share this code for other players to join <b>{{ game.Code() }}</b></p>
+        <p>
+            or share this link: <span id='joinLink' (click)="openJoinLink()">{{gameLink}}/join/{{game.Name()}}</span>&nbsp;
+            <ion-icon name="copy-outline" id="copyLink" (click)="copyJoinLink()"></ion-icon>
+        </p>
+    </div>
 
     <div>
         <button id='start-game' (click)="startGame()">Start game</button>

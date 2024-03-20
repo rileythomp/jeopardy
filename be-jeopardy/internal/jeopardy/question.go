@@ -1,9 +1,8 @@
 package jeopardy
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"strings"
-	"time"
 
 	"github.com/agnivade/levenshtein"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
@@ -12,10 +11,6 @@ import (
 const (
 	numCategories = 6
 	numQuestions  = 5
-)
-
-var (
-	rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
 type (
@@ -126,9 +121,9 @@ func (g *Game) setDailyDoubles() {
 }
 
 func (g *Game) setFirstRoundDailyDouble() {
-	tIdx := rng.Intn(numCategories)
+	tIdx := rand.IntN(numCategories)
 	qIdx := 0
-	num := rng.Intn(10000)
+	num := rand.IntN(10000)
 	if num < 15 {
 		qIdx = 0
 	} else if num < 1150 {
@@ -144,9 +139,9 @@ func (g *Game) setFirstRoundDailyDouble() {
 }
 
 func (g *Game) setSecondRoundDailyDouble() {
-	tIdx := rng.Intn(numCategories)
+	tIdx := rand.IntN(numCategories)
 	qIdx := 0
-	num := rng.Intn(10000)
+	num := rand.IntN(10000)
 	if num < 15 {
 		qIdx = 0
 	} else if num < 1524 {

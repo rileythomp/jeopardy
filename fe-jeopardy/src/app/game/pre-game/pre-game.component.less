@@ -1,46 +1,54 @@
 #pre-game-container {
 	margin-top: 20vh;
-}
 
-@keyframes ellipsis {
-    25% {
-        content: "";
+    @keyframes ellipsis {
+        25% {
+            content: "";
+        }
+        50% {
+            content: ".";
+        }
+        75% {
+            content: "..";
+        }
+        100% {
+            content: "...";
+        }
     }
-    50% {
-        content: ".";
-    }
-    75% {
-        content: "..";
-    }
-    100% {
+
+    h2:after {
         content: "...";
+        overflow: hidden;
+        display: inline-block;
+        vertical-align: bottom;
+        animation: ellipsis 2s infinite;
+        animation-fill-mode: forwards;
+        width: 1.25em;
     }
-}
 
-h2:after {
-    content: "...";
-    overflow: hidden;
-    display: inline-block;
-    vertical-align: bottom;
-    animation: ellipsis 2s infinite;
-    animation-fill-mode: forwards;
-    width: 1.25em;
-}
+    #share-join {
+        margin: 1em 0; 
 
-#joinLink {
-	color: blue;
-	text-decoration: underline;
-}
+        p {
+            margin: 0
+        }
 
-#joinLink:hover {
-	cursor: pointer;
-}
+        #joinLink {
+            color: blue;
+            text-decoration: underline;
+        }
+        
+        #joinLink:hover {
+            cursor: pointer;
+        }
+        
+        #copyLink:hover {
+            cursor: pointer;
+            transform: scale(1.1);
+        }
+    }
 
-#copyLink:hover {
-	cursor: pointer;
-	transform: scale(1.1);
-}
-
-#start-game {
-    margin-right: 1em;
+    #start-game {
+        margin-right: 1em;
+    }
 }

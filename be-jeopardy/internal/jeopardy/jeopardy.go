@@ -25,6 +25,8 @@ type GameRequest struct {
 	SecondRoundCategories []db.Category `json:"secondRoundCategories"`
 }
 
+var GameFull = fmt.Errorf("Game is full")
+
 var (
 	privateGames = map[string]*Game{}
 	publicGames  = map[string]*Game{}
@@ -87,7 +89,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	playerGames[player.Id] = game
 
 	for i := 0; i < game.Bots; i++ {
-		bot := NewBot(genBotCode(), i)
+		bot := NewBot(genBotName(), i)
 		game.Players = append(game.Players, bot)
 		bot.processMessages()
 	}
@@ -134,13 +136,24 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 	return game, player.Id, nil, socket.Ok
 }
 
-func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
-	game, ok := publicGames[gameCode]
-	if !ok {
-		game, ok = privateGames[gameCode]
-		if !ok {
-			return &Game{}, "", fmt.Errorf("Game %s not found", gameCode)
+func findGame(gameCode string) *Game {
+	for _, g := range publicGames {
+		if g.Name == gameCode || g.Code == gameCode {
+			return g
 		}
+	}
+	for _, g := range privateGames {
+		if g.Name == gameCode || g.Code == gameCode {
+			return g
+		}
+	}
+	return nil
+}
+
+func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
+	game := findGame(gameCode)
+	if game == nil {
+		return &Game{}, "", fmt.Errorf("Game not found")
 	}
 
 	if err := game.validateName(playerName); err != nil {
@@ -159,7 +172,7 @@ func JoinGameByCode(playerName, gameCode string) (*Game, string, error) {
 	}
 	if player == nil {
 		if len(game.Players) >= maxPlayers {
-			return &Game{}, "", fmt.Errorf("Game %s is full", gameCode)
+			return &Game{}, "", GameFull
 		}
 		player = NewPlayer(playerName, game.nextImg())
 		game.Players = append(game.Players, player)
@@ -188,7 +201,7 @@ func AddBot(playerId string) error {
 	for i, p := range game.Players {
 		if p.conn() == nil {
 			delete(playerGames, p.id())
-			bot = NewBot(genBotCode(), game.numBots())
+			bot = NewBot(genBotName(), game.numBots())
 			bot.copyState(p)
 			game.Players[i] = bot
 			break
@@ -196,9 +209,9 @@ func AddBot(playerId string) error {
 	}
 	if bot == nil {
 		if len(game.Players) >= maxPlayers {
-			return fmt.Errorf("Game is full")
+			return GameFull
 		}
-		bot = NewBot(genBotCode(), game.numBots())
+		bot = NewBot(genBotName(), game.numBots())
 		game.Players = append(game.Players, bot)
 	}
 

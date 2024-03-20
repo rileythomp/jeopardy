@@ -2,7 +2,7 @@ package jeopardy
 
 import (
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"time"
 
@@ -22,6 +22,7 @@ type (
 		jeopardyDB jeopardyDB
 
 		Name           string       `json:"name"`
+		Code           string       `json:"code"`
 		State          GameState    `json:"state"`
 		Round          RoundState   `json:"round"`
 		FirstRound     []Category   `json:"firstRound"`
@@ -134,9 +135,10 @@ func NewGame(db jeopardyDB, config GameConfig) (*Game, error) {
 		State:      PreGame,
 		Players:    []GamePlayer{},
 		Round:      FirstRound,
-		Name:       genGameCode(),
+		Name:       genGameName(),
+		Code:       genGameCode(),
 		LastToPick: &Player{},
-		imgOffset:  rand.Intn(6),
+		imgOffset:  rand.IntN(6),
 	}
 	if err := game.setQuestions(); err != nil {
 		return nil, err

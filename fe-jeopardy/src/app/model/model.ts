@@ -1,5 +1,6 @@
 export type Game = {
     name: string;
+    code: string;
     state: GameState;
     round: RoundState;
     players: Player[];

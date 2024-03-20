@@ -2,6 +2,7 @@ package jeopardy
 
 import (
 	_ "embed"
+	"math/rand/v2"
 	"strings"
 )
 
@@ -17,10 +18,26 @@ var animals = strings.Split(animalsList, "\n")
 var adjectivesList string
 var adjectives = strings.Split(adjectivesList, "\n")
 
-func genGameCode() string {
-	return adjectives[rng.Intn(len(adjectives))] + "-" + nouns[rng.Intn(len(animals))]
+func genGameName() string {
+	return adjectives[rand.IntN(len(adjectives))] + "-" + nouns[rand.IntN(len(animals))]
 }
 
-func genBotCode() string {
-	return adjectives[rng.Intn(len(adjectives))] + "-" + animals[rng.Intn(len(animals))]
+func genBotName() string {
+	return adjectives[rand.IntN(len(adjectives))] + "-" + animals[rand.IntN(len(animals))]
+}
+
+func genGameCode() string {
+	letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	numbers := "0123456789"
+
+	code := ""
+	for i := 0; i < 3; i++ {
+		code += string(letters[rand.IntN(len(letters))])
+	}
+	code += "-"
+	for i := 0; i < 3; i++ {
+		code += string(numbers[rand.IntN(len(numbers))])
+	}
+
+	return code
 }

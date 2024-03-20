@@ -27,6 +27,10 @@ export class GameStateService {
 		return this.game.name
 	}
 
+	Code(): string {
+		return this.game.code
+	}
+
 	State(): GameState {
 		return this.game.state
 	}
