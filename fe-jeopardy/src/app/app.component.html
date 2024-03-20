@@ -15,8 +15,8 @@
 			</a>
 		</div>
 		<div style='position: relative;'>
-			<ion-icon *ngIf="user == null" (click)="showLoginOptions = !showLoginOptions" name="log-in-outline"></ion-icon>
-			<img *ngIf="user != null" (click)="showLogoutOptions = !showLogoutOptions" [src]="user.imgUrl" alt="">
+			<ion-icon *ngIf="!user.Authenticated()" (click)="showLoginOptions = !showLoginOptions" name="log-in-outline"></ion-icon>
+			<img *ngIf="user.Authenticated()" (click)="showLogoutOptions = !showLogoutOptions" [src]="user.ImgUrl()" alt="">
 			<div>
 				<div  *ngIf="showLoginOptions" class='auth-options'>
 					<app-login></app-login>
