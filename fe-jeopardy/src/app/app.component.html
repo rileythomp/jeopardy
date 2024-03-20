@@ -17,7 +17,7 @@
 		<div style='position: relative;'>
 			<div (click)="showAuthOptions = !showAuthOptions">
 				<ion-icon *ngIf="!userAuthenticated" name="log-in-outline"></ion-icon>
-				<img *ngIf="userAuthenticated" [src]="userImg" alt="">
+				<img *ngIf="userAuthenticated" [src]="playerImg" alt="">
 			</div>
 			<div *ngIf="showAuthOptions" id="auth-options" [@slideDownUp]>
 				<div *ngIf="!userAuthenticated"  class='flex-column'>

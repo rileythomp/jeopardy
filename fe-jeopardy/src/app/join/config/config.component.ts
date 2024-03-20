@@ -12,7 +12,7 @@ import { ModalService } from 'src/app/services/modal.service';
 	styleUrls: ['./config.component.less']
 })
 export class ConfigComponent {
-	private userImg: string = ''
+	private playerImg: string = ''
 	@Input() playerName: string
 	@Input() oneRoundChecked: boolean = true
 	@Input() twoRoundChecked: boolean = false
@@ -40,7 +40,7 @@ export class ConfigComponent {
 
 	ngOnInit() {
 		this.auth.user.subscribe(user => {
-			this.userImg = user.imgUrl
+			this.playerImg = user.imgUrl
 		})
 	}
 
@@ -122,7 +122,7 @@ export class ConfigComponent {
 			return
 		}
 		this.apiService.CreatePrivateGame(
-			this.playerName, this.userImg,
+			this.playerName, this.playerImg,
 			bots, this.twoRoundChecked, this.penaltyChecked,
 			this.pickConfig, this.buzzConfig, this.answerConfig, this.wagerConfig,
 			this.firstRoundCategories, this.secondRoundCategories

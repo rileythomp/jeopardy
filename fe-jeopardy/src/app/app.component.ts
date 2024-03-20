@@ -20,7 +20,7 @@ import { ModalService } from './services/modal.service';
 export class AppComponent implements OnInit, AfterViewInit {
 	protected showAuthOptions: boolean = false
 	protected userAuthenticated: boolean = false
-	protected userImg: string = ''
+	protected playerImg: string = ''
 
 	constructor(
 		private router: Router,
@@ -48,7 +48,7 @@ Please report any issues at https://github.com/rileythomp/jeopardy/issues/new
 
 		this.auth.user.subscribe(user => {
 			this.userAuthenticated = user.authenticated
-			this.userImg = user.imgUrl
+			this.playerImg = user.imgUrl
 		})
 
 		this.auth.GetUser()
