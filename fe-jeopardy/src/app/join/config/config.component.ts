@@ -1,10 +1,9 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { Router } from '@angular/router';
 import { ServerUnavailableMsg } from 'src/app/model/model';
 import { ApiService } from 'src/app/services/api.service';
-import { ModalService } from 'src/app/services/modal.service';
 import { JwtService } from 'src/app/services/jwt.service';
-import { Router } from '@angular/router';
-import { ThisReceiver } from '@angular/compiler';
+import { ModalService } from 'src/app/services/modal.service';
 
 @Component({
 	selector: 'app-config',
@@ -13,9 +12,9 @@ import { ThisReceiver } from '@angular/compiler';
 })
 export class ConfigComponent {
 	@Input() playerName: string
-	protected oneRoundChecked: boolean = true
-	protected twoRoundChecked: boolean = false
-	protected penaltyChecked: boolean = true
+	@Input() oneRoundChecked: boolean = true
+	@Input() twoRoundChecked: boolean = false
+	@Input() penaltyChecked: boolean = true
 	protected botConfig: number = 0
 	protected pickConfig: number = 30
 	protected buzzConfig: number = 30
