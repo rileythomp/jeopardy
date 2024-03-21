@@ -74,8 +74,23 @@ Please report any issues at https://github.com/rileythomp/jeopardy/issues/new
 	async signOut() {
 		if (await this.auth.SignOut()) {
 			this.handleAuthError('Uh oh, there was an unexpected error signing out. Please try again.')
-		} else {
-			location.reload();
+			return
+		}
+		location.reload();
+	}
+
+	async signUp() {
+		if (await this.auth.SignUp({
+			email: 'rileythompson99@gmail.com',
+			password: 'testpassword',
+			options: {
+				data: {
+					first_name: 'Riley',
+					age: 25,
+				}
+			}
+		})) {
+			this.handleAuthError('Uh oh, there was an unexpected error signing up. Please try again.')
 		}
 	}
 
