@@ -12,7 +12,7 @@ import { ModalService } from 'src/app/services/modal.service';
 	styleUrls: ['./config.component.less']
 })
 export class ConfigComponent {
-	private playerImg: string = ''
+	@Input() playerImg: string = ''
 	@Input() playerName: string
 	@Input() oneRoundChecked: boolean = true
 	@Input() twoRoundChecked: boolean = false
@@ -37,12 +37,6 @@ export class ConfigComponent {
 		private router: Router,
 		private auth: AuthService,
 	) { }
-
-	ngOnInit() {
-		this.auth.user.subscribe(user => {
-			this.playerImg = user.imgUrl
-		})
-	}
 
 	searchCategories() {
 		this.searchLoader = true

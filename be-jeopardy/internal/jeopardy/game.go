@@ -410,14 +410,12 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 	} else {
 		g.NonDisputers++
 	}
-	accepted := (g.numPlayers() / 2) + 1
-	declined := (g.numPlayers() + 1) / 2
-	if g.Disputers < accepted && g.NonDisputers < declined {
+	if g.Disputers < g.acceptMajority() && g.NonDisputers < g.declineMajority() {
 		return nil
 	}
 	g.cancelDisputeTimeout()
 	nextPicker := g.DisputePicker
-	if g.Disputers >= accepted {
+	if g.Disputers >= g.acceptMajority() {
 		g.CurQuestion.CurDisputed.Overturned = true
 		g.CurQuestion.CurDisputed.Correct = true
 		for i, ans := range g.CurQuestion.Answers {
@@ -454,17 +452,6 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 	g.setState(RecvPick, nextPicker)
 	g.messageAllPlayers("Dispute resolved")
 	return nil
-}
-
-func (g *Game) numPlayers() int {
-	players := 0
-	for _, p := range g.Players {
-		if p.conn() != nil {
-			players++
-		}
-	}
-	return players
-
 }
 
 func (g *Game) processWager(player GamePlayer, wager int) error {
@@ -518,7 +505,7 @@ func (g *Game) processProtest(protestByPlayer GamePlayer, protestFor string) err
 		return nil
 	}
 	protestForPlayer.addFinalProtestor(protestByPlayer.id())
-	if len(protestForPlayer.finalProtestors()) != len(g.Players)/2+1 {
+	if len(protestForPlayer.finalProtestors()) < g.acceptMajority() {
 		_ = protestByPlayer.sendMessage(Response{
 			Code:      socket.Ok,
 			Message:   "You protested for " + protestForPlayer.name(),
@@ -840,6 +827,28 @@ func (g *Game) numBots() int {
 		}
 	}
 	return bots
+}
+
+func (g *Game) numPlayers() int {
+	players := 0
+	for _, p := range g.Players {
+		if p.conn() != nil {
+			players++
+		}
+	}
+	return players
+}
+
+func (g *Game) numHumans() int {
+	return g.numPlayers() - g.numBots()
+}
+
+func (g *Game) acceptMajority() int {
+	return (g.numPlayers() / 2) + 1
+}
+
+func (g *Game) declineMajority() int {
+	return (g.numPlayers() + 1) / 2
 }
 
 func (g *Game) nextImg() string {

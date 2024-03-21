@@ -8,6 +8,7 @@ import { Component, Input } from '@angular/core';
 export class AuthButtonComponent {
 	@Input() buttonText: string
 	@Input() imgUrl: string
+	@Input() iconName: string
 
 	constructor() { }
 }

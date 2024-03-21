@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Provider, SupabaseClient, createClient } from '@supabase/supabase-js';
+import { Provider, SignUpWithPasswordCredentials, SupabaseClient, createClient } from '@supabase/supabase-js';
 import { Observable, Subject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { User } from '../model/model';
@@ -29,6 +29,15 @@ export class AuthService {
 			name: data.user?.user_metadata['full_name']
 		}
 		this.userSubject.next(user)
+	}
+
+	public async SignUp(credentials: SignUpWithPasswordCredentials): Promise<Error | null> {
+		let { data, error } = await this.supabase.auth.signUp(credentials)
+		if (error) {
+			console.error(error)
+			return error
+		}
+		return null
 	}
 
 	public async SignIn(provider: string): Promise<Error | null> {

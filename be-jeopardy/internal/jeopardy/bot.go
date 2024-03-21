@@ -27,11 +27,11 @@ var botConfigs = []struct {
 	name   string
 	imgUrl string
 }{
-	{"eager-eagle", "https://i.postimg.cc/8kwgKF8C/eagle.png"},
-	{"golden-gorilla", "https://i.postimg.cc/QtJZrCH0/gorilla.png"},
-	{"sharp-shark", "https://i.postimg.cc/YqsK7JCK/shark.png"},
-	{"smart-snake", "https://i.postimg.cc/3x0Mxnky/snake.png"},
-	{"tough-tiger", "https://i.postimg.cc/13kknwFv/tiger.png"},
+	{"Eager Eagle", "https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/eagle.png"},
+	{"Golden Gorilla", "https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/gorilla.png"},
+	{"Sharp Shark", "https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/shark.png"},
+	{"Smart Snake", "https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/snake.png"},
+	{"Tough Tiger", "https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/tiger.png"},
 }
 
 func NewBot(name string, i int) *Bot {
@@ -62,7 +62,7 @@ func (p *Bot) processMessages() {
 
 func sendBuzzAfter(ctx context.Context, g *Game, msg Message, passDelay, buzzDelay time.Duration) {
 	ticker := time.NewTicker(1 * time.Second)
-	passedTicks := 0
+	secondsSinceHumansPassed := 0
 	passDelayTimeout := time.After(passDelay)
 	buzzDelayTimeout := time.After(buzzDelay)
 	for {
@@ -78,16 +78,16 @@ func sendBuzzAfter(ctx context.Context, g *Game, msg Message, passDelay, buzzDel
 			g.msgChan <- msg
 			return
 		case <-ticker.C:
-			passes := 0
+			humanPasses := 0
 			for _, player := range g.Players {
-				if !player.canBuzz() {
-					passes++
+				if !player.isBot() && !player.canBuzz() {
+					humanPasses++
 				}
 			}
-			if passes > 1 {
-				passedTicks++
+			if humanPasses == g.numHumans() {
+				secondsSinceHumansPassed++
 			}
-			if passedTicks > 3 {
+			if secondsSinceHumansPassed > 3 {
 				g.msgChan <- msg
 				return
 			}
