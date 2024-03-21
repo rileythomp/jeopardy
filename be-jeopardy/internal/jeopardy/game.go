@@ -454,17 +454,6 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 	return nil
 }
 
-func (g *Game) numPlayers() int {
-	players := 0
-	for _, p := range g.Players {
-		if p.conn() != nil {
-			players++
-		}
-	}
-	return players
-
-}
-
 func (g *Game) processWager(player GamePlayer, wager int) error {
 	if !player.canWager() {
 		return fmt.Errorf("player cannot wager")
@@ -505,14 +494,6 @@ func (g *Game) processWager(player GamePlayer, wager int) error {
 	}
 	g.messageAllPlayers(msg)
 	return nil
-}
-
-func (g *Game) acceptMajority() int {
-	return (g.numPlayers() / 2) + 1
-}
-
-func (g *Game) declineMajority() int {
-	return (g.numPlayers() + 1) / 2
 }
 
 func (g *Game) processProtest(protestByPlayer GamePlayer, protestFor string) error {
@@ -846,6 +827,28 @@ func (g *Game) numBots() int {
 		}
 	}
 	return bots
+}
+
+func (g *Game) numPlayers() int {
+	players := 0
+	for _, p := range g.Players {
+		if p.conn() != nil {
+			players++
+		}
+	}
+	return players
+}
+
+func (g *Game) numHumans() int {
+	return g.numPlayers() - g.numBots()
+}
+
+func (g *Game) acceptMajority() int {
+	return (g.numPlayers() / 2) + 1
+}
+
+func (g *Game) declineMajority() int {
+	return (g.numPlayers() + 1) / 2
 }
 
 func (g *Game) nextImg() string {
