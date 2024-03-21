@@ -175,7 +175,11 @@ func JoinGameByCode(req GameRequest) (*Game, string, error) {
 			player = p
 			player.setId(uuid.New().String())
 			player.setName(req.PlayerName)
-			player.setImg(req.PlayerImg)
+			imgUrl := req.PlayerImg
+			if imgUrl == "" {
+				imgUrl = game.nextImg()
+			}
+			player.setImg(imgUrl)
 			break
 		}
 	}
