@@ -2,7 +2,6 @@ import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { ServerUnavailableMsg } from 'src/app/model/model';
 import { ApiService } from 'src/app/services/api.service';
-import { AuthService } from 'src/app/services/auth.service';
 import { JwtService } from 'src/app/services/jwt.service';
 import { ModalService } from 'src/app/services/modal.service';
 
@@ -12,8 +11,9 @@ import { ModalService } from 'src/app/services/modal.service';
 	styleUrls: ['./config.component.less']
 })
 export class ConfigComponent {
+	@Input() userAuthenticated: boolean = false
 	@Input() playerImg: string = ''
-	@Input() playerName: string
+	@Input() playerName: string = ''
 	@Input() oneRoundChecked: boolean = true
 	@Input() twoRoundChecked: boolean = false
 	@Input() penaltyChecked: boolean = true
@@ -35,7 +35,6 @@ export class ConfigComponent {
 		private modal: ModalService,
 		private jwt: JwtService,
 		private router: Router,
-		private auth: AuthService,
 	) { }
 
 	searchCategories() {

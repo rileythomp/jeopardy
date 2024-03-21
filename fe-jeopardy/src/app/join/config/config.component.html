@@ -3,7 +3,7 @@
         <h3>Jeopardy Configuration</h3>
         <div id='config-inputs' class='flex-row'>
             <div class='game-inputs'>
-                <div>
+                <div *ngIf="!userAuthenticated">
                     <input id="player-name-config" type="text" [(ngModel)]="playerName" placeholder="Enter your name">
                 </div>
                 <div>

@@ -14,7 +14,7 @@ import { ModalService } from '../services/modal.service'
 })
 export class JoinComponent implements OnInit {
 	protected playerName: string = ''
-	private playerImg: string = ''
+	protected playerImg: string = ''
 	protected userAuthenticated: boolean = false
 	protected joinCode: string = ''
 	protected showJoinCodeInput: boolean = false
