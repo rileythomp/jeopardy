@@ -76,7 +76,7 @@ Please report any issues to https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhds
 			this.handleAuthError('Uh oh, there was an unexpected error signing out. Please try again.')
 			return
 		}
-		location.reload();
+		location.replace('');
 	}
 
 	async signUp() {
