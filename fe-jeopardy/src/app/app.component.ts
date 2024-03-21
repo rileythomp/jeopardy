@@ -42,7 +42,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 			     | |                     __/ |
 			     |_|                    |___/ 		
 
-Please report any issues at https://github.com/rileythomp/jeopardy/issues/new
+Please report any issues to https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhdsgNksr8lDUO3hHhVwaIqeO9asIhBWsroNfYZW4Q/viewform
 `
 		console.log(jeopardy)
 

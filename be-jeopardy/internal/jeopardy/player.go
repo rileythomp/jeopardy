@@ -103,12 +103,12 @@ const (
 )
 
 var playerImgs = []string{
-	"https://i.postimg.cc/RFBx8KVW/cat.png",
-	"https://i.postimg.cc/pr0NpSQj/deer.png",
-	"https://i.postimg.cc/4NdkrJZQ/dragon.png",
-	"https://i.postimg.cc/fbXhBBZ4/giraffe.png",
-	"https://i.postimg.cc/t48j38Kt/panda.png",
-	"https://i.postimg.cc/6q6J6KZw/lion.png",
+	"https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/cat.png",
+	"https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/deer.png",
+	"https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/dragon.png",
+	"https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/giraffe.png",
+	"https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/panda.png",
+	"https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/lion.png",
 }
 
 func NewPlayer(name string, imgUrl string) *Player {
