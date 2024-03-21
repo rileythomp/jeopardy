@@ -62,7 +62,7 @@ func (p *Bot) processMessages() {
 
 func sendBuzzAfter(ctx context.Context, g *Game, msg Message, passDelay, buzzDelay time.Duration) {
 	ticker := time.NewTicker(1 * time.Second)
-	passedTicks := 0
+	secondsSinceAllHumansPassed := 0
 	passDelayTimeout := time.After(passDelay)
 	buzzDelayTimeout := time.After(buzzDelay)
 	for {
@@ -78,16 +78,16 @@ func sendBuzzAfter(ctx context.Context, g *Game, msg Message, passDelay, buzzDel
 			g.msgChan <- msg
 			return
 		case <-ticker.C:
-			passes := 0
+			humans, humanPasses := len(g.Players)-g.numBots(), 0
 			for _, player := range g.Players {
-				if !player.canBuzz() {
-					passes++
+				if !player.isBot() && !player.canBuzz() {
+					humanPasses++
 				}
 			}
-			if passes > 1 {
-				passedTicks++
+			if humanPasses == humans {
+				secondsSinceAllHumansPassed++
 			}
-			if passedTicks > 3 {
+			if secondsSinceAllHumansPassed > 3 {
 				g.msgChan <- msg
 				return
 			}
