@@ -116,8 +116,8 @@ export class RegisterComponent {
 			password: this.password,
 			options: {
 				data: {
-					username: this.username,
-					imgUrl: this.uploadedImgUrl
+					full_name: this.username,
+					avatar_url: this.uploadedImgUrl
 				}
 			}
 		}
