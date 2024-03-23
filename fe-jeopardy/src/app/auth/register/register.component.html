@@ -15,17 +15,17 @@
                 <input #userImg (change)='handleUserUpload($event)' type="file" accept=".jpg, .jpeg, .png">
             </div>
             <div class='flex-row'>
-                <input (focus)="emailBorder('1px solid grey')" #emailInput [(ngModel)]="email" type="text" placeholder="Email">
+                <input (focus)="emailBorder('1px solid grey')" #emailInput [(ngModel)]="email" type="email" autocomplete="email" placeholder="Email">
             </div>
             <div id='password' class='flex-column'>
                 <div id='password-inputs' class='flex-row'>
                     <div id='password'>
-                        <input (focus)="passwordsBorder('1px solid grey')" #passwordInput [(ngModel)]="password" type="password" placeholder="Password">
+                        <input (focus)="passwordsBorder('1px solid grey')" #passwordInput [(ngModel)]="password" type="password" autocomplete="new-password" placeholder="Password">
                         <ion-icon *ngIf='showEye' (click)='showPassword(true)' name='eye-outline'></ion-icon>
                         <ion-icon *ngIf='!showEye' (click)='showPassword(false)' name='eye-off-outline'></ion-icon>
                     </div>
                     <div>
-                        <input (focus)="passwordsBorder('1px solid grey')" #confirmedPasswordInput [(ngModel)]="confirmedPassword" type="password" placeholder="Confirm password">
+                        <input (focus)="passwordsBorder('1px solid grey')" #confirmedPasswordInput [(ngModel)]="confirmedPassword" type="password"  autocomplete="new-password" placeholder="Confirm password">
                     </div>
                 </div>
                 <div id='password-requirements'>
