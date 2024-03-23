@@ -3,6 +3,7 @@ import { SignUpWithPasswordCredentials } from '@supabase/supabase-js';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
 import { StorageService } from 'src/app/services/storage.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
 	selector: 'app-register',
@@ -116,6 +117,7 @@ export class RegisterComponent {
 			email: this.email,
 			password: this.password,
 			options: {
+				emailRedirectTo: environment.redirectUrl,
 				data: {
 					full_name: this.username,
 					avatar_url: this.uploadedImgUrl
