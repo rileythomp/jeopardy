@@ -9,3 +9,7 @@ updates:
     directory: "/fe-jeopardy" # Location of package manifests
     schedule:
       interval: "daily"
+  - package-ecosystem: "gomod"
+    directory: "/be-jeopardy"
+    schedule:
+      interval: "daily"
