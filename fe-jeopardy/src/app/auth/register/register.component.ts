@@ -1,9 +1,7 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { SignUpWithPasswordCredentials } from '@supabase/supabase-js';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
 import { StorageService } from 'src/app/services/storage.service';
-import { environment } from 'src/environments/environment';
 
 @Component({
 	selector: 'app-register',
@@ -113,18 +111,7 @@ export class RegisterComponent {
 		if (hasError) {
 			return
 		}
-		let credentials: SignUpWithPasswordCredentials = {
-			email: this.email,
-			password: this.password,
-			options: {
-				emailRedirectTo: environment.redirectUrl,
-				data: {
-					full_name: this.username,
-					avatar_url: this.uploadedImgUrl
-				}
-			}
-		}
-		let error = await this.auth.SignUp(credentials)
+		let error = await this.auth.SignUp(this.email, this.password, this.username, this.uploadedImgUrl)
 		if (error) {
 			console.error(error)
 			this.modal.displayMessage('Uh oh, we\'re not able to create new accounts right now. Please try again later.')

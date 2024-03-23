@@ -1,5 +1,4 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { SignInWithPasswordCredentials } from '@supabase/supabase-js';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
 
@@ -42,11 +41,7 @@ export class LoginComponent {
 		if (hasError) {
 			return
 		}
-		let credentials: SignInWithPasswordCredentials = {
-			email: this.email,
-			password: this.password,
-		}
-		let error = await this.auth.SignInWithPassword(credentials)
+		let error = await this.auth.SignInWithPassword(this.email, this.password)
 		if (error) {
 			this.invalidLogin = true
 			this.emailBorder('1px solid red')

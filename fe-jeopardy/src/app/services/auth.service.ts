@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Provider, SignInWithPasswordCredentials, SignUpWithPasswordCredentials } from '@supabase/supabase-js';
+import { Provider } from '@supabase/supabase-js';
 import { Observable, Subject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { User } from '../model/model';
@@ -30,8 +30,18 @@ export class AuthService {
 		this.userSubject.next(user)
 	}
 
-	public async SignUp(credentials: SignUpWithPasswordCredentials): Promise<Error | null> {
-		let { data, error } = await this.supabase.Auth().signUp(credentials)
+	public async SignUp(email: string, password: string, username: string, imgUrl: string): Promise<Error | null> {
+		let { data, error } = await this.supabase.Auth().signUp({
+			email: email,
+			password: password,
+			options: {
+				emailRedirectTo: environment.redirectUrl,
+				data: {
+					full_name: username,
+					avatar_url: imgUrl,
+				}
+			}
+		})
 		if (error) {
 			console.error(error)
 			return error
@@ -53,8 +63,11 @@ export class AuthService {
 		return null
 	}
 
-	public async SignOut(): Promise<Error | null> {
-		let { error } = await this.supabase.Auth().signOut();
+	public async SignInWithPassword(email: string, password: string): Promise<Error | null> {
+		let { data, error } = await this.supabase.Auth().signInWithPassword({
+			email: email,
+			password: password,
+		})
 		if (error) {
 			console.error(error)
 			return error
@@ -62,8 +75,8 @@ export class AuthService {
 		return null
 	}
 
-	public async SignInWithPassword(credentials: SignInWithPasswordCredentials): Promise<Error | null> {
-		let { data, error } = await this.supabase.Auth().signInWithPassword(credentials)
+	public async SignOut(): Promise<Error | null> {
+		let { error } = await this.supabase.Auth().signOut();
 		if (error) {
 			console.error(error)
 			return error
