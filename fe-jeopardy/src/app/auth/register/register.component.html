@@ -1,0 +1,64 @@
+<div class='modal-container'>
+    <div class='modal-message'>
+        <h3>Create an account</h3>
+        <div id='register-inputs' class='flex-column'>
+            <div id='name-inputs' class='flex-row'>
+                <div style='flex-grow: 1;' class='flex-row'>
+                    <input  #usernameInput (focus)="usernameBorder('1px solid grey')" [(ngModel)]="username" type="text" placeholder="Username">
+                </div>
+                <div style='flex-grow: 0;' (click)='showImgUpload()' class='user-img'>
+                    <ion-icon *ngIf='!uploadedImg' name="image-outline"></ion-icon>
+                    <img *ngIf='uploadedImg' [src]='uploadedImgUrl'>
+                </div>
+            </div>
+            <div *ngIf='imgUpload' id='img-upload'>
+                <input #userImg (change)='handleUserUpload($event)' type="file" accept=".jpg, .jpeg, .png">
+            </div>
+            <div class='flex-row'>
+                <input (focus)="emailBorder('1px solid grey')" #emailInput [(ngModel)]="email" type="email" autocomplete="email" placeholder="Email">
+            </div>
+            <div id='password' class='flex-column'>
+                <div id='password-inputs' class='flex-row'>
+                    <div id='password'>
+                        <input (focus)="passwordsBorder('1px solid grey')" #passwordInput [(ngModel)]="password" type="password" autocomplete="new-password" placeholder="Password">
+                        <ion-icon *ngIf='showEye' (click)='showPassword(true)' name='eye-outline'></ion-icon>
+                        <ion-icon *ngIf='!showEye' (click)='showPassword(false)' name='eye-off-outline'></ion-icon>
+                    </div>
+                    <div>
+                        <input (focus)="passwordsBorder('1px solid grey')" #confirmedPasswordInput [(ngModel)]="confirmedPassword" type="password"  autocomplete="new-password" placeholder="Confirm password">
+                    </div>
+                </div>
+                <div id='password-requirements'>
+                    <p>
+                        Password requirements:
+                    </p>
+                    <ul>
+                        <li>
+                            <app-pw-req [satisfied]='password.length > 7' [passwordRequirement]="'At least 8 characters long'"></app-pw-req>
+                        </li>
+                        <li>
+                            <app-pw-req [satisfied]="hasUppercase()" [passwordRequirement]="'At least one uppercase letter'"></app-pw-req>
+                        </li>
+                        <li>
+                            <app-pw-req [satisfied]="hasLowercase()" [passwordRequirement]="'At least one lowercase letter'"></app-pw-req>
+                        </li>
+                        <li>
+                            <app-pw-req [satisfied]="hasNumber()" [passwordRequirement]="'At least one number'"></app-pw-req>
+                        </li>
+                        <li>
+                            <app-pw-req [satisfied]="hasSpecialChar()" [passwordRequirement]="'At least one special character'"></app-pw-req>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>    
+    </div>
+    <div *ngIf='!registerDone' id='register-buttons' class='flex-row'>
+        <button (click)='createAccount()'>Create an account</button>
+        <button (click)='modal.hideRegister()'>Exit</button>
+    </div>
+    <div *ngIf='registerDone'>
+        <p>Thanks for creating an account! A confirmation email has been sent to {{email}}.</p>
+    </div>
+</div>

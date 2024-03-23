@@ -9,6 +9,8 @@ import { AnswersComponent } from './answers/answers.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthButtonComponent } from './auth/auth-button/auth-button.component';
+import { LoginComponent } from './auth/login/login.component';
+import { RegisterComponent } from './auth/register/register.component';
 import { DisputeComponent } from './dispute/dispute.component';
 import { GameMessageComponent } from './game-message/game-message.component';
 import { BoardIntroComponent } from './game/board-intro/board-intro.component';
@@ -26,6 +28,7 @@ import { InstructionsComponent } from './instructions/instructions.component';
 import { ConfigComponent } from './join/config/config.component';
 import { JoinComponent } from './join/join.component';
 import { LinkJoinComponent } from './link-join/link-join.component';
+import { PwReqComponent } from './pw-req/pw-req.component';
 import { WarningComponent } from './warning/warning.component';
 
 @NgModule({
@@ -52,6 +55,9 @@ import { WarningComponent } from './warning/warning.component';
     AnswersComponent,
     PlayerPodiumComponent,
     AuthButtonComponent,
+    RegisterComponent,
+    PwReqComponent,
+    LoginComponent,
   ],
   imports: [
     BrowserModule,
