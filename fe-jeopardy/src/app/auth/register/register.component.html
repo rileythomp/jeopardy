@@ -6,8 +6,8 @@
                 <div style='flex-grow: 1;' class='flex-row'>
                     <input  #usernameInput (focus)="usernameBorder('1px solid grey')" [(ngModel)]="username" type="text" placeholder="Username">
                 </div>
-                <div style='flex-grow: 0;' class='user-img'>
-                    <ion-icon *ngIf='!uploadedImg' (click)='showImgUpload()' name="image-outline"></ion-icon>
+                <div style='flex-grow: 0;' (click)='showImgUpload()' class='user-img'>
+                    <ion-icon *ngIf='!uploadedImg' name="image-outline"></ion-icon>
                     <img *ngIf='uploadedImg' [src]='uploadedImgUrl'>
                 </div>
             </div>
@@ -54,8 +54,11 @@
             </div>
         </div>    
     </div>
-    <div id='register-buttons' class='flex-row'>
+    <div *ngIf='!registerDone' id='register-buttons' class='flex-row'>
         <button (click)='createAccount()'>Create an account</button>
         <button (click)='modal.hideRegister()'>Exit</button>
+    </div>
+    <div *ngIf='registerDone'>
+        <p>Thanks for creating an account! A confirmation email has been sent to {{email}}.</p>
     </div>
 </div>

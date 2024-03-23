@@ -89,4 +89,9 @@ Please report any issues to https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhds
 		this.showAuthOptions = false
 		this.modal.displayMessage(msg)
 	}
+
+	startLogin() {
+		this.showAuthOptions = false
+		this.modal.displayLogin()
+	}
 }

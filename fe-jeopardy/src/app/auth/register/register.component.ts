@@ -18,6 +18,7 @@ export class RegisterComponent {
 	protected email: string = '';
 	protected username: string = '';
 	protected showEye: boolean = true
+	protected registerDone: boolean = false
 	@ViewChild('userImg') userImg: ElementRef
 	@ViewChild('usernameInput') usernameInput: ElementRef
 	@ViewChild('emailInput') emailInput: ElementRef
@@ -127,8 +128,12 @@ export class RegisterComponent {
 			this.modal.displayMessage('Uh oh, there was an error creating your acccount. Please try again later.')
 			return
 		}
-		console.log('created account with following credentials')
-		console.log(credentials)
+		this.usernameInput.nativeElement.disabled = true
+		this.emailInput.nativeElement.disabled = true
+		this.showPassword(false)
+		this.passwordInput.nativeElement.disabled = true
+		this.confirmedPasswordInput.nativeElement.disabled = true
+		this.registerDone = true
 	}
 
 	protected showPassword(show: boolean) {

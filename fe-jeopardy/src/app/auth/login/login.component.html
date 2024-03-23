@@ -1,0 +1,24 @@
+<div class='modal-container flex-column'>
+    <div class='modal-message'>
+        <h3>Sign in with email</h3>
+        <div id='login-inputs' class='flex-column'>
+            <div class='flex-row'>
+                <input (focus)="emailBorder('1px solid grey')" #emailInput [(ngModel)]="email" type="email" autocomplete="email" placeholder="Email">
+            </div>
+            <div id='password' class='flex-row'>
+                <input (focus)="passwordsBorder('1px solid grey')" #passwordInput [(ngModel)]="password" type="password" autocomplete="new-password" placeholder="Password">
+                <ion-icon *ngIf='showEye' (click)='showPassword(true)' name='eye-outline'></ion-icon>
+                <ion-icon *ngIf='!showEye' (click)='showPassword(false)' name='eye-off-outline'></ion-icon>
+            </div>
+        </div>    
+    </div>
+    <div>
+        <p *ngIf='invalidLogin'>
+            Sorry, the email or password you entered is incorrect. Please try again.
+        </p>
+    </div>
+    <div id='login-buttons' class='flex-row'>
+        <button (click)='logIn()'>Sign in</button>
+        <button (click)='modal.hideLogin()'>Exit</button>
+    </div>
+</div>

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Provider, SignUpWithPasswordCredentials } from '@supabase/supabase-js';
+import { Provider, SignInWithPasswordCredentials, SignUpWithPasswordCredentials } from '@supabase/supabase-js';
 import { Observable, Subject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { User } from '../model/model';
@@ -55,6 +55,15 @@ export class AuthService {
 
 	public async SignOut(): Promise<Error | null> {
 		let { error } = await this.supabase.Auth().signOut();
+		if (error) {
+			console.error(error)
+			return error
+		}
+		return null
+	}
+
+	public async SignInWithPassword(credentials: SignInWithPasswordCredentials): Promise<Error | null> {
+		let { data, error } = await this.supabase.Auth().signInWithPassword(credentials)
 		if (error) {
 			console.error(error)
 			return error

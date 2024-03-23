@@ -9,6 +9,7 @@ import { AnswersComponent } from './answers/answers.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthButtonComponent } from './auth/auth-button/auth-button.component';
+import { LoginComponent } from './auth/login/login.component';
 import { RegisterComponent } from './auth/register/register.component';
 import { DisputeComponent } from './dispute/dispute.component';
 import { GameMessageComponent } from './game-message/game-message.component';
@@ -56,6 +57,7 @@ import { WarningComponent } from './warning/warning.component';
     AuthButtonComponent,
     RegisterComponent,
     PwReqComponent,
+    LoginComponent,
   ],
   imports: [
     BrowserModule,

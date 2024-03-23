@@ -12,10 +12,12 @@ export class ModalService {
 	analytics: boolean
 	config: boolean
 	register: boolean
+	login: boolean
 
 	constructor(private game: GameStateService) { }
 
 	displayMessage(msg: string) {
+		this.login = false
 		this.register = false
 		this.config = false
 		this.instructions = false
@@ -29,6 +31,7 @@ export class ModalService {
 	}
 
 	displayDispute() {
+		this.login = false
 		this.register = false
 		this.config = false
 		this.instructions = false
@@ -39,6 +42,7 @@ export class ModalService {
 		if (this.game.InDispute()) {
 			return
 		}
+		this.login = false
 		this.register = false
 		this.config = false
 		this.analytics = false
@@ -49,6 +53,7 @@ export class ModalService {
 		if (this.game.InDispute()) {
 			return
 		}
+		this.login = false
 		this.register = false
 		this.config = false
 		this.instructions = false
@@ -59,6 +64,7 @@ export class ModalService {
 		if (this.game.InDispute()) {
 			return
 		}
+		this.login = false
 		this.register = false
 		this.instructions = false
 		this.analytics = false
@@ -69,10 +75,22 @@ export class ModalService {
 		if (this.game.InDispute()) {
 			return
 		}
+		this.login = false
 		this.config = false
 		this.instructions = false
 		this.analytics = false
 		this.register = true
+	}
+
+	displayLogin() {
+		if (this.game.InDispute()) {
+			return
+		}
+		this.config = false
+		this.instructions = false
+		this.analytics = false
+		this.register = false
+		this.login = true
 	}
 
 	hideGameMessage() {
@@ -93,6 +111,10 @@ export class ModalService {
 
 	hideRegister() {
 		this.register = false
+	}
+
+	hideLogin() {
+		this.login = false
 	}
 
 	getGameMessage(): string {
@@ -117,5 +139,9 @@ export class ModalService {
 
 	showRegister(): boolean {
 		return this.register
+	}
+
+	showLogin(): boolean {
+		return this.login
 	}
 }
