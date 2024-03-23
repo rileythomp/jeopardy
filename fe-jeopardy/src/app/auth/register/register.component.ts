@@ -127,7 +127,7 @@ export class RegisterComponent {
 
 	protected showPassword(show: boolean) {
 		this.passwordInput.nativeElement.type = show ? 'text' : 'password'
-		this.confirmedPasswordInput.nativeElement.type = show ? 'text' : 'password'
+		this.confirmedPasswordInput.nativeElement.type = this.passwordInput.nativeElement.type
 		this.showEye = !show
 	}
 }

@@ -6,7 +6,7 @@
                 <input (focus)="emailBorder('1px solid grey')" #emailInput [(ngModel)]="email" type="email" autocomplete="email" placeholder="Email">
             </div>
             <div id='password' class='flex-row'>
-                <input (focus)="passwordsBorder('1px solid grey')" #passwordInput [(ngModel)]="password" type="password" autocomplete="new-password" placeholder="Password">
+                <input (focus)="passwordsBorder('1px solid grey')" #passwordInput [(ngModel)]="password" type="password" autocomplete="current-password" placeholder="Password">
                 <ion-icon *ngIf='showEye' (click)='showPassword(true)' name='eye-outline'></ion-icon>
                 <ion-icon *ngIf='!showEye' (click)='showPassword(false)' name='eye-off-outline'></ion-icon>
             </div>
