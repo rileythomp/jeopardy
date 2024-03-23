@@ -125,7 +125,7 @@ export class RegisterComponent {
 		let error = await this.auth.SignUp(credentials)
 		if (error) {
 			console.error(error)
-			this.modal.displayMessage('Uh oh, there was an error creating your acccount. Please try again later.')
+			this.modal.displayMessage('Uh oh, we\'re not able to create new accounts right now. Please try again later.')
 			return
 		}
 		this.usernameInput.nativeElement.disabled = true
