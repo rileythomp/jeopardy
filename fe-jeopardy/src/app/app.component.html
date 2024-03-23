@@ -23,7 +23,7 @@
 				<div *ngIf="!userAuthenticated"  class='flex-column'>
 					<app-auth-button (click)="signIn('google')"  [buttonText]="'Sign in with Google'" [imgUrl]="'../../../assets/google.png'"></app-auth-button>
 					<app-auth-button (click)="signIn('github')"  [buttonText]="'Sign in with GitHub'" [imgUrl]="'../../../assets/github.png'"></app-auth-button>
-					<app-auth-button *ngIf='false' (click)="signUp()"  [buttonText]="'Create an account&nbsp;&nbsp;'" [imgUrl]="''" [iconName]="'sign-up'"></app-auth-button>
+					<app-auth-button (click)="signUp()"  [buttonText]="'Create an account&nbsp;&nbsp;'" [imgUrl]="''" [iconName]="'sign-up'"></app-auth-button>
 				</div>
 				<div *ngIf="userAuthenticated">
 					<app-auth-button (click)="signOut()" [buttonText]="'Sign out'" [imgUrl]="''" [iconName]="'sign-out'"></app-auth-button>
@@ -42,3 +42,4 @@
 <app-instructions *ngIf="modal.showInstructions()"></app-instructions>
 <app-analytics *ngIf="modal.showAnalytics()"></app-analytics>
 <app-dispute></app-dispute>
+<app-register *ngIf="showRegistration"></app-register>

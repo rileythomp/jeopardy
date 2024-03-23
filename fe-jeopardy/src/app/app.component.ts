@@ -21,6 +21,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	protected showAuthOptions: boolean = false
 	protected userAuthenticated: boolean = false
 	protected playerImg: string = ''
+	protected showRegistration: boolean = false
 
 	constructor(
 		private router: Router,
@@ -80,18 +81,19 @@ Please report any issues to https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhds
 	}
 
 	async signUp() {
-		if (await this.auth.SignUp({
-			email: 'rileythompson99@gmail.com',
-			password: 'testpassword',
-			options: {
-				data: {
-					first_name: 'Riley',
-					age: 25,
-				}
-			}
-		})) {
-			this.handleAuthError('Uh oh, there was an unexpected error signing up. Please try again.')
-		}
+		this.showRegistration = true
+		// if (await this.auth.SignUp({
+		// 	email: 'rileythompson99@gmail.com',
+		// 	password: 'testpassword',
+		// 	options: {
+		// 		data: {
+		// 			first_name: 'Riley',
+		// 			age: 25,
+		// 		}
+		// 	}
+		// })) {
+		// 	this.handleAuthError('Uh oh, there was an unexpected error signing up. Please try again.')
+		// }
 	}
 
 	handleAuthError(msg: string) {

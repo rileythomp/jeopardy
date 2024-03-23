@@ -9,6 +9,7 @@ import { AnswersComponent } from './answers/answers.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthButtonComponent } from './auth/auth-button/auth-button.component';
+import { RegisterComponent } from './auth/register/register.component';
 import { DisputeComponent } from './dispute/dispute.component';
 import { GameMessageComponent } from './game-message/game-message.component';
 import { BoardIntroComponent } from './game/board-intro/board-intro.component';
@@ -59,6 +60,7 @@ import { WarningComponent } from './warning/warning.component';
     FormsModule,
     HttpClientModule,
     BrowserAnimationsModule,
+    RegisterComponent,
   ],
   providers: [],
   bootstrap: [AppComponent],
