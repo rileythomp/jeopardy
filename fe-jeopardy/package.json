@@ -38,7 +38,7 @@
   },
   "overrides": {
     "@supabase/supabase-js": {
-      "@supabase/gotrue-js": "2.62.2"
+      "@supabase/gotrue-js": "2.61.0"
     }
   }
 }

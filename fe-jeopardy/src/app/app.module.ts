@@ -27,6 +27,7 @@ import { InstructionsComponent } from './instructions/instructions.component';
 import { ConfigComponent } from './join/config/config.component';
 import { JoinComponent } from './join/join.component';
 import { LinkJoinComponent } from './link-join/link-join.component';
+import { PwReqComponent } from './pw-req/pw-req.component';
 import { WarningComponent } from './warning/warning.component';
 
 @NgModule({
@@ -53,6 +54,8 @@ import { WarningComponent } from './warning/warning.component';
     AnswersComponent,
     PlayerPodiumComponent,
     AuthButtonComponent,
+    RegisterComponent,
+    PwReqComponent,
   ],
   imports: [
     BrowserModule,
@@ -60,7 +63,6 @@ import { WarningComponent } from './warning/warning.component';
     FormsModule,
     HttpClientModule,
     BrowserAnimationsModule,
-    RegisterComponent,
   ],
   providers: [],
   bootstrap: [AppComponent],

@@ -11,10 +11,12 @@ export class ModalService {
 	instructions: boolean
 	analytics: boolean
 	config: boolean
+	register: boolean
 
 	constructor(private game: GameStateService) { }
 
 	displayMessage(msg: string) {
+		this.register = false
 		this.config = false
 		this.instructions = false
 		this.analytics = false
@@ -27,6 +29,7 @@ export class ModalService {
 	}
 
 	displayDispute() {
+		this.register = false
 		this.config = false
 		this.instructions = false
 		this.analytics = false
@@ -36,6 +39,7 @@ export class ModalService {
 		if (this.game.InDispute()) {
 			return
 		}
+		this.register = false
 		this.config = false
 		this.analytics = false
 		this.instructions = true
@@ -45,6 +49,7 @@ export class ModalService {
 		if (this.game.InDispute()) {
 			return
 		}
+		this.register = false
 		this.config = false
 		this.instructions = false
 		this.analytics = true
@@ -54,9 +59,20 @@ export class ModalService {
 		if (this.game.InDispute()) {
 			return
 		}
+		this.register = false
 		this.instructions = false
 		this.analytics = false
 		this.config = true
+	}
+
+	displayRegister() {
+		if (this.game.InDispute()) {
+			return
+		}
+		this.config = false
+		this.instructions = false
+		this.analytics = false
+		this.register = true
 	}
 
 	hideGameMessage() {
@@ -73,6 +89,10 @@ export class ModalService {
 
 	hideConfig() {
 		this.config = false
+	}
+
+	hideRegister() {
+		this.register = false
 	}
 
 	getGameMessage(): string {
@@ -93,5 +113,9 @@ export class ModalService {
 
 	showConfig(): boolean {
 		return this.config
+	}
+
+	showRegister(): boolean {
+		return this.register
 	}
 }

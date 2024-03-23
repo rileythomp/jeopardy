@@ -80,20 +80,9 @@ Please report any issues to https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhds
 		location.replace('');
 	}
 
-	async signUp() {
-		this.showRegistration = true
-		// if (await this.auth.SignUp({
-		// 	email: 'rileythompson99@gmail.com',
-		// 	password: 'testpassword',
-		// 	options: {
-		// 		data: {
-		// 			first_name: 'Riley',
-		// 			age: 25,
-		// 		}
-		// 	}
-		// })) {
-		// 	this.handleAuthError('Uh oh, there was an unexpected error signing up. Please try again.')
-		// }
+	startRegistration() {
+		this.showAuthOptions = false
+		this.modal.displayRegister()
 	}
 
 	handleAuthError(msg: string) {

@@ -1,25 +1,24 @@
 import { Injectable } from '@angular/core';
-import { Provider, SignUpWithPasswordCredentials, SupabaseClient, createClient } from '@supabase/supabase-js';
+import { Provider, SignUpWithPasswordCredentials } from '@supabase/supabase-js';
 import { Observable, Subject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { User } from '../model/model';
+import { SupabaseService } from './supabase.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class AuthService {
-	private supabase: SupabaseClient<any, "public", any>
 	private userSubject: Subject<User>
 	public user: Observable<User>
 
-	constructor() {
-		this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
+	constructor(private supabase: SupabaseService) {
 		this.userSubject = new Subject<User>();
 		this.user = this.userSubject.asObservable();
 	}
 
 	public async GetUser() {
-		let { data, error } = await this.supabase.auth.getUser();
+		let { data, error } = await this.supabase.Auth().getUser();
 		if (error) {
 			return
 		}
@@ -32,7 +31,7 @@ export class AuthService {
 	}
 
 	public async SignUp(credentials: SignUpWithPasswordCredentials): Promise<Error | null> {
-		let { data, error } = await this.supabase.auth.signUp(credentials)
+		let { data, error } = await this.supabase.Auth().signUp(credentials)
 		if (error) {
 			console.error(error)
 			return error
@@ -41,7 +40,7 @@ export class AuthService {
 	}
 
 	public async SignIn(provider: string): Promise<Error | null> {
-		let { data, error } = await this.supabase.auth.signInWithOAuth({
+		let { data, error } = await this.supabase.Auth().signInWithOAuth({
 			provider: provider as Provider,
 			options: {
 				redirectTo: environment.redirectUrl,
@@ -55,7 +54,7 @@ export class AuthService {
 	}
 
 	public async SignOut(): Promise<Error | null> {
-		let { error } = await this.supabase.auth.signOut();
+		let { error } = await this.supabase.Auth().signOut();
 		if (error) {
 			console.error(error)
 			return error
