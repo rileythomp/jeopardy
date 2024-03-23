@@ -41,7 +41,7 @@ Play here: https://playjeopardy.netlify.app
 
 ### Features
 
-- Sign in with Google and GitHub accounts
+- Sign in with Google and GitHub accounts or email
 
 - Game configuration
 
