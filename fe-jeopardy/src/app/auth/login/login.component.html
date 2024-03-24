@@ -15,7 +15,14 @@
                     Forgot your password?
                 </p>
                 <button (click)='sendPasswordResetEmail()' *ngIf='showSendReset' id='reset-button'>
-                    Send password reset email
+                    <div class='icon-text'>
+                        <div>
+                            <ion-icon name="paper-plane-outline"></ion-icon>
+                        </div>
+                        <p>
+                            Send password reset email
+                        </p>
+                    </div>
                 </button>
             </div>
         </div>    

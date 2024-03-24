@@ -31,7 +31,16 @@
         <div>
             <p class='link' (click)='showPasswordReset = !showPasswordReset'>Reset password</p>
             <div *ngIf='showPasswordReset'>
-                <button (click)='sendPasswordResetEmail()'>Send password reset email</button>
+                <button (click)='sendPasswordResetEmail()'>
+                    <div class='icon-text'>
+                        <div>
+                            <ion-icon name="paper-plane-outline"></ion-icon>
+                        </div>
+                        <p>
+                            Send password reset email
+                        </p>
+                    </div>
+                </button>
             </div>
         </div>
     </div>
