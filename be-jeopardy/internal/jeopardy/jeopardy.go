@@ -12,9 +12,9 @@ import (
 )
 
 type GameRequest struct {
-	PlayerName            string        `json:"playerName"`
-	PlayerImg             string        `json:"playerImg"`
-	PlayerEmail           string        `json:"playerEmail"`
+	PlayerName            string        `json:"name"`
+	PlayerImg             string        `json:"imgUrl"`
+	PlayerEmail           string        `json:"email"`
 	JoinCode              string        `json:"joinCode"`
 	Bots                  int           `json:"bots"`
 	FullGame              bool          `json:"fullGame"`
