@@ -2,6 +2,7 @@ import { Component, ElementRef, ViewChild } from '@angular/core';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
 import { StorageService } from 'src/app/services/storage.service';
+import { environment } from 'src/environments/environment';
 import { NewPasswordComponent } from '../new-password/new-password.component';
 
 @Component({
@@ -12,7 +13,7 @@ import { NewPasswordComponent } from '../new-password/new-password.component';
 export class RegisterComponent {
 	protected uploadedImg: boolean = false;
 	protected imgUpload: boolean = false;
-	protected uploadedImgUrl: string = 'https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_user_imgs/anonymous-user.jpg';
+	protected uploadedImgUrl: string = `${environment.supabaseUrl}}/storage/v1/object/public/${this.storage.UserImgs}/anonymous-user.jpg`
 	protected email: string = '';
 	protected username: string = '';
 	protected registerDone: boolean = false
