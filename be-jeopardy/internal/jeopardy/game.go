@@ -64,6 +64,7 @@ type (
 		AddAlternative(alternative, answer string) error
 		AddIncorrect(incorrect, clue string) error
 		SaveGameAnalytics(gameID uuid.UUID, createdAt int64, fr db.AnalyticsRound, sr db.AnalyticsRound) error
+		IncrementPlayerGames(email string, wins, points, answers, correct int) error
 		Close()
 	}
 

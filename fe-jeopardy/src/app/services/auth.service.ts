@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Provider } from '@supabase/supabase-js';
-import { Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { User } from '../model/model';
 import { SupabaseService } from './supabase.service';
@@ -9,11 +9,17 @@ import { SupabaseService } from './supabase.service';
 	providedIn: 'root'
 })
 export class AuthService {
-	private userSubject: Subject<User>
+	private userSubject: BehaviorSubject<User>
 	public user: Observable<User>
 
 	constructor(private supabase: SupabaseService) {
-		this.userSubject = new Subject<User>();
+		this.userSubject = new BehaviorSubject<User>({
+			email: '',
+			imgUrl: '',
+			authenticated: false,
+			name: '',
+			dateJoined: ''
+		});
 		this.user = this.userSubject.asObservable();
 	}
 

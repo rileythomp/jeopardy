@@ -17,30 +17,36 @@ export class ApiService {
         private jwt: JwtService,
     ) { }
 
+    GetPlayerAnalytics(email: string): Observable<any> {
+        return this.get(`analytics/players?email=${email}`)
+    }
+
     CreatePrivateGame(
-        playName: string, playerImg: string, bots: number, fullGame: boolean, penalty: boolean,
+        name: string, imgUrl: string, email: string, bots: number, fullGame: boolean, penalty: boolean,
         pickConfig: number, buzzConfig: number, answerConfig: number, wagerConfig: number,
         firstRoundCategories: any[], secondRoundCategories: any[]
     ): Observable<any> {
         return this.post('games', {
-            playerName: playName, playerImg: playerImg, bots: bots, fullGame: fullGame, penalty: penalty,
+            name: name, imgUrl: imgUrl, email: email, bots: bots, fullGame: fullGame, penalty: penalty,
             pickConfig: pickConfig, buzzConfig: buzzConfig, answerConfig: answerConfig, wagerConfig: wagerConfig,
             firstRoundCategories: firstRoundCategories, secondRoundCategories: secondRoundCategories,
         })
     }
 
-    JoinGameByCode(playerName: string, playerImg: string, joinCode: string): Observable<any> {
+    JoinGameByCode(name: string, imgUrl: string, email: string, joinCode: string): Observable<any> {
         return this.put(`games/${joinCode}`, {
-            playerName: playerName,
-            playerImg: playerImg,
+            name: name,
+            imgUrl: imgUrl,
+            email: email,
             joinCode: joinCode,
         })
     }
 
-    JoinPublicGame(playerName: string, playerImg: string): Observable<any> {
+    JoinPublicGame(name: string, imgUrl: string, email: string): Observable<any> {
         return this.put('games', {
-            playerName: playerName,
-            playerImg: playerImg,
+            name: name,
+            imgUrl: imgUrl,
+            email: email,
             fullGame: true,
         })
     }

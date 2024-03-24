@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AuthService } from 'src/app/services/auth.service';
 import { StorageService } from 'src/app/services/storage.service';
 import { User } from '../model/model';
+import { ApiService } from '../services/api.service';
 import { ModalService } from '../services/modal.service';
 
 @Component({
@@ -9,23 +10,61 @@ import { ModalService } from '../services/modal.service';
 	templateUrl: './profile.component.html',
 	styleUrl: './profile.component.less'
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
 	protected user: User
 	protected showImgUpload: boolean = false
 	protected showPasswordReset: boolean = false
 	protected editName = false
 	protected editedUserName = ''
+	protected playSomeGames = false
+	protected analytics: {
+		wins: number,
+		games: number,
+		points: number,
+		answers: number,
+		correct: number,
+		maxPoints: number,
+		maxCorrect: number,
+		winPercentage: number,
+		correctPercentage: number,
+	}
 
 	constructor(
 		private auth: AuthService,
 		private storage: StorageService,
 		private modal: ModalService,
+		private api: ApiService,
 	) {
 		this.auth.user.subscribe(user => {
 			this.user = user
 			this.editedUserName = this.user.name
 		})
-		this.auth.GetUser();
+	}
+
+	async ngOnInit() {
+		await this.auth.GetUser()
+		this.api.GetPlayerAnalytics(this.user.email).subscribe({
+			next: (resp: any) => {
+				this.analytics = resp
+				this.analytics.winPercentage = Math.round((resp.wins / resp.games) * 1000) / 10
+				this.analytics.correctPercentage = Math.round((resp.correct / resp.answers) * 1000) / 10
+			},
+			error: (err: any) => {
+				console.error(err)
+				this.playSomeGames = true
+				this.analytics = {
+					wins: 0,
+					games: 0,
+					points: 0,
+					answers: 0,
+					correct: 0,
+					maxPoints: 0,
+					maxCorrect: 0,
+					winPercentage: 0,
+					correctPercentage: 0,
+				}
+			}
+		})
 	}
 
 	async changeProfilePicture(event: any) {

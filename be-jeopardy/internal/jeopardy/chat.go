@@ -10,7 +10,7 @@ import (
 )
 
 type ChatMessage struct {
-	PlayerName string `json:"playerName"`
+	PlayerName string `json:"name"`
 	Message    string `json:"message"`
 	TimeStamp  int64  `json:"timeStamp"`
 }

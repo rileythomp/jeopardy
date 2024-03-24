@@ -50,7 +50,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 			console.log(resp)
 
 			this.messages.push({
-				username: resp.playerName,
+				username: resp.name,
 				message: resp.message,
 				timestamp: resp.timeStamp,
 			})

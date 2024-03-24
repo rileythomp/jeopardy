@@ -22,6 +22,7 @@ type SafeConn interface {
 type GamePlayer interface {
 	id() string
 	name() string
+	email() string
 	conn() SafeConn
 	chatConn() SafeConn
 	score() int
@@ -74,6 +75,7 @@ type GamePlayer interface {
 type Player struct {
 	Id              string          `json:"id"`
 	Name            string          `json:"name"`
+	Email           string          `json:"email"`
 	Score           int             `json:"score"`
 	CanPick         bool            `json:"canPick"`
 	CanBuzz         bool            `json:"canBuzz"`
@@ -111,10 +113,11 @@ var playerImgs = []string{
 	"https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/lion.png",
 }
 
-func NewPlayer(name string, imgUrl string) *Player {
+func NewPlayer(name, imgUrl, email string) *Player {
 	return &Player{
 		Id:                  uuid.New().String(),
 		Name:                name,
+		Email:               email,
 		Score:               0,
 		CanPick:             false,
 		CanBuzz:             false,
@@ -224,6 +227,10 @@ func (p *Player) id() string {
 
 func (p *Player) name() string {
 	return p.Name
+}
+
+func (p *Player) email() string {
+	return p.Email
 }
 
 func (p *Player) conn() SafeConn {
