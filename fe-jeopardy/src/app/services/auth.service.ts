@@ -20,7 +20,7 @@ export class AuthService {
 	public async UpdateUserImg(url: string): Promise<Error | null> {
 		let { data, error } = await this.supabase.Auth().updateUser({
 			data: {
-				avatar_url: url,
+				user_img_url: url,
 			}
 		})
 		if (error) {
@@ -59,7 +59,7 @@ export class AuthService {
 		}
 		let user: User = {
 			email: data.user?.email ?? '',
-			imgUrl: data.user?.user_metadata['avatar_url'],
+			imgUrl: data.user?.user_metadata['user_img_url'] ?? data.user?.user_metadata['avatar_url'],
 			authenticated: true,
 			name: data.user?.user_metadata['full_name'],
 			dateJoined: this.formattedDate(data.user?.confirmed_at ?? '')

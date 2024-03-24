@@ -1,28 +1,24 @@
-<div class='modal-container'>
-    <div class='modal-message'>
-        <h3>Create an account</h3>
-        <div id='register-inputs' class='flex-column'>
-            <div id='name-inputs' class='flex-row'>
-                <div style='flex-grow: 1;' class='flex-row'>
-                    <input  #usernameInput (focus)="usernameBorder('1px solid grey')" [(ngModel)]="username" type="text" placeholder="Username">
-                </div>
-                <div style='flex-grow: 0;' (click)='showImgUpload()' class='user-img'>
-                    <ion-icon *ngIf='!uploadedImg' name="image-outline"></ion-icon>
-                    <img *ngIf='uploadedImg' [src]='uploadedImgUrl'>
-                </div>
-            </div>
-            <div *ngIf='imgUpload' id='img-upload'>
-                <input #userImg (change)='handleUserUpload($event)' type="file" accept=".jpg, .jpeg, .png">
-            </div>
-            <div class='flex-row'>
-                <input (focus)="emailBorder('1px solid grey')" #emailInput [(ngModel)]="email" type="email" autocomplete="email" placeholder="Email">
-            </div>
-            <div>
-                <app-new-password [inputFlexDirection]="'flex-row'"></app-new-password>
-            </div>
-        </div>    
+<div class='modal-container flex-column'>
+    <h3>Create an account</h3>
+    <div class='flex-row'>
+        <div style='flex-grow: 1;' class='flex-row'>
+            <input  #usernameInput (focus)="usernameBorder('1px solid grey')" [(ngModel)]="username" type="text" placeholder="Username">
+        </div>
+        <div style='flex-grow: 0;' (click)='showImgUpload()' class='user-img'>
+            <ion-icon *ngIf='!uploadedImg' name="image-outline"></ion-icon>
+            <img *ngIf='uploadedImg' [src]='uploadedImgUrl'>
+        </div>
     </div>
-    <div *ngIf='!registerDone' id='register-buttons' class='flex-row'>
+    <div *ngIf='imgUpload'>
+        <input #userImg (change)='handleUserUpload($event)' type="file" accept=".jpg, .jpeg, .png">
+    </div>
+    <div class='flex-row'>
+        <input (focus)="emailBorder('1px solid grey')" #emailInput [(ngModel)]="email" type="email" autocomplete="email" placeholder="Email">
+    </div>
+    <div>
+        <app-new-password [inputFlexDirection]="'flex-row'"></app-new-password>
+    </div>
+    <div *ngIf='!registerDone' class='flex-row'>
         <button (click)='createAccount()'>Create an account</button>
         <button (click)='modal.hideRegister()'>Exit</button>
     </div>
