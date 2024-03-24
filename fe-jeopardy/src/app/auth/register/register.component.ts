@@ -13,7 +13,7 @@ import { NewPasswordComponent } from '../new-password/new-password.component';
 export class RegisterComponent {
 	protected uploadedImg: boolean = false;
 	protected imgUpload: boolean = false;
-	protected uploadedImgUrl: string = `${environment.supabaseUrl}}/storage/v1/object/public/${this.storage.UserImgs}/anonymous-user.jpg`
+	protected uploadedImgUrl: string = `${environment.supabaseUrl}/storage/v1/object/public/${this.storage.UserImgs}/anonymous-user.jpg`
 	protected email: string = '';
 	protected username: string = '';
 	protected registerDone: boolean = false

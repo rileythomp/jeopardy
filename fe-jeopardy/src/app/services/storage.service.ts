@@ -3,12 +3,10 @@ import { environment } from 'src/environments/environment';
 import { v4 as uuidv4 } from 'uuid';
 import { SupabaseService } from './supabase.service';
 
-
 @Injectable({
 	providedIn: 'root'
 })
 export class StorageService {
-
 	readonly UserImgs: string = 'jeopardy_user_imgs'
 
 	constructor(private supabase: SupabaseService) { }
