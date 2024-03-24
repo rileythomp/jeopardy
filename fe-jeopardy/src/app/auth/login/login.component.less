@@ -1,22 +1,20 @@
-.modal-container {
+.flex-row,
+.flex-column {
     gap: 1em;
+}
 
+
+.modal-container {
     p {
         margin: 0;
     }
 
     #login-inputs {
-        gap: 1em;
-
-        #password-inputs {
-            gap: 1em;
-        }
-
         #password {
-            gap: 1em;
             align-items: center;
             justify-content: center;
             position: relative;
+            margin-bottom: 0.5em;
 
             ion-icon {
                 font-size: 1.5em;
@@ -29,9 +27,10 @@
                 transform: scale(1.1);
             }
         }
-    }
 
-    #login-buttons {
-        gap: 1em;
+        #reset-button {
+            padding: 0.5em 0.75em;
+            margin-top: 0.5em;
+        }
     }
 }

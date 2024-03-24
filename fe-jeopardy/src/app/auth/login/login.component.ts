@@ -11,7 +11,8 @@ export class LoginComponent {
 	protected password: string = '';
 	protected email: string = '';
 	protected showEye: boolean = true
-	protected invalidLogin: boolean = false
+	protected loginMessage: string = ''
+	protected showSendReset: boolean = false
 	@ViewChild('emailInput') emailInput: ElementRef
 	@ViewChild('passwordInput') passwordInput: ElementRef
 
@@ -30,7 +31,7 @@ export class LoginComponent {
 
 	async logIn() {
 		let hasError = false
-		if (!this.email) {
+		if (!this.validEmail()) {
 			this.emailBorder('1px solid red')
 			hasError = true
 		}
@@ -41,9 +42,8 @@ export class LoginComponent {
 		if (hasError) {
 			return
 		}
-		let error = await this.auth.SignInWithPassword(this.email, this.password)
-		if (error) {
-			this.invalidLogin = true
+		if (await this.auth.SignInWithPassword(this.email, this.password)) {
+			this.loginMessage = 'Sorry, the email or password you entered is incorrect. Please try again.'
 			this.emailBorder('1px solid red')
 			this.passwordsBorder('1px solid red')
 			return
@@ -55,4 +55,22 @@ export class LoginComponent {
 		this.passwordInput.nativeElement.type = show ? 'text' : 'password'
 		this.showEye = !show
 	}
+
+	protected async sendPasswordResetEmail() {
+		if (!this.validEmail()) {
+			this.emailBorder('1px solid red')
+			return
+		}
+		if (await this.auth.SendPasswordResetEmail(this.email)) {
+			this.loginMessage = 'Sorry, there was an error sending the password reset email. Please try again later.'
+			return
+		}
+		this.loginMessage = 'Password reset email sent.'
+		this.showSendReset = false
+	}
+
+	private validEmail(): boolean {
+		return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
+	}
+
 }
