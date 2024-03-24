@@ -11,9 +11,7 @@
                     <ion-icon *ngIf='showEye' (click)='showPassword(true)' name='eye-outline'></ion-icon>
                     <ion-icon *ngIf='!showEye' (click)='showPassword(false)' name='eye-off-outline'></ion-icon>
                 </div>
-                <p (click)='showSendReset = !showSendReset' class='link'>
-                    Forgot your password?
-                </p>
+                <p (click)='showSendReset = !showSendReset' class='link'>Forgot your password?</p>
                 <button (click)='sendPasswordResetEmail()' *ngIf='showSendReset' id='reset-button'>
                     <div class='icon-text'>
                         <div><ion-icon name="paper-plane-outline"></ion-icon></div>
@@ -23,11 +21,7 @@
             </div>
         </div>    
     </div>
-    <div>
-        <p *ngIf="loginMessage != ''">
-            {{loginMessage}}
-        </p>
-    </div>
+    <div><p *ngIf="loginMessage != ''">{{loginMessage}}</p></div>
     <div id='login-buttons' class='flex-row'>
         <button (click)='logIn()'>Sign in</button>
         <button (click)='modal.hideLogin()'>Exit</button>
