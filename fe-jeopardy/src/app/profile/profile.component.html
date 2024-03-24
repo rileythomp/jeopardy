@@ -3,9 +3,9 @@
         <div>
             <img [src]="user.imgUrl" alt="">
             <p class='link' (click)='showImgUpload = !showImgUpload'>Change profile picture</p>
-        </div>
-        <div *ngIf='showImgUpload'>
-            <input #userImg (change)='changeProfilePicture($event)' type="file" accept=".jpg, .jpeg, .png">
+            <div *ngIf='showImgUpload'>
+                <input #userImg (change)='changeProfilePicture($event)' type="file" accept=".jpg, .jpeg, .png">
+            </div>
         </div>
         <div *ngIf='!editName' class='profile-username'>
             <p style='font-size: 2em;'>{{ user.name }}</p>
@@ -30,9 +30,9 @@
         </div>
         <div>
             <p class='link' (click)='showPasswordReset = !showPasswordReset'>Reset password</p>
-        </div>
-        <div *ngIf='showPasswordReset'>
-            <button (click)='sendPasswordResetEmail()'>Click here to reset your password</button>
+            <div *ngIf='showPasswordReset'>
+                <button (click)='sendPasswordResetEmail()'>Click here to reset your password</button>
+            </div>
         </div>
     </div>
     <div id='profile-main-panel' class='profile-panel'>
