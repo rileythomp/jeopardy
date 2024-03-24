@@ -2,6 +2,7 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
+import { User } from './model/model';
 import { AuthService } from './services/auth.service';
 import { ModalService } from './services/modal.service';
 
@@ -19,8 +20,7 @@ import { ModalService } from './services/modal.service';
 })
 export class AppComponent implements OnInit, AfterViewInit {
 	protected showAuthOptions: boolean = false
-	protected userAuthenticated: boolean = false
-	protected playerImg: string = ''
+	protected user: User
 	protected showRegistration: boolean = false
 
 	constructor(
@@ -48,8 +48,7 @@ Please report any issues to https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhds
 		console.log(jeopardy)
 
 		this.auth.user.subscribe(user => {
-			this.userAuthenticated = user.authenticated
-			this.playerImg = user.imgUrl
+			this.user = user
 		})
 
 		this.auth.GetUser()

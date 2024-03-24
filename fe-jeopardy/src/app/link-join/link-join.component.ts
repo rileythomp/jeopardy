@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ServerUnavailableMsg } from '../model/model';
+import { ServerUnavailableMsg, User } from '../model/model';
 import { ApiService } from '../services/api.service';
 import { AuthService } from '../services/auth.service';
 import { JwtService } from '../services/jwt.service';
@@ -13,9 +13,7 @@ import { ModalService } from '../services/modal.service';
 })
 export class LinkJoinComponent {
     protected joinCode: string
-    protected playerName: string
-    private playerImg: string = ''
-    private playerEmail: string = ''
+    protected user: User
 
     constructor(
         private route: ActivatedRoute,
@@ -30,15 +28,15 @@ export class LinkJoinComponent {
 
     ngOnInit() {
         this.auth.user.subscribe(user => {
-            this.playerImg = user.imgUrl
-            this.playerName = user.name
-            this.playerEmail = user.email
-            this.joinGame()
+            this.user = user
+            if (this.user.authenticated) {
+                this.joinGame()
+            }
         })
     }
 
     joinGame() {
-        this.api.JoinGameByCode(this.playerName, this.playerImg, this.playerEmail, this.joinCode).subscribe({
+        this.api.JoinGameByCode(this.user.name, this.user.imgUrl, this.user.email, this.joinCode).subscribe({
             next: (resp: any) => {
                 this.jwt.SetJWT(resp.token);
                 this.router.navigate([`/game/${resp.game.name}`]);

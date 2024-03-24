@@ -1,7 +1,7 @@
 <div class='join-container flex-column'>
     <div class='flex-column gap15'>
-        <input *ngIf="!userAuthenticated" id="player-name-join" type="text" [(ngModel)]="playerName" placeholder="Enter your name">
-        <p style='margin: 0;' *ngIf="userAuthenticated">Welcome, {{playerName}}</p>
+        <input *ngIf="!user.authenticated" id="player-name-join" type="text" [(ngModel)]="user.name" placeholder="Enter your name">
+        <p style='margin: 0;' *ngIf="user.authenticated">Welcome, {{user.name}}</p>
 
         <div class='flex-row gap15'>
             <!-- <button (click)="joinPublicGame()">Join public game</button> -->
@@ -42,4 +42,4 @@
     <button (click)="rejoin()">Disconnected? Click to rejoin</button>
 </div>
 
-<app-config *ngIf="modal.showConfig()" [userAuthenticated]="userAuthenticated" [playerEmail]='playerEmail' [playerName]="playerName" [playerImg]="playerImg" [oneRoundChecked]="oneRoundChecked" [twoRoundChecked]="twoRoundChecked" [penaltyChecked]="penaltyChecked"></app-config>
+<app-config *ngIf="modal.showConfig()" [user]="user" [oneRoundChecked]="oneRoundChecked" [twoRoundChecked]="twoRoundChecked" [penaltyChecked]="penaltyChecked"></app-config>
