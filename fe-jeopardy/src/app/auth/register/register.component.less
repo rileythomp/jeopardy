@@ -1,77 +1,41 @@
-#register-inputs {
+.flex-column,
+.flex-row {
     gap: 1em;
-    margin-bottom: 1em;
+}
 
-    #name-inputs,
-    #password-inputs {
-        gap: 1em;
+h3 {
+    margin: 0;
+}
+
+.user-img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5em;
+
+    img:hover,
+    ion-icon:hover {
+        transform: scale(1.1);
+        cursor: pointer;
     }
 
-    .user-img {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 2.5em;
-
-        img:hover,
-        ion-icon:hover {
-            transform: scale(1.1);
-            cursor: pointer;
-        }
-
-        img {
-            width: 2.5em;
-            height: 2.5em;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 1px solid black;
-        }
-
-        ion-icon {
-            font-size: 2.5em;
-        }
+    img {
+        width: 2.5em;
+        height: 2.5em;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 1px solid black;
     }
 
-    #img-upload {
-        input {
-            margin-right: 1em;
-        }
-    }
-
-
-    #password {
-        gap: 1em;
-
-        ul,
-        p {
-            margin: 0;
-        }
-
-        #password-inputs {
-            div {
-                display: flex;
-            }
-
-            #password {
-                align-items: center;
-                justify-content: center;
-                position: relative;
-
-                ion-icon {
-                    font-size: 1.5em;
-                    position: absolute;
-                    right: 0.5em;
-                }
-
-                ion-icon:hover {
-                    cursor: pointer;
-                    transform: scale(1.1);
-                }
-            }
-        }
+    ion-icon {
+        font-size: 2.5em;
     }
 }
 
-#register-buttons {
-    gap: 1em;
+#user-img-input {
+    align-self: flex-end;
+
+    input {
+        padding: 0.5em;
+    }
 }

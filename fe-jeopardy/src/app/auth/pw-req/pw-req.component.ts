@@ -6,6 +6,6 @@ import { Component, Input } from '@angular/core';
 	styleUrl: './pw-req.component.less'
 })
 export class PwReqComponent {
-	@Input() passwordRequirement: string;
+	@Input() requirement: string;
 	@Input() satisfied: boolean;
 }
