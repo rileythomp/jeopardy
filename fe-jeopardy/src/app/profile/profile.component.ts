@@ -13,6 +13,7 @@ export class ProfileComponent {
 	protected user: User
 	protected showImgUpload: boolean = false
 	protected showPasswordReset: boolean = false
+	protected editName = false
 
 	constructor(
 		private auth: AuthService,
@@ -47,5 +48,17 @@ export class ProfileComponent {
 			return
 		}
 		this.modal.displayMessage('Password reset email sent. Please check your email.')
+	}
+
+	editUserName(edit: boolean) {
+		this.editName = edit
+	}
+
+	async updateUserName() {
+		if (await this.auth.UpdateUserName(this.user.name)) {
+			this.modal.displayMessage('Uh oh, there was an error updating your name. Please try again later.')
+			return
+		}
+		this.editName = false
 	}
 }

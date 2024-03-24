@@ -1,28 +1,22 @@
 #profile-container {
-    margin-top: calc(var(--header-height) + 1em);
-
-    div {
-        padding: 0em 2em;
-        gap: 0.5em;
-    }
+    margin-top: calc(var(--header-height));
+    padding: 2em;
+    gap: 0.5em;
 
     #profile-side-panel {
         flex-grow: 0;
+        gap: 1em;
 
-        div {
-            padding: 0.5em 1em;
+        p {
+            margin: 0;
+        }
 
-            p {
-                margin: 0;
-            }
-
-            img {
-                height: 20em;
-                width: 20em;
-                object-fit: cover;
-                border-radius: 50%;
-                border: 0.75em solid lightgrey;
-            }
+        img {
+            height: 20em;
+            width: 20em;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 0.75em solid lightgrey;
         }
 
         .link {
@@ -34,17 +28,51 @@
             cursor: pointer;
             text-decoration: underline;
         }
+
+        .profile-username {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1em;
+            width: max-content;
+
+            p {
+                flex-grow: 1;
+            }
+
+            div {
+                flex-grow: 0;
+
+                ion-icon:hover {
+                    transform: scale(1.25);
+                    cursor: pointer;
+                }
+
+                ion-icon[name="close-outline"],
+                ion-icon[name="checkmark-outline"] {
+                    font-size: 1.5em;
+                    font-weight: bold;
+                }
+
+                ion-icon[name="close-outline"]:hover {
+                    color: red;
+                }
+
+                ion-icon[name="checkmark-outline"]:hover {
+                    color: green;
+                }
+            }
+        }
     }
 
     #profile-main-panel {
         flex-grow: 1;
     }
 
-    #profile-side-panel,
-    #profile-main-panel {
+    .profile-panel {
         border: 1px solid var(--jeopardy-blue);
         background-color: var(--jeopardy-lightblue);
         border-radius: 1em;
-        padding: 1em;
+        padding: 2em;
     }
 }

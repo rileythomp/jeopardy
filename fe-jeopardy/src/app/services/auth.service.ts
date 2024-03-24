@@ -17,6 +17,19 @@ export class AuthService {
 		this.user = this.userSubject.asObservable();
 	}
 
+	public async UpdateUserName(name: string): Promise<Error | null> {
+		let { data, error } = await this.supabase.Auth().updateUser({
+			data: {
+				display_name: name,
+			}
+		})
+		if (error) {
+			console.error(error)
+			return error
+		}
+		return null
+	}
+
 	public async UpdateUserImg(url: string): Promise<Error | null> {
 		let { data, error } = await this.supabase.Auth().updateUser({
 			data: {
@@ -61,7 +74,7 @@ export class AuthService {
 			email: data.user?.email ?? '',
 			imgUrl: data.user?.user_metadata['user_img_url'] ?? data.user?.user_metadata['avatar_url'],
 			authenticated: true,
-			name: data.user?.user_metadata['full_name'],
+			name: data.user?.user_metadata['display_name'] ?? data.user?.user_metadata['full_name'],
 			dateJoined: this.formattedDate(data.user?.confirmed_at ?? '')
 		}
 		this.userSubject.next(user)
