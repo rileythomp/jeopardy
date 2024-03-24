@@ -2,6 +2,7 @@ import { Component, ElementRef, ViewChild } from '@angular/core';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
 import { StorageService } from 'src/app/services/storage.service';
+import { NewPasswordComponent } from '../new-password/new-password.component';
 
 @Component({
 	selector: 'app-register',
@@ -12,17 +13,13 @@ export class RegisterComponent {
 	protected uploadedImg: boolean = false;
 	protected imgUpload: boolean = false;
 	protected uploadedImgUrl: string = '';
-	protected password: string = '';
-	protected confirmedPassword = '';
 	protected email: string = '';
 	protected username: string = '';
-	protected showEye: boolean = true
 	protected registerDone: boolean = false
 	@ViewChild('userImg') userImg: ElementRef
 	@ViewChild('usernameInput') usernameInput: ElementRef
 	@ViewChild('emailInput') emailInput: ElementRef
-	@ViewChild('passwordInput') passwordInput: ElementRef
-	@ViewChild('confirmedPasswordInput') confirmedPasswordInput: ElementRef
+	@ViewChild(NewPasswordComponent) passwords: NewPasswordComponent
 
 	constructor(
 		private storage: StorageService,
@@ -57,40 +54,12 @@ export class RegisterComponent {
 		return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
 	}
 
-	private verifyPasswords(): boolean {
-		return this.password.length > 7 &&
-			this.password == this.confirmedPassword &&
-			this.hasUppercase() && this.hasLowercase() &&
-			this.hasNumber() && this.hasSpecialChar()
-	}
-
-	protected hasUppercase(): boolean {
-		return /[A-Z]/.test(this.password)
-	}
-
-	protected hasLowercase(): boolean {
-		return /[a-z]/.test(this.password)
-	}
-
-	protected hasNumber(): boolean {
-		return /[0-9]/.test(this.password)
-	}
-
-	protected hasSpecialChar(): boolean {
-		return /[^A-Za-z0-9]/.test(this.password)
-	}
-
 	protected usernameBorder(border: string) {
 		this.usernameInput.nativeElement.style.border = border
 	}
 
 	protected emailBorder(border: string) {
 		this.emailInput.nativeElement.style.border = border
-	}
-
-	protected passwordsBorder(border: string) {
-		this.passwordInput.nativeElement.style.border = border
-		this.confirmedPasswordInput.nativeElement.style.border = border
 	}
 
 	async createAccount() {
@@ -103,14 +72,14 @@ export class RegisterComponent {
 			this.emailBorder('1px solid red')
 			hasError = true
 		}
-		if (!this.verifyPasswords()) {
-			this.passwordsBorder('1px solid red')
+		if (!this.passwords.isValid()) {
+			this.passwords.setBorder('1px solid red')
 			hasError = true
 		}
 		if (hasError) {
 			return
 		}
-		let error = await this.auth.SignUp(this.email, this.password, this.username, this.uploadedImgUrl)
+		let error = await this.auth.SignUp(this.email, this.passwords.password, this.username, this.uploadedImgUrl)
 		if (error) {
 			console.error(error)
 			this.modal.displayMessage('Uh oh, we\'re not able to create new accounts right now. Please try again later.')
@@ -118,15 +87,7 @@ export class RegisterComponent {
 		}
 		this.usernameInput.nativeElement.disabled = true
 		this.emailInput.nativeElement.disabled = true
-		this.showPassword(false)
-		this.passwordInput.nativeElement.disabled = true
-		this.confirmedPasswordInput.nativeElement.disabled = true
+		this.passwords.disableInput()
 		this.registerDone = true
-	}
-
-	protected showPassword(show: boolean) {
-		this.passwordInput.nativeElement.type = show ? 'text' : 'password'
-		this.confirmedPasswordInput.nativeElement.type = this.passwordInput.nativeElement.type
-		this.showEye = !show
 	}
 }
