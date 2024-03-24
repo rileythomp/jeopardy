@@ -12,7 +12,7 @@ import { NewPasswordComponent } from '../new-password/new-password.component';
 export class RegisterComponent {
 	protected uploadedImg: boolean = false;
 	protected imgUpload: boolean = false;
-	protected uploadedImgUrl: string = 'https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_user_imgs/anonymous-user.jpg?t=2024-03-24T18%3A12%3A17.995Z';
+	protected uploadedImgUrl: string = 'https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_user_imgs/anonymous-user.jpg';
 	protected email: string = '';
 	protected username: string = '';
 	protected registerDone: boolean = false
