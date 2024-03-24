@@ -3,11 +3,6 @@
   "extends": ["config:recommended"],
   "timezone": "America/Toronto",
   "postUpdateOptions": ["gomodTidy", "npmDedupe"],
-  "automerge": true,
-  "automergeType": "pr",
-  "major": {
-    "automerge": false
-  },
   "labels": ["renovate"],
   "groupName": "all updates"
 }
