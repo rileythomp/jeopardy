@@ -33,7 +33,7 @@ export class RegisterComponent {
 
 	async handleUserUpload(event: any) {
 		let file = event.target.files[0]
-		let { url, error } = await this.storage.UploadImg(file)
+		let { url, error } = await this.storage.UploadImg('anon', file)
 		if (error) {
 			this.userImg.nativeElement.value = ''
 			this.userImg.nativeElement.style.border = '1px solid red'

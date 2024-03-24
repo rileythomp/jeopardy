@@ -29,7 +29,7 @@ export class ProfileComponent {
 	}
 
 	async changeProfilePicture(event: any) {
-		let { url, error } = await this.storage.UploadImg(event.target.files[0])
+		let { url, error } = await this.storage.UploadImg(this.user.email, event.target.files[0])
 		if (error) {
 			this.modal.displayMessage('Uh oh, there was an error upadting your profile picture. Please try again later.')
 			return
