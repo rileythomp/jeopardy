@@ -28,12 +28,12 @@ export class PasswordResetComponent implements OnInit {
 		this.canReset = true
 	}
 
-	async resetPassword() {
+	async updatePassword() {
 		if (!this.verifyPasswords()) {
 			this.passwordsBorder('1px solid red')
 			return
 		}
-		let error = await this.auth.ResetUserPassword(this.password)
+		let error = await this.auth.UpdateUserPassword(this.password)
 		if (error) {
 			this.modal.displayMessage('Uh oh, there was an error restting your password. Please try again later.')
 			return

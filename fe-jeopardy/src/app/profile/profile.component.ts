@@ -41,8 +41,8 @@ export class ProfileComponent {
 		this.auth.GetUser()
 	}
 
-	async resetPassword() {
-		let error = await this.auth.UpdateUserPassword(this.user.email)
+	async sendPasswordResetEmail() {
+		let error = await this.auth.SendPasswordResetEmail(this.user.email)
 		if (error) {
 			this.modal.displayMessage('Uh oh, there was an error restting your password. Please try again later.')
 			return

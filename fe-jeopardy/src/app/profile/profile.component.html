@@ -21,7 +21,7 @@
                 <p class='link' (click)='showPasswordReset = !showPasswordReset'>Reset password</p>
             </div>
             <div *ngIf='showPasswordReset'>
-                <button (click)='resetPassword()'>Click here to reset your password</button>
+                <button (click)='sendPasswordResetEmail()'>Click here to reset your password</button>
             </div>
         </div>
         <div id='profile-main-panel'>

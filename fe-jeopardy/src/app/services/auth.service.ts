@@ -30,7 +30,7 @@ export class AuthService {
 		return null
 	}
 
-	public async ResetUserPassword(password: string): Promise<Error | null> {
+	public async UpdateUserPassword(password: string): Promise<Error | null> {
 		let { data, error } = await this.supabase.Auth().updateUser({
 			password: password,
 		})
@@ -41,7 +41,7 @@ export class AuthService {
 		return null
 	}
 
-	public async UpdateUserPassword(email: string): Promise<Error | null> {
+	public async SendPasswordResetEmail(email: string): Promise<Error | null> {
 		let { data, error } = await this.supabase.Auth().resetPasswordForEmail(email, {
 			redirectTo: environment.passwordRedirectUrl,
 		})
