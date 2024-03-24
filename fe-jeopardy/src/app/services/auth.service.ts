@@ -57,7 +57,6 @@ export class AuthService {
 		if (error) {
 			return error
 		}
-		console.log(data.user);
 		let user: User = {
 			email: data.user?.email ?? '',
 			imgUrl: data.user?.user_metadata['avatar_url'],
