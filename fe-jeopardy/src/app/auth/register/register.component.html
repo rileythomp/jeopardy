@@ -9,7 +9,7 @@
             <img *ngIf='uploadedImg' [src]='uploadedImgUrl'>
         </div>
     </div>
-    <div *ngIf='imgUpload'>
+    <div id='user-img-input' *ngIf='imgUpload'>
         <input #userImg (change)='handleUserUpload($event)' type="file" accept=".jpg, .jpeg, .png">
     </div>
     <div class='flex-row'>
