@@ -30,7 +30,25 @@
             </div>
         </div>
     </div>
-    <div id='profile-main-panel' class='profile-panel'>
-        <p>Player stats coming soon</p>
+    <div id='profile-main-panel' class='profile-panel flex-column'>
+        <div *ngIf='playSomeGames'>
+            <p>No player analytics found. Play some games to start generating analytics.</p>
+        </div>
+        <div *ngIf='analytics'>
+            <div>
+                <h4>Record</h4>
+                <p>{{ analytics.wins }}-{{ analytics.games - analytics.wins }} ({{ analytics.winPercentage }}%)</p>
+            </div>
+            <div>
+                <h4>All-time Totals</h4>
+                <p>Points: ${{ analytics.points }}</p>
+                <p>Correct answers: {{ analytics.correct }}/{{ analytics.answers }} ({{ analytics.correctPercentage }}%)</p>    
+            </div>
+            <div>
+                <h4>All-time highs</h4>
+                <p>Points: ${{analytics.maxPoints }}</p>
+                <p>Correct answers: {{ analytics.maxCorrect }}</p>
+            </div>
+        </div>
     </div>
 </div>

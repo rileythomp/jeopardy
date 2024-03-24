@@ -14,6 +14,7 @@ export class ConfigComponent {
 	@Input() userAuthenticated: boolean = false
 	@Input() playerImg: string = ''
 	@Input() playerName: string = ''
+	@Input() playerEmail: string = ''
 	@Input() oneRoundChecked: boolean = true
 	@Input() twoRoundChecked: boolean = false
 	@Input() penaltyChecked: boolean = true
@@ -115,7 +116,7 @@ export class ConfigComponent {
 			return
 		}
 		this.api.CreatePrivateGame(
-			this.playerName, this.playerImg,
+			this.playerName, this.playerImg, this.playerEmail,
 			bots, this.twoRoundChecked, this.penaltyChecked,
 			this.pickConfig, this.buzzConfig, this.answerConfig, this.wagerConfig,
 			this.firstRoundCategories, this.secondRoundCategories

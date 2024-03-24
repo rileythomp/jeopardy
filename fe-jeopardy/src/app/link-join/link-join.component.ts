@@ -12,9 +12,10 @@ import { ModalService } from '../services/modal.service';
     styleUrls: ['./link-join.component.less']
 })
 export class LinkJoinComponent {
-    protected joinCode: string;
-    protected playerName: string;
-    private playerImg: string = '';
+    protected joinCode: string
+    protected playerName: string
+    private playerImg: string = ''
+    private playerEmail: string = ''
 
     constructor(
         private route: ActivatedRoute,
@@ -31,12 +32,13 @@ export class LinkJoinComponent {
         this.auth.user.subscribe(user => {
             this.playerImg = user.imgUrl
             this.playerName = user.name
+            this.playerEmail = user.email
             this.joinGame()
         })
     }
 
     joinGame() {
-        this.api.JoinGameByCode(this.playerName, this.playerImg, this.joinCode).subscribe({
+        this.api.JoinGameByCode(this.playerName, this.playerImg, this.playerEmail, this.joinCode).subscribe({
             next: (resp: any) => {
                 this.jwt.SetJWT(resp.token);
                 this.router.navigate([`/game/${resp.game.name}`]);

@@ -114,6 +114,11 @@ var (
 			Path:    "/jeopardy/games/start",
 			Handler: StartGame,
 		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/analytics/players",
+			Handler: GetPlayerAnalytics,
+		},
 	}
 
 	upgrader = websocket.Upgrader{
@@ -373,7 +378,7 @@ func PlayAgain(c *gin.Context) {
 
 	if err = jeopardy.PlayAgain(playerId); err != nil {
 		log.Errorf("Error playing again: %s", err.Error())
-		respondWithError(c, socket.BadRequest, "Unable to play again: %s", err.Error())
+		respondWithError(c, http.StatusBadRequest, "Unable to play again: %s", err.Error())
 		return
 	}
 
@@ -410,6 +415,23 @@ func GetAnalytics(c *gin.Context) {
 	analytics, err := jeopardy.GetAnalytics()
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Unable to get analytics")
+		return
+	}
+
+	c.JSON(http.StatusOK, analytics)
+}
+
+func GetPlayerAnalytics(c *gin.Context) {
+	log.Infof("Received request to get analytics for player")
+
+	email := c.Query("email")
+	if email == "" {
+		respondWithError(c, http.StatusBadRequest, "Email is required")
+	}
+
+	analytics, err := jeopardy.GetPlayerAnalytics(email)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Unable to get player analytics")
 		return
 	}
 

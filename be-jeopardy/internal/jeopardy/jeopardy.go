@@ -14,6 +14,7 @@ import (
 type GameRequest struct {
 	PlayerName            string        `json:"playerName"`
 	PlayerImg             string        `json:"playerImg"`
+	PlayerEmail           string        `json:"playerEmail"`
 	JoinCode              string        `json:"joinCode"`
 	Bots                  int           `json:"bots"`
 	FullGame              bool          `json:"fullGame"`
@@ -89,7 +90,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	if imgUrl == "" {
 		imgUrl = game.nextImg()
 	}
-	player := NewPlayer(req.PlayerName, imgUrl)
+	player := NewPlayer(req.PlayerName, imgUrl, req.PlayerEmail)
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
 
@@ -137,7 +138,7 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 	if imgUrl == "" {
 		imgUrl = game.nextImg()
 	}
-	player := NewPlayer(req.PlayerName, imgUrl)
+	player := NewPlayer(req.PlayerName, imgUrl, req.PlayerEmail)
 	game.Players = append(game.Players, player)
 	playerGames[player.Id] = game
 
@@ -191,7 +192,7 @@ func JoinGameByCode(req GameRequest) (*Game, string, error) {
 		if imgUrl == "" {
 			imgUrl = game.nextImg()
 		}
-		player = NewPlayer(req.PlayerName, imgUrl)
+		player = NewPlayer(req.PlayerName, imgUrl, req.PlayerEmail)
 		game.Players = append(game.Players, player)
 	}
 
@@ -336,10 +337,15 @@ func PlayAgain(playerId string) error {
 }
 
 var searchDB *db.JeopardyDB
+var analyticsDB *db.JeopardyDB
 
 func init() {
 	var err error
 	searchDB, err = db.NewJeopardyDB()
+	if err != nil {
+		log.Fatalf("Error connecting to database: %s", err.Error())
+	}
+	analyticsDB, err = db.NewJeopardyDB()
 	if err != nil {
 		log.Fatalf("Error connecting to database: %s", err.Error())
 	}

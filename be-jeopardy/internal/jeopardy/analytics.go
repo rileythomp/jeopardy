@@ -13,6 +13,44 @@ type GameAnalytics struct {
 	SecondRoundScore float64 `json:"secondRoundScore"`
 }
 
+func (g *Game) isWinner(score int) bool {
+	for _, player := range g.Players {
+		if player.score() > score {
+			return false
+		}
+	}
+	return true
+}
+
+func (g *Game) answersFor(player GamePlayer) (int, int) {
+	answers, correct := 0, 0
+	for _, category := range g.FirstRound {
+		for _, question := range category.Questions {
+			for _, answer := range question.Answers {
+				if answer.Player.id() == player.id() {
+					answers++
+					if answer.Correct {
+						correct++
+					}
+				}
+			}
+		}
+	}
+	for _, category := range g.SecondRound {
+		for _, question := range category.Questions {
+			for _, answer := range question.Answers {
+				if answer.Player.id() == player.id() {
+					answers++
+					if answer.Correct {
+						correct++
+					}
+				}
+			}
+		}
+	}
+	return answers, correct
+}
+
 func (g *Game) saveGameAnalytics() {
 	if !g.Penalty {
 		return
@@ -24,6 +62,18 @@ func (g *Game) saveGameAnalytics() {
 	}
 	if err := g.jeopardyDB.SaveGameAnalytics(uuid.New(), time.Now().Unix(), fr, sr); err != nil {
 		log.Errorf("Error saving game analytics: %s", err.Error())
+	}
+	for _, player := range g.Players {
+		if !player.isBot() && player.email() != "" {
+			wins := 0
+			if g.isWinner(player.score()) {
+				wins = 1
+			}
+			answers, correct := g.answersFor(player)
+			if err := g.jeopardyDB.IncrementPlayerGames(player.email(), wins, player.score(), answers, correct); err != nil {
+				log.Errorf("Error incrementing player game count: %s", err.Error())
+			}
+		}
 	}
 }
 
@@ -66,17 +116,19 @@ func getRoundAnalytics(round []Category) db.AnalyticsRound {
 }
 
 func GetAnalytics() (any, error) {
-	db, err := db.NewJeopardyDB()
-	if err != nil {
-		log.Errorf("Error connecting to database: %s", err.Error())
-		return nil, err
-	}
-
-	analytics, err := db.GetAnalytics()
+	analytics, err := analyticsDB.GetAnalytics()
 	if err != nil {
 		log.Errorf("Error getting game analytics: %s", err.Error())
 		return nil, err
 	}
+	return analytics, nil
+}
 
+func GetPlayerAnalytics(email string) (any, error) {
+	analytics, err := analyticsDB.GetPlayerAnalytics(email)
+	if err != nil {
+		log.Errorf("Error getting player analytics: %s", err.Error())
+		return nil, err
+	}
 	return analytics, nil
 }

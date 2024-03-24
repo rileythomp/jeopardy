@@ -34,7 +34,7 @@ func TestPickWager(t *testing.T) {
 	}
 	for i, tc := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
-			p1, p2, bot := NewPlayer("a", ""), NewPlayer("b", ""), NewBot("c", 0)
+			p1, p2, bot := NewPlayer("a", "", ""), NewPlayer("b", "", ""), NewBot("c", 0)
 			p1.addToScore(tc.score1)
 			p2.addToScore(tc.score2)
 			bot.addToScore(tc.score3)

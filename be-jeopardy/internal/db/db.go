@@ -150,28 +150,7 @@ func (db *JeopardyDB) SaveGameAnalytics(gameID uuid.UUID, createdAt int64, fr An
 var getAnalytics string
 
 func (db *JeopardyDB) GetAnalytics() (any, error) {
-	var (
-		gamesPlayed         int
-		firstRoundAnsRate   int
-		firstRoundCorrRate  int
-		firstRoundScore     int
-		secondRoundAnsRate  int
-		secondRoundCorrRate int
-		secondRoundScore    int
-	)
-	err := db.pool.QueryRow(context.Background(), getAnalytics).Scan(
-		&gamesPlayed,
-		&firstRoundAnsRate,
-		&firstRoundCorrRate,
-		&firstRoundScore,
-		&secondRoundAnsRate,
-		&secondRoundCorrRate,
-		&secondRoundScore,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return struct {
+	a := struct {
 		GamesPlayed         int `json:"gamesPlayed"`
 		FirstRoundAnsRate   int `json:"firstRoundAnsRate"`
 		FirstRoundCorrRate  int `json:"firstRoundCorrRate"`
@@ -179,15 +158,48 @@ func (db *JeopardyDB) GetAnalytics() (any, error) {
 		SecondRoundAnsRate  int `json:"secondRoundAnsRate"`
 		SecondRoundCorrRate int `json:"secondRoundCorrRate"`
 		SecondRoundScore    int `json:"secondRoundScore"`
-	}{
-		GamesPlayed:         gamesPlayed,
-		FirstRoundAnsRate:   firstRoundAnsRate,
-		FirstRoundCorrRate:  firstRoundCorrRate,
-		FirstRoundScore:     firstRoundScore,
-		SecondRoundAnsRate:  secondRoundAnsRate,
-		SecondRoundCorrRate: secondRoundCorrRate,
-		SecondRoundScore:    secondRoundScore,
-	}, nil
+	}{}
+	err := db.pool.QueryRow(context.Background(), getAnalytics).Scan(
+		&a.GamesPlayed,
+		&a.FirstRoundAnsRate,
+		&a.FirstRoundCorrRate,
+		&a.FirstRoundScore,
+		&a.SecondRoundAnsRate,
+		&a.SecondRoundCorrRate,
+		&a.SecondRoundScore,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return a, nil
+}
+
+//go:embed sql/get_player_analytics.sql
+var getPlayerAnalytics string
+
+func (db *JeopardyDB) GetPlayerAnalytics(email string) (any, error) {
+	a := struct {
+		Games      int `json:"games"`
+		Wins       int `json:"wins"`
+		Points     int `json:"points"`
+		Answers    int `json:"answers"`
+		Correct    int `json:"correct"`
+		MaxPoints  int `json:"maxPoints"`
+		MaxCorrect int `json:"maxCorrect"`
+	}{}
+	err := db.pool.QueryRow(context.Background(), getPlayerAnalytics, email).Scan(
+		&a.Games,
+		&a.Wins,
+		&a.Points,
+		&a.Answers,
+		&a.Correct,
+		&a.MaxPoints,
+		&a.MaxCorrect,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return a, nil
 }
 
 //go:embed sql/search_categories.sql
@@ -210,4 +222,12 @@ func (db *JeopardyDB) SearchCategories(query, start string, secondRound int) ([]
 	}
 
 	return categories, nil
+}
+
+//go:embed sql/increment_player_games.sql
+var incrementPlayerGames string
+
+func (db *JeopardyDB) IncrementPlayerGames(email string, win, points, answered, correct int) error {
+	_, err := db.pool.Exec(context.Background(), incrementPlayerGames, email, win, points, answered, correct)
+	return err
 }

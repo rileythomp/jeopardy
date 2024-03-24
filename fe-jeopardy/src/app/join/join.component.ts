@@ -15,6 +15,7 @@ import { ModalService } from '../services/modal.service'
 export class JoinComponent implements OnInit {
 	protected playerName: string = ''
 	protected playerImg: string = ''
+	protected playerEmail: string = ''
 	protected userAuthenticated: boolean = false
 	protected joinCode: string = ''
 	protected showJoinCodeInput: boolean = false
@@ -35,7 +36,10 @@ export class JoinComponent implements OnInit {
 			this.userAuthenticated = user.authenticated
 			this.playerName = user.name
 			this.playerImg = user.imgUrl
+			this.playerEmail = user.email
 		})
+
+		this.auth.GetUser()
 	}
 
 	private joinResp(): Partial<Observer<any>> {
@@ -65,7 +69,7 @@ export class JoinComponent implements OnInit {
 			return
 		}
 		this.api.CreatePrivateGame(
-			this.playerName, this.playerImg,
+			this.playerName, this.playerImg, this.playerEmail,
 			bots, this.twoRoundChecked, this.penaltyChecked,
 			30, 30, 15, 30, [], []
 		).subscribe(this.joinResp())
@@ -76,7 +80,7 @@ export class JoinComponent implements OnInit {
 			this.showInvalidName()
 			return
 		}
-		this.api.JoinGameByCode(this.playerName, this.playerImg, this.joinCode).subscribe(this.joinResp())
+		this.api.JoinGameByCode(this.playerName, this.playerImg, this.playerEmail, this.joinCode).subscribe(this.joinResp())
 	}
 
 	joinPublicGame() {
@@ -84,7 +88,7 @@ export class JoinComponent implements OnInit {
 			this.showInvalidName()
 			return
 		}
-		this.api.JoinPublicGame(this.playerName, this.playerImg).subscribe(this.joinResp())
+		this.api.JoinPublicGame(this.playerName, this.playerImg, this.playerEmail).subscribe(this.joinResp())
 	}
 
 	rejoin() {
