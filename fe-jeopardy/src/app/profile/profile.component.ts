@@ -14,6 +14,7 @@ export class ProfileComponent {
 	protected showImgUpload: boolean = false
 	protected showPasswordReset: boolean = false
 	protected editName = false
+	protected editedUserName = ''
 
 	constructor(
 		private auth: AuthService,
@@ -22,6 +23,7 @@ export class ProfileComponent {
 	) {
 		this.auth.user.subscribe(user => {
 			this.user = user
+			this.editedUserName = this.user.name
 		})
 		this.auth.GetUser();
 	}
@@ -50,15 +52,19 @@ export class ProfileComponent {
 		this.modal.displayMessage('Password reset email sent. Please check your email.')
 	}
 
-	editUserName(edit: boolean) {
+	showEditName(edit: boolean) {
+		if (!edit) {
+			this.editedUserName = this.user.name
+		}
 		this.editName = edit
 	}
 
 	async updateUserName() {
-		if (await this.auth.UpdateUserName(this.user.name)) {
+		if (await this.auth.UpdateUserName(this.editedUserName)) {
 			this.modal.displayMessage('Uh oh, there was an error updating your name. Please try again later.')
 			return
 		}
-		this.editName = false
+		this.user.name = this.editedUserName
+		this.showEditName(false)
 	}
 }

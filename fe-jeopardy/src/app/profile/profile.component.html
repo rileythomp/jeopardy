@@ -10,13 +10,13 @@
         <div *ngIf='!editName' class='profile-username'>
             <p style='font-size: 2em;'>{{ user.name }}</p>
             <div>
-                <ion-icon (click)='editUserName(true)' name='pencil-outline'></ion-icon>
+                <ion-icon (click)='showEditName(true)' name='pencil-outline'></ion-icon>
             </div>
         </div>
         <div *ngIf='editName' class='profile-username'>
-            <input type='text' [(ngModel)]='user.name'>
+            <input type='text' [(ngModel)]='editedUserName'>
             <div>
-                <ion-icon (click)='editUserName(false)' name='close-outline'></ion-icon>
+                <ion-icon (click)='showEditName(false)' name='close-outline'></ion-icon>
             </div>
             <div>
                 <ion-icon (click)='updateUserName()' name='checkmark-outline'></ion-icon>
