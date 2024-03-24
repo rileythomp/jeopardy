@@ -1,0 +1,50 @@
+#profile-container {
+    margin-top: calc(var(--header-height) + 1em);
+
+    div {
+        padding: 0em 2em;
+        gap: 0.5em;
+    }
+
+    #profile-side-panel {
+        flex-grow: 0;
+
+        div {
+            padding: 0.5em 1em;
+
+            p {
+                margin: 0;
+            }
+
+            img {
+                height: 20em;
+                width: 20em;
+                object-fit: cover;
+                border-radius: 50%;
+                border: 0.75em solid lightgrey;
+            }
+        }
+
+        .link {
+            color: blue;
+            user-select: none;
+        }
+
+        .link:hover {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    }
+
+    #profile-main-panel {
+        flex-grow: 1;
+    }
+
+    #profile-side-panel,
+    #profile-main-panel {
+        border: 1px solid var(--jeopardy-blue);
+        background-color: var(--jeopardy-lightblue);
+        border-radius: 1em;
+        padding: 1em;
+    }
+}

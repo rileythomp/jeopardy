@@ -4,6 +4,11 @@
 	</div>
 	<div id='header-icons' class='flex-row'>
 		<div>
+			<a href="/">
+				<ion-icon name="home-outline"></ion-icon>
+			</a>
+		</div>
+		<div>
 			<ion-icon (click)="modal.displayInstructions()" name="information-circle-outline"></ion-icon>
 		</div>
 		<div>
@@ -26,7 +31,8 @@
 					<app-auth-button (click)="startLogin()"  [buttonText]="'Sign in with email&nbsp;&nbsp;&nbsp;'" [imgUrl]="''" [iconName]="'sign-in'"></app-auth-button>
 					<app-auth-button (click)="startRegistration()"  [buttonText]="'Create an account&nbsp;&nbsp;'" [imgUrl]="''" [iconName]="'sign-up'"></app-auth-button>
 				</div>
-				<div *ngIf="userAuthenticated">
+				<div *ngIf="userAuthenticated" class='flex-column'>
+					<app-auth-button (click)="goToProfile()" [buttonText]="'Profile&nbsp;&nbsp;&nbsp;'" [imgUrl]="''" [iconName]="'profile'"></app-auth-button>
 					<app-auth-button (click)="signOut()" [buttonText]="'Sign out'" [imgUrl]="''" [iconName]="'sign-out'"></app-auth-button>
 				</div>
 			</div>

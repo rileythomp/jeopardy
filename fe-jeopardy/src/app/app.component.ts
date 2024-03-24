@@ -94,4 +94,9 @@ Please report any issues to https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhds
 		this.showAuthOptions = false
 		this.modal.displayLogin()
 	}
+
+	goToProfile() {
+		this.showAuthOptions = false
+		this.router.navigate(['/profile'])
+	}
 }

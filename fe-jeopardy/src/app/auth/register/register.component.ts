@@ -38,7 +38,6 @@ export class RegisterComponent {
 		let file = event.target.files[0]
 		let { url, error } = await this.storage.UploadImg(file)
 		if (error) {
-			console.error(error)
 			this.userImg.nativeElement.value = ''
 			this.userImg.nativeElement.style.border = '1px solid red'
 			setTimeout(() => {

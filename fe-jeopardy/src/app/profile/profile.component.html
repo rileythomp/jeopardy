@@ -1,0 +1,31 @@
+<div *ngIf='user'  id='profile-container'>
+    <div class='flex-row'>
+        <div id='profile-side-panel' class='flex-column'>
+            <div>
+                <img [src]="user.imgUrl" alt="">
+                <p class='link' (click)='showImgUpload = !showImgUpload'>Change profile picture</p>
+            </div>
+            <div *ngIf='showImgUpload'>
+                <input #userImg (change)='changeProfilePicture($event)' type="file" accept=".jpg, .jpeg, .png">
+            </div>
+            <div>
+                <p style='font-size: 2em;'>{{ user.name }}</p>
+            </div>
+            <div>
+                <p>{{ user.email }}</p>
+            </div>
+            <div>
+                <p>Date joined: {{ user.dateJoined }}</p>
+            </div>
+            <div>
+                <p class='link' (click)='showPasswordReset = !showPasswordReset'>Reset password</p>
+            </div>
+            <div *ngIf='showPasswordReset'>
+                <button (click)='resetPassword()'>Click here to reset your password</button>
+            </div>
+        </div>
+        <div id='profile-main-panel'>
+            <p>Player stats coming soon</p>
+        </div>
+    </div>
+</div>
