@@ -17,9 +17,9 @@ Play here: https://playjeopardy.netlify.app
 </details>
 
 <details>
-  <summary>Search page</summary>
-  
-![search](imgs/search.png)
+  <summary>Profile page</summary>
+
+![profile](imgs/profile.png)
 
 </details>
 
@@ -42,6 +42,8 @@ Play here: https://playjeopardy.netlify.app
 ### Features
 
 - Sign in with Google and GitHub accounts or email
+
+- Player accounts with analytics (all-time record, totals and highs)
 
 - Game configuration
 
@@ -87,9 +89,7 @@ $ ng serve
 
 ### TODO
 
-- Accounts with user stats
-
-- Leaderboards
+- Leaderboards and improved analytics
 
 - Allow players to select bot difficulty
 
