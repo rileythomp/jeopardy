@@ -4,7 +4,7 @@
     <app-question></app-question>
 
     <div id='answer-input' class='flex-row' *ngIf="player.CanAnswer()">
-        <input type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
+        <input (keydown.enter)='handleAnswer()' type="text" [(ngModel)]="questionAnswer" placeholder="Enter your answer">
         <button (click)="handleAnswer()">Answer</button>
     </div>
 
