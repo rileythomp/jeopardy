@@ -13,6 +13,7 @@ import (
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/jeopardy"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/supabase"
 )
 
 type (
@@ -118,6 +119,11 @@ var (
 			Method:  http.MethodGet,
 			Path:    "/jeopardy/analytics/players",
 			Handler: GetPlayerAnalytics,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/users/:name",
+			Handler: GetUserByName,
 		},
 	}
 
@@ -436,6 +442,19 @@ func GetPlayerAnalytics(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, analytics)
+}
+
+func GetUserByName(c *gin.Context) {
+	log.Infof("Received request to get user by name")
+
+	name := c.Param("name")
+	user, err := supabase.GetUserByName(c, name)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Unable to get user by name")
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func SearchCategories(c *gin.Context) {

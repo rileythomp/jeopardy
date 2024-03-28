@@ -1,7 +1,8 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { User } from '../model/model';
 import { JwtService } from './jwt.service';
 
 const apiAddr = environment.apiServerUrl;
@@ -78,6 +79,25 @@ export class ApiService {
 
     StartGame(): Observable<any> {
         return this.put('games/start', {})
+    }
+
+    async GetUserByName(name: string): Promise<User> {
+        let resp = await firstValueFrom(this.get(`users/${name}`))
+        let user: User = {
+            email: resp.email,
+            imgUrl: resp.imgUrl,
+            authenticated: false,
+            name: resp.displayName,
+            dateJoined: this.formattedDate(resp.confirmedAt)
+        }
+        return user
+    }
+
+    // todo: move this to utils
+    private formattedDate(dateStr: string): string {
+        let date = new Date(dateStr);
+        let formattedDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: '2-digit' }).format(date);
+        return formattedDate
     }
 
     private post(path: string, req: any): Observable<any> {

@@ -14,6 +14,7 @@ const routes: Routes = [
 	{ path: 'game/:joinCode', component: GameComponent },
 	{ path: 'warning', component: WarningComponent },
 	{ path: 'profile', component: ProfileComponent },
+	{ path: 'profile/:name', component: ProfileComponent },
 	{ path: 'password-reset', component: PasswordResetComponent },
 ];
 

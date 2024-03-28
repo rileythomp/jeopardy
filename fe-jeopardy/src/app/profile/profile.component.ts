@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { StorageService } from 'src/app/services/storage.service';
 import { User } from '../model/model';
@@ -11,6 +12,7 @@ import { ModalService } from '../services/modal.service';
 	styleUrl: './profile.component.less'
 })
 export class ProfileComponent implements OnInit {
+	protected profileUser: User
 	protected user: User
 	protected showImgUpload: boolean = false
 	protected showPasswordReset: boolean = false
@@ -28,22 +30,30 @@ export class ProfileComponent implements OnInit {
 		winPercentage: number,
 		correctPercentage: number,
 	}
+	protected profileName: string
 
 	constructor(
 		private auth: AuthService,
 		private storage: StorageService,
 		private modal: ModalService,
 		private api: ApiService,
+		private route: ActivatedRoute,
 	) {
 		this.auth.user.subscribe(user => {
 			this.user = user
 			this.editedUserName = this.user.name
 		})
+		this.profileName = this.route.snapshot.paramMap.get('name') ?? ''
 	}
 
 	async ngOnInit() {
 		await this.auth.GetUser()
-		this.api.GetPlayerAnalytics(this.user.email).subscribe({
+		if (this.profileName) {
+			this.profileUser = await this.api.GetUserByName(this.profileName) // todo: handle the error here;
+		} else {
+			this.profileUser = this.user
+		}
+		this.api.GetPlayerAnalytics(this.profileUser.email).subscribe({
 			next: (resp: any) => {
 				this.analytics = resp
 				this.analytics.winPercentage = Math.round((resp.wins / resp.games) * 1000) / 10
@@ -103,7 +113,7 @@ export class ProfileComponent implements OnInit {
 			this.modal.displayMessage('Uh oh, there was an error updating your name. Please try again later.')
 			return
 		}
-		this.user.name = this.editedUserName
+		this.profileUser.name = this.editedUserName
 		this.showEditName(false)
 	}
 }
