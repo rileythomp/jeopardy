@@ -1,24 +1,32 @@
-<div *ngIf='user'  id='profile-container' class='flex-row'>
+<div *ngIf='profileUser && (profileUser.public || profileUser.email == user.email)'  id='profile-container' class='flex-row'>
     <div id='profile-side-panel' class='flex-column profile-panel'>
         <div>
-            <img [src]="user.imgUrl" alt="">
-            <p class='link' (click)='showImgUpload = !showImgUpload'>Change profile picture</p>
-            <div *ngIf='showImgUpload'>
-                <input #userImg (change)='changeProfilePicture($event)' type="file" accept=".jpg, .jpeg, .png">
+            <img [src]="profileUser.imgUrl" alt="">
+            <div *ngIf='user.email == profileUser.email'>
+                <p class='link' (click)='showImgUpload = !showImgUpload'>Change profile picture</p>
+                <div *ngIf='showImgUpload'>
+                    <input #userImg (change)='changeProfilePicture($event)' type="file" accept=".jpg, .jpeg, .png">
+                </div>
             </div>
         </div>
         <div *ngIf='!editName' class='profile-username'>
-            <p style='font-size: 2em;'>{{ user.name }}</p>
-            <div><ion-icon (click)='showEditName(true)' name='pencil-outline'></ion-icon></div>
+            <p style='font-size: 2em; max-width: 10em; word-break: break-word;'>{{ profileUser.name }}</p>
+            <div *ngIf='user.email == profileUser.email'><ion-icon (click)='showEditName(true)' name='pencil-outline'></ion-icon></div>
         </div>
-        <div *ngIf='editName' class='profile-username'>
+        <div *ngIf='editName && user.email == profileUser.email' class='profile-username'>
             <input type='text' [(ngModel)]='editedUserName'>
             <div><ion-icon (click)='showEditName(false)' name='close-outline'></ion-icon></div>
             <div><ion-icon (click)='updateUserName()' name='checkmark-outline'></ion-icon></div>
         </div>
-        <div><p>{{ user.email }}</p></div>
-        <div><p>Date joined: {{ user.dateJoined }}</p></div>
-        <div>
+        <div><p>{{ profileUser.email }}</p></div>
+        <div><p>Date joined: {{ profileUser.dateJoined }}</p></div>
+        <div *ngIf='user.email == profileUser.email'>
+            <input id='private-profile' type="checkbox" [(ngModel)]="!user.public" (change)="updateProfileVisibility(false)">
+            <label for="private-profile" style="margin-right: 1em;">Private</label>
+            <input id='public-profile' type="checkbox" [(ngModel)]="user.public" (change)="updateProfileVisibility(true)">
+            <label for="public-profile">Public</label>
+        </div>
+        <div *ngIf='user.email == profileUser.email'>
             <p class='link' (click)='showPasswordReset = !showPasswordReset'>Reset password</p>
             <div *ngIf='showPasswordReset'>
                 <button (click)='sendPasswordResetEmail()'>
@@ -31,23 +39,23 @@
         </div>
     </div>
     <div id='profile-main-panel' class='profile-panel flex-column'>
-        <div *ngIf='playSomeGames'>
+        <div *ngIf='playSomeGames && user.email == profileUser.email'>
             <p>No player analytics found. Play some games to start generating analytics.</p>
         </div>
-        <div *ngIf='analytics'>
+        <div id='player-analytics' class='flex-column' *ngIf='analytics'>
             <div>
-                <h4>Record</h4>
-                <p>{{ analytics.wins }}-{{ analytics.games - analytics.wins }} ({{ analytics.winPercentage }}%)</p>
+                <h2>Record</h2>
+                <p>{{ analytics.wins.toLocaleString() }}-{{ (analytics.games - analytics.wins).toLocaleString() }} ({{ analytics.winPercentage }}%)</p>
             </div>
             <div>
-                <h4>All-time Totals</h4>
-                <p>Points: ${{ analytics.points }}</p>
-                <p>Correct answers: {{ analytics.correct }}/{{ analytics.answers }} ({{ analytics.correctPercentage }}%)</p>    
+                <h2>All-time Totals</h2>
+                <p>Points: ${{ analytics.points.toLocaleString() }}</p>
+                <p>Correct answers: {{ analytics.correct.toLocaleString() }}/{{ analytics.answers.toLocaleString() }} ({{ analytics.correctPercentage }}%)</p>    
             </div>
             <div>
-                <h4>All-time Highs</h4>
-                <p>Points: ${{analytics.maxPoints }}</p>
-                <p>Correct answers: {{ analytics.maxCorrect }}</p>
+                <h2>All-time Highs</h2>
+                <p>Points: ${{analytics.maxPoints.toLocaleString() }}</p>
+                <p>Correct answers: {{ analytics.maxCorrect.toLocaleString() }}</p>
             </div>
         </div>
     </div>

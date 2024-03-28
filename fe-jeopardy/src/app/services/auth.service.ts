@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { User } from '../model/model';
 import { SupabaseService } from './supabase.service';
+import { formattedDate } from './utils';
 
 @Injectable({
 	providedIn: 'root'
@@ -18,7 +19,8 @@ export class AuthService {
 			imgUrl: '',
 			authenticated: false,
 			name: '',
-			dateJoined: ''
+			dateJoined: '',
+			public: false,
 		});
 		this.user = this.userSubject.asObservable();
 	}
@@ -27,6 +29,19 @@ export class AuthService {
 		let { data, error } = await this.supabase.Auth().updateUser({
 			data: {
 				display_name: name,
+			}
+		})
+		if (error) {
+			console.error(error)
+			return error
+		}
+		return null
+	}
+
+	public async UpdateProfileVisibility(profilePublic: boolean): Promise<Error | null> {
+		let { data, error } = await this.supabase.Auth().updateUser({
+			data: {
+				profile_public: profilePublic,
 			}
 		})
 		if (error) {
@@ -81,16 +96,11 @@ export class AuthService {
 			imgUrl: data.user?.user_metadata['user_img_url'] ?? data.user?.user_metadata['avatar_url'],
 			authenticated: true,
 			name: data.user?.user_metadata['display_name'] ?? data.user?.user_metadata['full_name'],
-			dateJoined: this.formattedDate(data.user?.confirmed_at ?? '')
+			dateJoined: formattedDate(data.user?.created_at ?? ''),
+			public: data.user?.user_metadata['profile_public'] ?? true,
 		}
 		this.userSubject.next(user)
 		return null
-	}
-
-	private formattedDate(dateStr: string): string {
-		let date = new Date(dateStr);
-		let formattedDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: '2-digit' }).format(date);
-		return formattedDate
 	}
 
 	public async SignUp(email: string, password: string, username: string, imgUrl: string): Promise<Error | null> {

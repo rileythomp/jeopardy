@@ -1,6 +1,7 @@
 package jeopardy
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -52,7 +53,8 @@ func pickQuestion(g *Game, catIdx, valIdx int) {
 
 func TestPickQuestion(t *testing.T) {
 	t.Run("test pick question", func(t *testing.T) {
-		questionDB, err := db.NewJeopardyDB()
+		ctx := context.Background()
+		questionDB, err := db.NewJeopardyDB(ctx)
 		if err != nil {
 			t.Fatalf("Failed to create questionDB: %s", err)
 		}
@@ -60,7 +62,7 @@ func TestPickQuestion(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create config: %s", err)
 		}
-		game, err := NewGame(questionDB, config)
+		game, err := NewGame(ctx, questionDB, config)
 		if err != nil {
 			t.Fatalf("Failed to create game: %s", err)
 		}

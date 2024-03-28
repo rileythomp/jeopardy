@@ -12,6 +12,7 @@ import (
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/auth"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/jeopardy"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/logic"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
 )
 
@@ -119,6 +120,16 @@ var (
 			Path:    "/jeopardy/analytics/players",
 			Handler: GetPlayerAnalytics,
 		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/users/:name",
+			Handler: GetUserByName,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/analytics/leaderboard",
+			Handler: GetLeaderboard,
+		},
 	}
 
 	upgrader = websocket.Upgrader{
@@ -172,7 +183,7 @@ func CreatePrivateGame(c *gin.Context) {
 		return
 	}
 
-	game, playerId, err, code := jeopardy.CreatePrivateGame(req)
+	game, playerId, err, code := jeopardy.CreatePrivateGame(c, req)
 	if err != nil {
 		log.Errorf("Error creating private game: %s", err.Error())
 		if code == socket.BadRequest {
@@ -240,7 +251,7 @@ func JoinPublicGame(c *gin.Context) {
 		return
 	}
 
-	game, playerId, err, code := jeopardy.JoinPublicGame(req)
+	game, playerId, err, code := jeopardy.JoinPublicGame(c, req)
 	if err != nil {
 		log.Errorf("Error joining public game: %s", err.Error())
 		if code == socket.BadRequest {
@@ -412,13 +423,26 @@ func LeaveGame(c *gin.Context) {
 func GetAnalytics(c *gin.Context) {
 	log.Infof("Received request to get analytics")
 
-	analytics, err := jeopardy.GetAnalytics()
+	analytics, err := jeopardy.GetAnalytics(c)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Unable to get analytics")
 		return
 	}
 
 	c.JSON(http.StatusOK, analytics)
+}
+
+func GetLeaderboard(c *gin.Context) {
+	log.Infof("Received request to get leaderboard")
+
+	leaderboardType := c.Query("type")
+	leaderboard, err := jeopardy.GetLeaderboard(c, leaderboardType)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Unable to get leaderboard")
+		return
+	}
+
+	c.JSON(http.StatusOK, leaderboard)
 }
 
 func GetPlayerAnalytics(c *gin.Context) {
@@ -429,7 +453,7 @@ func GetPlayerAnalytics(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "Email is required")
 	}
 
-	analytics, err := jeopardy.GetPlayerAnalytics(email)
+	analytics, err := jeopardy.GetPlayerAnalytics(c, email)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Unable to get player analytics")
 		return
@@ -438,11 +462,24 @@ func GetPlayerAnalytics(c *gin.Context) {
 	c.JSON(http.StatusOK, analytics)
 }
 
+func GetUserByName(c *gin.Context) {
+	log.Infof("Received request to get user by name")
+
+	name := c.Param("name")
+	user, err := logic.GetUserByName(c, name)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Unable to get user by name")
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
 func SearchCategories(c *gin.Context) {
 	category := c.Query("category")
 	rounds := c.Query("rounds")
 
-	categories, err := jeopardy.SearchCategories(category, rounds)
+	categories, err := jeopardy.SearchCategories(c, category, rounds)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Unable to search categories")
 		return

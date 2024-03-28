@@ -30,6 +30,7 @@ import { RecvWagerComponent } from './game/recv-wager/recv-wager.component';
 import { InstructionsComponent } from './instructions/instructions.component';
 import { ConfigComponent } from './join/config/config.component';
 import { JoinComponent } from './join/join.component';
+import { LeaderboardsComponent } from './leaderboards/leaderboards.component';
 import { LinkJoinComponent } from './link-join/link-join.component';
 import { ProfileComponent } from './profile/profile.component';
 import { WarningComponent } from './warning/warning.component';
@@ -64,6 +65,7 @@ import { WarningComponent } from './warning/warning.component';
     ProfileComponent,
     PasswordResetComponent,
     NewPasswordComponent,
+    LeaderboardsComponent,
   ],
   imports: [
     BrowserModule,

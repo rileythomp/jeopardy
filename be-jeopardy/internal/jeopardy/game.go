@@ -1,6 +1,7 @@
 package jeopardy
 
 import (
+	"context"
 	"fmt"
 	"math/rand/v2"
 	"os"
@@ -59,12 +60,12 @@ type (
 	}
 
 	jeopardyDB interface {
-		GetQuestions(firstRoundCategories, secondRoundCategories int) ([]db.Question, error)
-		GetCategoryQuestions(category db.Category) ([]db.Question, error)
-		AddAlternative(alternative, answer string) error
-		AddIncorrect(incorrect, clue string) error
-		SaveGameAnalytics(gameID uuid.UUID, createdAt int64, fr db.AnalyticsRound, sr db.AnalyticsRound) error
-		IncrementPlayerGames(email string, wins, points, answers, correct int) error
+		GetQuestions(ctx context.Context, frCategories, srCategories int) ([]db.Question, error)
+		GetCategoryQuestions(ctx context.Context, category db.Category) ([]db.Question, error)
+		AddAlternative(ctx context.Context, alternative, answer string) error
+		AddIncorrect(ctx context.Context, incorrect, clue string) error
+		SaveGameAnalytics(ctx context.Context, gameID uuid.UUID, createdAt int64, fr db.AnalyticsRound, sr db.AnalyticsRound) error
+		IncrementPlayerGames(ctx context.Context, email string, wins, points, answers, correct int) error
 		Close()
 	}
 
@@ -117,7 +118,7 @@ const (
 
 var maxPlayers = 6
 
-func NewGame(db jeopardyDB, config GameConfig) (*Game, error) {
+func NewGame(ctx context.Context, db jeopardyDB, config GameConfig) (*Game, error) {
 	game := &Game{
 		GameConfig: config,
 		GameChannels: GameChannels{
@@ -141,7 +142,7 @@ func NewGame(db jeopardyDB, config GameConfig) (*Game, error) {
 		LastToPick: &Player{},
 		imgOffset:  rand.IntN(6),
 	}
-	if err := game.setQuestions(); err != nil {
+	if err := game.setQuestions(ctx); err != nil {
 		return nil, err
 	}
 	game.processMessages()
@@ -154,7 +155,7 @@ func (g *Game) processMessages() {
 		for {
 			select {
 			case msg := <-g.msgChan:
-				if err := g.processMsg(msg); err != nil {
+				if err := g.processMsg(context.Background(), msg); err != nil {
 					log.Errorf("Error processing message: %s", err.Error())
 				}
 			case player := <-g.disconnectChan:
@@ -162,7 +163,7 @@ func (g *Game) processMessages() {
 				g.disconnectPlayer(player)
 			case <-g.restartChan:
 				log.Infof("Restarting game %s", g.Name)
-				g.restartGame()
+				g.restartGame(context.Background())
 			}
 		}
 	}()
@@ -176,7 +177,7 @@ func (g *Game) startRound(player GamePlayer) {
 	}
 }
 
-func (g *Game) restartGame() {
+func (g *Game) restartGame(ctx context.Context) {
 	g.State = PreGame
 	g.Round = FirstRound
 	g.LastToPick = &Player{}
@@ -190,7 +191,7 @@ func (g *Game) restartGame() {
 	g.NumFinalWagers = 0
 	g.FinalWagers = []string{}
 	g.FinalAnswers = []string{}
-	g.setQuestions()
+	g.setQuestions(ctx)
 	for _, p := range g.Players {
 		p.resetPlayer()
 	}
@@ -232,7 +233,7 @@ func (g *Game) disconnectPlayer(player GamePlayer) {
 
 }
 
-func (g *Game) processMsg(msg Message) error {
+func (g *Game) processMsg(ctx context.Context, msg Message) error {
 	player := msg.Player
 	if g.State != msg.State {
 		log.Infof("Ignoring message from player %s because it is not for the current game state", player.name())
@@ -270,10 +271,10 @@ func (g *Game) processMsg(msg Message) error {
 			action = "passed"
 		}
 		log.Debugf("Player %s %s", player.name(), action)
-		err = g.processBuzz(player, msg.IsPass)
+		err = g.processBuzz(ctx, player, msg.IsPass)
 	case RecvAns:
 		log.Debugf("Player %s answered", player.name())
-		err = g.processAnswer(player, msg.Answer)
+		err = g.processAnswer(ctx, player, msg.Answer)
 	case RecvWager:
 		log.Debugf("Player %s wagered", player.name())
 		err = g.processWager(player, msg.Wager)
@@ -283,7 +284,7 @@ func (g *Game) processMsg(msg Message) error {
 			action = "disputed"
 		}
 		log.Debugf("Player %s %s the question", player.name(), action)
-		err = g.processDispute(player, msg.Dispute)
+		err = g.processDispute(ctx, player, msg.Dispute)
 	case PostGame:
 		log.Debugf("Player %s protested", player.name())
 		err = g.processProtest(player, msg.ProtestFor)
@@ -354,7 +355,7 @@ func (g *Game) processPick(player GamePlayer, catIdx, valIdx int) error {
 	return nil
 }
 
-func (g *Game) processBuzz(player GamePlayer, isPass bool) error {
+func (g *Game) processBuzz(ctx context.Context, player GamePlayer, isPass bool) error {
 	if !player.canBuzz() {
 		return fmt.Errorf("player cannot buzz")
 	}
@@ -363,7 +364,7 @@ func (g *Game) processBuzz(player GamePlayer, isPass bool) error {
 		player.setCanBuzz(false)
 		if g.noPlayerCanBuzz() {
 			g.cancelBuzzTimeout()
-			g.skipQuestion()
+			g.skipQuestion(ctx)
 			return nil
 		}
 		return nil
@@ -374,14 +375,14 @@ func (g *Game) processBuzz(player GamePlayer, isPass bool) error {
 	return nil
 }
 
-func (g *Game) processAnswer(player GamePlayer, answer string) error {
+func (g *Game) processAnswer(ctx context.Context, player GamePlayer, answer string) error {
 	if !player.canAnswer() {
 		return fmt.Errorf("player cannot answer")
 	}
 	player.cancelAnswerTimeout()
 	isCorrect := g.CurQuestion.checkAnswer(answer)
 	if g.Round == FinalRound {
-		return g.processFinalRoundAns(player, isCorrect, answer)
+		return g.processFinalRoundAns(ctx, player, isCorrect, answer)
 	}
 	g.AnsCorrectness = isCorrect
 	g.CurQuestion.CurAns = &Answer{
@@ -392,16 +393,16 @@ func (g *Game) processAnswer(player GamePlayer, answer string) error {
 	}
 	g.CurQuestion.Answers = append(g.CurQuestion.Answers, g.CurQuestion.CurAns)
 	if !isCorrect {
-		if err := g.jeopardyDB.AddIncorrect(g.CurQuestion.CurAns.Answer, g.CurQuestion.Clue); err != nil {
+		if err := g.jeopardyDB.AddIncorrect(ctx, g.CurQuestion.CurAns.Answer, g.CurQuestion.Clue); err != nil {
 			log.Errorf("Error adding incorrect: %s", err.Error())
 		}
 	}
 	g.CurQuestion.CurAns.Correct = isCorrect
-	g.nextQuestion(g.CurQuestion.CurAns.Player, isCorrect)
+	g.nextQuestion(ctx, g.CurQuestion.CurAns.Player, isCorrect)
 	return nil
 }
 
-func (g *Game) processDispute(player GamePlayer, dispute bool) error {
+func (g *Game) processDispute(ctx context.Context, player GamePlayer, dispute bool) error {
 	if !player.canDispute() {
 		return fmt.Errorf("player cannot dispute")
 	}
@@ -443,7 +444,7 @@ func (g *Game) processDispute(player GamePlayer, dispute bool) error {
 				break
 			}
 		}
-		if err := g.jeopardyDB.AddAlternative(g.CurQuestion.CurDisputed.Answer, g.CurQuestion.Answer); err != nil {
+		if err := g.jeopardyDB.AddAlternative(ctx, g.CurQuestion.CurDisputed.Answer, g.CurQuestion.Answer); err != nil {
 			log.Errorf("Error adding alternative: %s", err.Error())
 		}
 		nextPicker = g.CurQuestion.CurDisputed.Player
@@ -529,7 +530,7 @@ func (g *Game) processProtest(protestByPlayer GamePlayer, protestFor string) err
 	return nil
 }
 
-func (g *Game) processFinalRoundAns(player GamePlayer, isCorrect bool, answer string) error {
+func (g *Game) processFinalRoundAns(ctx context.Context, player GamePlayer, isCorrect bool, answer string) error {
 	player.updateScore(g.CurQuestion.Value, isCorrect, g.Penalty, g.Round)
 	g.FinalAnswers = append(g.FinalAnswers, player.id())
 	player.setCanAnswer(false)
@@ -537,7 +538,7 @@ func (g *Game) processFinalRoundAns(player GamePlayer, isCorrect bool, answer st
 	player.setFinalCorrect(isCorrect)
 	if g.roundEnded() {
 		g.setState(PostGame, &Player{})
-		g.saveGameAnalytics()
+		g.saveGameAnalytics(ctx)
 		g.messageAllPlayers("Final round ended")
 		return nil
 	}
@@ -663,7 +664,7 @@ func (g *Game) startSecondRound() {
 	g.startRound(g.lowestPlayer())
 }
 
-func (g *Game) startFinalRound() {
+func (g *Game) startFinalRound(ctx context.Context) {
 	g.Round = FinalRound
 	g.resetGuesses()
 	g.CurQuestion = g.FinalQuestion
@@ -671,13 +672,13 @@ func (g *Game) startFinalRound() {
 	g.NumFinalWagers = g.numFinalWagers()
 	if g.NumFinalWagers < 2 {
 		g.setState(PostGame, &Player{})
-		g.saveGameAnalytics()
+		g.saveGameAnalytics(ctx)
 	} else {
 		g.setState(RecvWager, &Player{})
 	}
 }
 
-func (g *Game) handleRoundEnd() {
+func (g *Game) handleRoundEnd(ctx context.Context) {
 	if g.Round == FirstRound {
 		g.FirstRoundScore = g.getAvgScore()
 	} else if g.Round == SecondRound {
@@ -686,11 +687,11 @@ func (g *Game) handleRoundEnd() {
 	if g.Round == FirstRound && g.FullGame {
 		g.startSecondRound()
 	} else {
-		g.startFinalRound()
+		g.startFinalRound(ctx)
 	}
 }
 
-func (g *Game) nextQuestion(player GamePlayer, isCorrect bool) {
+func (g *Game) nextQuestion(ctx context.Context, player GamePlayer, isCorrect bool) {
 	player.updateScore(g.CurQuestion.Value, isCorrect, g.Penalty, g.Round)
 	if !isCorrect {
 		g.GuessedWrong = append(g.GuessedWrong, player.id())
@@ -700,7 +701,7 @@ func (g *Game) nextQuestion(player GamePlayer, isCorrect bool) {
 	}
 	var msg string
 	if g.roundEnded() {
-		g.handleRoundEnd()
+		g.handleRoundEnd(ctx)
 		msg = "Round ended"
 	} else if g.noPlayerCanBuzz() {
 		g.resetGuesses()
@@ -719,11 +720,11 @@ func (g *Game) nextQuestion(player GamePlayer, isCorrect bool) {
 	g.messageAllPlayers(msg)
 }
 
-func (g *Game) skipQuestion() {
+func (g *Game) skipQuestion(ctx context.Context) {
 	var msg string
 	g.disableQuestion()
 	if g.roundEnded() {
-		g.handleRoundEnd()
+		g.handleRoundEnd(ctx)
 		msg = "Round ended"
 	} else {
 		g.resetGuesses()

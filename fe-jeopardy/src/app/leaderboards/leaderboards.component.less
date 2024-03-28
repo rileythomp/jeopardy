@@ -1,0 +1,63 @@
+#leaderboards-container {
+    margin-top: calc(var(--header-height));
+    padding: 2em;
+    gap: 1em;
+    min-height: calc(100vh - var(--header-height) - 4em);
+
+    .analytics-panel {
+        border: 1px solid var(--jeopardy-blue);
+        border-radius: 1em;
+        background-color: var(--jeopardy-lightblue);
+        padding: 1.5em 2em;
+
+        h2 {
+            margin: 0;
+        }
+
+        select {
+            margin-top: 1em;
+            padding: 0.25em;
+            border-radius: 5px;
+        }
+    }
+
+    #leaderboard {
+        margin-top: 1em;
+
+        .player-container {
+            border-bottom: 1px solid var(--jeopardy-blue);
+            padding: 0.5em;
+
+            .center-vert {
+                display: flex;
+                align-items: center;
+            }
+
+            .leader-text {
+                font-size: 1.5em;
+            }
+
+            img {
+                width: 2.5em;
+                height: 2.5em;
+                object-fit: cover;
+                border-radius: 50%;
+                border: 1px solid black;
+                margin-right: 1em;
+            }
+
+            .leader-name:hover {
+                text-decoration: underline;
+                cursor: pointer;
+            }
+        }
+
+        .player-container:first-child {
+            border-top: 1px solid var(--jeopardy-blue);
+        }
+    }
+
+    app-analytics {
+        font-size: 1.5em;
+    }
+}
