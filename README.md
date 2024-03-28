@@ -100,8 +100,6 @@ $ ng serve
 
 ### TODO
 
-- Leaderboards and improved analytics
-
 - Allow players to select bot difficulty
 
 - Tournament play
