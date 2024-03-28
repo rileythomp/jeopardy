@@ -60,7 +60,7 @@ func (g *Game) startBuzzTimeout() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancelBuzzTimeout = cancel
 	g.startTimeout(ctx, g.BuzzTimeout, &Player{}, func(_ GamePlayer) error {
-		g.skipQuestion()
+		g.skipQuestion(ctx)
 		return nil
 	})
 }
@@ -75,7 +75,7 @@ func (g *Game) startAnswerTimeout(player GamePlayer) {
 	}
 	go g.startTimeout(ctx, timeout, player, func(player GamePlayer) error {
 		if g.Round == FinalRound {
-			return g.processFinalRoundAns(player, false, "answer-timeout")
+			return g.processFinalRoundAns(ctx, player, false, "answer-timeout")
 		}
 		g.CurQuestion.CurAns = &Answer{
 			Player:  player,
@@ -84,7 +84,7 @@ func (g *Game) startAnswerTimeout(player GamePlayer) {
 			Bot:     player.isBot(),
 		}
 		g.CurQuestion.Answers = append(g.CurQuestion.Answers, g.CurQuestion.CurAns)
-		g.nextQuestion(player, false)
+		g.nextQuestion(ctx, player, false)
 		return nil
 	})
 }

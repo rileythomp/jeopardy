@@ -11,7 +11,7 @@ var supabase *db.SupabaseDB
 
 func init() {
 	var err error
-	supabase, err = db.NewSupabaseDB()
+	supabase, err = db.NewSupabaseDB(context.Background())
 	if err != nil {
 		log.Fatalf("error creating supabase db: %v", err)
 	}

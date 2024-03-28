@@ -183,7 +183,7 @@ func CreatePrivateGame(c *gin.Context) {
 		return
 	}
 
-	game, playerId, err, code := jeopardy.CreatePrivateGame(req)
+	game, playerId, err, code := jeopardy.CreatePrivateGame(c, req)
 	if err != nil {
 		log.Errorf("Error creating private game: %s", err.Error())
 		if code == socket.BadRequest {
@@ -251,7 +251,7 @@ func JoinPublicGame(c *gin.Context) {
 		return
 	}
 
-	game, playerId, err, code := jeopardy.JoinPublicGame(req)
+	game, playerId, err, code := jeopardy.JoinPublicGame(c, req)
 	if err != nil {
 		log.Errorf("Error joining public game: %s", err.Error())
 		if code == socket.BadRequest {
@@ -423,7 +423,7 @@ func LeaveGame(c *gin.Context) {
 func GetAnalytics(c *gin.Context) {
 	log.Infof("Received request to get analytics")
 
-	analytics, err := jeopardy.GetAnalytics()
+	analytics, err := jeopardy.GetAnalytics(c)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Unable to get analytics")
 		return
@@ -453,7 +453,7 @@ func GetPlayerAnalytics(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "Email is required")
 	}
 
-	analytics, err := jeopardy.GetPlayerAnalytics(email)
+	analytics, err := jeopardy.GetPlayerAnalytics(c, email)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Unable to get player analytics")
 		return
@@ -479,7 +479,7 @@ func SearchCategories(c *gin.Context) {
 	category := c.Query("category")
 	rounds := c.Query("rounds")
 
-	categories, err := jeopardy.SearchCategories(category, rounds)
+	categories, err := jeopardy.SearchCategories(c, category, rounds)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Unable to search categories")
 		return

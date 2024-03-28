@@ -1,6 +1,7 @@
 package jeopardy
 
 import (
+	"context"
 	"math/rand/v2"
 	"strings"
 
@@ -64,7 +65,7 @@ func (q *Question) equal(q0 *Question) bool {
 	return q.Clue == q0.Clue && q.Answer == q0.Answer
 }
 
-func (g *Game) setQuestions() error {
+func (g *Game) setQuestions(ctx context.Context) error {
 	g.FirstRound = []Category{}
 	g.SecondRound = []Category{}
 	g.FinalQuestion = &Question{}
@@ -75,14 +76,14 @@ func (g *Game) setQuestions() error {
 
 	categories := append(g.FirstRoundCategories, g.SecondRoundCategories...)
 	for _, category := range categories {
-		categoryQuestions, err := g.jeopardyDB.GetCategoryQuestions(category)
+		categoryQuestions, err := g.jeopardyDB.GetCategoryQuestions(ctx, category)
 		if err != nil {
 			return err
 		}
 		questions = append(questions, categoryQuestions...)
 	}
 
-	randomQuestions, err := g.jeopardyDB.GetQuestions(6-len(g.FirstRoundCategories), 6-len(g.SecondRoundCategories))
+	randomQuestions, err := g.jeopardyDB.GetQuestions(ctx, 6-len(g.FirstRoundCategories), 6-len(g.SecondRoundCategories))
 	if err != nil {
 		return err
 	}

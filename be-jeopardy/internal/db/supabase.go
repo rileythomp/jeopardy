@@ -24,12 +24,12 @@ type (
 	}
 )
 
-func NewSupabaseDB() (*SupabaseDB, error) {
+func NewSupabaseDB(ctx context.Context) (*SupabaseDB, error) {
 	poolConfig, err := pgxpool.ParseConfig(os.Getenv("SUPABASE_URL"))
 	if err != nil {
 		return &SupabaseDB{}, err
 	}
-	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
 		return &SupabaseDB{}, err
 	}
