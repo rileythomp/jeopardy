@@ -25,7 +25,7 @@ type (
 )
 
 func NewSupabaseDB(ctx context.Context) (*SupabaseDB, error) {
-	poolConfig, err := pgxpool.ParseConfig(os.Getenv("SUPABASE_URL"))
+	poolConfig, err := pgxpool.ParseConfig(os.Getenv("SUPABASE_DB_URL"))
 	if err != nil {
 		return &SupabaseDB{}, err
 	}
