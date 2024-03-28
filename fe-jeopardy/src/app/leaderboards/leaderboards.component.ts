@@ -16,9 +16,7 @@ export class LeaderboardsComponent {
 		private api: ApiService,
 		private modal: ModalService,
 		protected router: Router
-	) {
-
-	}
+	) { }
 
 	async ngOnInit() {
 		await this.updateLeaderboard()
