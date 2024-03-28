@@ -136,6 +136,8 @@ func GetPlayerAnalytics(email string) (any, error) {
 	return analytics, nil
 }
 
+var userCache = map[string]db.User{}
+
 func GetLeaderboard(ctx context.Context, leaderboardType string) ([]*db.AnalyticsUser, error) {
 	leaderboard, err := analyticsDB.GetLeaderboard(ctx, leaderboardType)
 	if err != nil {
@@ -145,11 +147,16 @@ func GetLeaderboard(ctx context.Context, leaderboardType string) ([]*db.Analytic
 	for _, user := range leaderboard {
 		user.WinRate, _ = strconv.ParseFloat(fmt.Sprintf("%.1f", 100*user.WinRate), 64)
 		user.CorrectRate, _ = strconv.ParseFloat(fmt.Sprintf("%.1f", 100*user.CorrectRate), 64)
-		user.User, err = supabase.GetUserByEmail(ctx, user.Email)
-		if err != nil {
-			log.Errorf("Error getting user: %s", err.Error())
-			return nil, err
+		if u, ok := userCache[user.Email]; ok {
+			user.User = u
+		} else {
+			user.User, err = supabase.GetUserByEmail(ctx, user.Email)
+			if err != nil {
+				log.Errorf("Error getting user: %s", err.Error())
+				return nil, err
+			}
 		}
+		userCache[user.Email] = user.User
 	}
 	return leaderboard, nil
 }
