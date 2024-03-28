@@ -7,6 +7,13 @@ import { JwtService } from './jwt.service';
 
 const apiAddr = environment.apiServerUrl;
 const httpProtocol = environment.httpProtocol;
+const nullUser = {
+    email: '',
+    imgUrl: '',
+    authenticated: false,
+    name: '',
+    dateJoined: '',
+}
 
 @Injectable({
     providedIn: 'root'
@@ -81,8 +88,13 @@ export class ApiService {
         return this.put('games/start', {})
     }
 
-    async GetUserByName(name: string): Promise<User> {
-        let resp = await firstValueFrom(this.get(`users/${name}`))
+    async GetUserByName(name: string): Promise<{ user: User, err: Error | null }> {
+        let resp;
+        try {
+            resp = await firstValueFrom(this.get(`users/${name}`))
+        } catch (error) {
+            return { user: nullUser, err: Error('Error getting user by name') }
+        }
         let user: User = {
             email: resp.email,
             imgUrl: resp.imgUrl,
@@ -90,7 +102,7 @@ export class ApiService {
             name: resp.displayName,
             dateJoined: this.formattedDate(resp.confirmedAt)
         }
-        return user
+        return { user: user, err: null }
     }
 
     // todo: move this to utils

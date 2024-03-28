@@ -49,7 +49,12 @@ export class ProfileComponent implements OnInit {
 	async ngOnInit() {
 		await this.auth.GetUser()
 		if (this.profileName) {
-			this.profileUser = await this.api.GetUserByName(this.profileName) // todo: handle the error here;
+			let { user, err } = await this.api.GetUserByName(this.profileName)
+			if (err) {
+				this.modal.displayMessage('Uh oh, there was an error getting this user. Please try again later.')
+				return
+			}
+			this.profileUser = user
 		} else {
 			this.profileUser = this.user
 		}
