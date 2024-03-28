@@ -16,7 +16,7 @@ type (
 		DisplayName string    `json:"displayName"`
 		ImgUrl      string    `json:"imgUrl"`
 		Public      bool      `json:"public"`
-		ConfirmedAt time.Time `json:"confirmedAt"`
+		CreatedAt   time.Time `json:"createdAt"`
 	}
 
 	SupabaseDB struct {
@@ -52,7 +52,27 @@ func (db *SupabaseDB) GetUserByName(ctx context.Context, name string) (User, err
 		&user.DisplayName,
 		&user.ImgUrl,
 		&user.Public,
-		&user.ConfirmedAt,
+		&user.CreatedAt,
+	)
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+
+//go:embed sql/get_user_by_email.sql
+var getUserByEmail string
+
+func (db *SupabaseDB) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	row := db.pool.QueryRow(ctx, getUserByEmail, email)
+	var user User
+	err := row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.DisplayName,
+		&user.ImgUrl,
+		&user.Public,
+		&user.CreatedAt,
 	)
 	if err != nil {
 		return User{}, err

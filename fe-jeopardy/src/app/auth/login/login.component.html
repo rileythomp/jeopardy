@@ -7,7 +7,7 @@
             </div>
             <div>
                 <div id='password' class='flex-row'>
-                    <input (focus)="passwordsBorder('1px solid grey')" #passwordInput [(ngModel)]="password" type="password" autocomplete="current-password" placeholder="Password">
+                    <input (keydown.enter)='logIn()' (focus)="passwordsBorder('1px solid grey')" #passwordInput [(ngModel)]="password" type="password" autocomplete="current-password" placeholder="Password">
                     <ion-icon *ngIf='showEye' (click)='showPassword(true)' name='eye-outline'></ion-icon>
                     <ion-icon *ngIf='!showEye' (click)='showPassword(false)' name='eye-off-outline'></ion-icon>
                 </div>

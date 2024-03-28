@@ -96,8 +96,8 @@ export class AuthService {
 			imgUrl: data.user?.user_metadata['user_img_url'] ?? data.user?.user_metadata['avatar_url'],
 			authenticated: true,
 			name: data.user?.user_metadata['display_name'] ?? data.user?.user_metadata['full_name'],
-			dateJoined: formattedDate(data.user?.confirmed_at ?? ''),
-			public: data.user?.user_metadata['profile_public'] ?? false,
+			dateJoined: formattedDate(data.user?.created_at ?? ''),
+			public: data.user?.user_metadata['profile_public'] ?? true,
 		}
 		this.userSubject.next(user)
 		return null

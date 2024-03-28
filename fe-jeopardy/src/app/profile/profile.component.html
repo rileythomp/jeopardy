@@ -10,7 +10,7 @@
             </div>
         </div>
         <div *ngIf='!editName' class='profile-username'>
-            <p style='font-size: 2em;'>{{ profileUser.name }}</p>
+            <p style='font-size: 2em; max-width: 10em; word-break: break-word;'>{{ profileUser.name }}</p>
             <div *ngIf='user.email == profileUser.email'><ion-icon (click)='showEditName(true)' name='pencil-outline'></ion-icon></div>
         </div>
         <div *ngIf='editName && user.email == profileUser.email' class='profile-username'>
@@ -42,20 +42,20 @@
         <div *ngIf='playSomeGames && user.email == profileUser.email'>
             <p>No player analytics found. Play some games to start generating analytics.</p>
         </div>
-        <div *ngIf='analytics'>
+        <div id='player-analytics' class='flex-column' *ngIf='analytics'>
             <div>
-                <h4>Record</h4>
-                <p>{{ analytics.wins }}-{{ analytics.games - analytics.wins }} ({{ analytics.winPercentage }}%)</p>
+                <h2>Record</h2>
+                <p>{{ analytics.wins.toLocaleString() }}-{{ (analytics.games - analytics.wins).toLocaleString() }} ({{ analytics.winPercentage }}%)</p>
             </div>
             <div>
-                <h4>All-time Totals</h4>
-                <p>Points: ${{ analytics.points }}</p>
-                <p>Correct answers: {{ analytics.correct }}/{{ analytics.answers }} ({{ analytics.correctPercentage }}%)</p>    
+                <h2>All-time Totals</h2>
+                <p>Points: ${{ analytics.points.toLocaleString() }}</p>
+                <p>Correct answers: {{ analytics.correct.toLocaleString() }}/{{ analytics.answers.toLocaleString() }} ({{ analytics.correctPercentage }}%)</p>    
             </div>
             <div>
-                <h4>All-time Highs</h4>
-                <p>Points: ${{analytics.maxPoints }}</p>
-                <p>Correct answers: {{ analytics.maxCorrect }}</p>
+                <h2>All-time Highs</h2>
+                <p>Points: ${{analytics.maxPoints.toLocaleString() }}</p>
+                <p>Correct answers: {{ analytics.maxCorrect.toLocaleString() }}</p>
             </div>
         </div>
     </div>

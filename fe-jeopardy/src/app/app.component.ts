@@ -24,7 +24,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	protected showRegistration: boolean = false
 
 	constructor(
-		private router: Router,
+		protected router: Router,
 		protected modal: ModalService,
 		private auth: AuthService,
 	) { }

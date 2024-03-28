@@ -97,7 +97,8 @@ export class ProfileComponent implements OnInit {
 			return
 		}
 		this.showImgUpload = false
-		this.auth.GetUser()
+		await this.auth.GetUser()
+		this.profileUser = this.user
 	}
 
 	async sendPasswordResetEmail() {

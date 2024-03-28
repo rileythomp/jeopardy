@@ -102,10 +102,20 @@ export class ApiService {
             imgUrl: resp.imgUrl,
             authenticated: false,
             name: resp.displayName,
-            dateJoined: formattedDate(resp.confirmedAt),
+            dateJoined: formattedDate(resp.createdAt),
             public: resp.public,
         }
         return { user: user, err: null }
+    }
+
+    async GetLeaderboard(type: string): Promise<{ leaderboard: any[], err: Error | null }> {
+        let resp;
+        try {
+            resp = await firstValueFrom(this.get(`analytics/leaderboard?type=${type}`))
+        } catch (error) {
+            return { leaderboard: [], err: Error('Error getting leaderboard') }
+        }
+        return { leaderboard: resp, err: null }
     }
 
     private post(path: string, req: any): Observable<any> {

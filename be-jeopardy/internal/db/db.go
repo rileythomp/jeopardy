@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	_ "embed"
+	"fmt"
 	"os"
 
 	"github.com/google/uuid"
@@ -125,6 +126,19 @@ type AnalyticsQuestion struct {
 	Answers []AnalyticsAnswer `json:"answers"`
 }
 
+type AnalyticsUser struct {
+	User
+	Games       int     `json:"games"`
+	Wins        int     `json:"wins"`
+	Points      int     `json:"points"`
+	Answers     int     `json:"answers"`
+	Correct     int     `json:"correct"`
+	MaxPoints   int     `json:"maxPoints"`
+	MaxCorrect  int     `json:"maxCorrect"`
+	WinRate     float64 `json:"winRate"`
+	CorrectRate float64 `json:"correctRate"`
+}
+
 type AnalyticsAnswer struct {
 	PlayerID    string `json:"playerId"`
 	Answer      string `json:"answer"`
@@ -172,6 +186,42 @@ func (db *JeopardyDB) GetAnalytics() (any, error) {
 		return nil, err
 	}
 	return a, nil
+}
+
+//go:embed sql/get_leaderboards.sql
+var getLeaderboards string
+
+func (db *JeopardyDB) GetLeaderboard(ctx context.Context, leaderboardType string) ([]*AnalyticsUser, error) {
+	switch leaderboardType {
+	case "win_rate", "wins", "games", "correct_rate", "correct", "answers", "points", "max_points", "max_correct":
+	default:
+		return nil, fmt.Errorf("invalid leaderboard type: %s", leaderboardType)
+	}
+	rows, err := db.pool.Query(ctx, fmt.Sprintf(getLeaderboards, leaderboardType))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	leaderboard := []*AnalyticsUser{}
+	for rows.Next() {
+		user := &AnalyticsUser{}
+		if err := rows.Scan(
+			&user.Email,
+			&user.Wins,
+			&user.Games,
+			&user.WinRate,
+			&user.Correct,
+			&user.Answers,
+			&user.CorrectRate,
+			&user.Points,
+			&user.MaxPoints,
+			&user.MaxCorrect,
+		); err != nil {
+			return nil, err
+		}
+		leaderboard = append(leaderboard, user)
+	}
+	return leaderboard, nil
 }
 
 //go:embed sql/get_player_analytics.sql

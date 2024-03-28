@@ -125,6 +125,11 @@ var (
 			Path:    "/jeopardy/users/:name",
 			Handler: GetUserByName,
 		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/jeopardy/analytics/leaderboard",
+			Handler: GetLeaderboard,
+		},
 	}
 
 	upgrader = websocket.Upgrader{
@@ -425,6 +430,19 @@ func GetAnalytics(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, analytics)
+}
+
+func GetLeaderboard(c *gin.Context) {
+	log.Infof("Received request to get leaderboard")
+
+	leaderboardType := c.Query("type")
+	leaderboard, err := jeopardy.GetLeaderboard(c, leaderboardType)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Unable to get leaderboard")
+		return
+	}
+
+	c.JSON(http.StatusOK, leaderboard)
 }
 
 func GetPlayerAnalytics(c *gin.Context) {

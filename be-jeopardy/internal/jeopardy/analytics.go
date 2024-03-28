@@ -1,6 +1,9 @@
 package jeopardy
 
 import (
+	"context"
+	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -131,4 +134,22 @@ func GetPlayerAnalytics(email string) (any, error) {
 		return nil, err
 	}
 	return analytics, nil
+}
+
+func GetLeaderboard(ctx context.Context, leaderboardType string) ([]*db.AnalyticsUser, error) {
+	leaderboard, err := analyticsDB.GetLeaderboard(ctx, leaderboardType)
+	if err != nil {
+		log.Errorf("Error getting leaderboard: %s", err.Error())
+		return nil, err
+	}
+	for _, user := range leaderboard {
+		user.WinRate, _ = strconv.ParseFloat(fmt.Sprintf("%.1f", 100*user.WinRate), 64)
+		user.CorrectRate, _ = strconv.ParseFloat(fmt.Sprintf("%.1f", 100*user.CorrectRate), 64)
+		user.User, err = supabase.GetUserByEmail(ctx, user.Email)
+		if err != nil {
+			log.Errorf("Error getting user: %s", err.Error())
+			return nil, err
+		}
+	}
+	return leaderboard, nil
 }

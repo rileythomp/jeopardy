@@ -338,6 +338,7 @@ func PlayAgain(playerId string) error {
 
 var searchDB *db.JeopardyDB
 var analyticsDB *db.JeopardyDB
+var supabase *db.SupabaseDB
 
 func init() {
 	var err error
@@ -346,6 +347,10 @@ func init() {
 		log.Fatalf("Error connecting to database: %s", err.Error())
 	}
 	analyticsDB, err = db.NewJeopardyDB()
+	if err != nil {
+		log.Fatalf("Error connecting to database: %s", err.Error())
+	}
+	supabase, err = db.NewSupabaseDB()
 	if err != nil {
 		log.Fatalf("Error connecting to database: %s", err.Error())
 	}
