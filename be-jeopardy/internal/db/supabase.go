@@ -42,7 +42,7 @@ func (db *SupabaseDB) Close() {
 //go:embed sql/get_user_by_name.sql
 var getUserByName string
 
-func (db *SupabaseDB) GetUserByName(ctx context.Context, name string) (any, error) {
+func (db *SupabaseDB) GetUserByName(ctx context.Context, name string) (User, error) {
 	row := db.pool.QueryRow(ctx, getUserByName, name)
 	var user User
 	err := row.Scan(
@@ -53,7 +53,7 @@ func (db *SupabaseDB) GetUserByName(ctx context.Context, name string) (any, erro
 		&user.ConfirmedAt,
 	)
 	if err != nil {
-		return nil, err
+		return User{}, err
 	}
 	return user, nil
 }

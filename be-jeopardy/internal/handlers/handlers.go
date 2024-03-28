@@ -12,8 +12,8 @@ import (
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/auth"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/jeopardy"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/log"
+	"github.com/rileythomp/jeopardy/be-jeopardy/internal/logic"
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/socket"
-	"github.com/rileythomp/jeopardy/be-jeopardy/internal/supabase"
 )
 
 type (
@@ -448,7 +448,7 @@ func GetUserByName(c *gin.Context) {
 	log.Infof("Received request to get user by name")
 
 	name := c.Param("name")
-	user, err := supabase.GetUserByName(c, name)
+	user, err := logic.GetUserByName(c, name)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Unable to get user by name")
 		return
