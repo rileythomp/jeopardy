@@ -4,6 +4,7 @@ import { Observable, firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { User } from '../model/model';
 import { JwtService } from './jwt.service';
+import { formattedDate } from './utils';
 
 const apiAddr = environment.apiServerUrl;
 const httpProtocol = environment.httpProtocol;
@@ -100,16 +101,9 @@ export class ApiService {
             imgUrl: resp.imgUrl,
             authenticated: false,
             name: resp.displayName,
-            dateJoined: this.formattedDate(resp.confirmedAt)
+            dateJoined: formattedDate(resp.confirmedAt)
         }
         return { user: user, err: null }
-    }
-
-    // todo: move this to utils
-    private formattedDate(dateStr: string): string {
-        let date = new Date(dateStr);
-        let formattedDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: '2-digit' }).format(date);
-        return formattedDate
     }
 
     private post(path: string, req: any): Observable<any> {
