@@ -19,7 +19,8 @@ export class AuthService {
 			imgUrl: '',
 			authenticated: false,
 			name: '',
-			dateJoined: ''
+			dateJoined: '',
+			public: false,
 		});
 		this.user = this.userSubject.asObservable();
 	}
@@ -28,6 +29,19 @@ export class AuthService {
 		let { data, error } = await this.supabase.Auth().updateUser({
 			data: {
 				display_name: name,
+			}
+		})
+		if (error) {
+			console.error(error)
+			return error
+		}
+		return null
+	}
+
+	public async UpdateProfileVisibility(profilePublic: boolean): Promise<Error | null> {
+		let { data, error } = await this.supabase.Auth().updateUser({
+			data: {
+				profile_public: profilePublic,
 			}
 		})
 		if (error) {
@@ -82,7 +96,8 @@ export class AuthService {
 			imgUrl: data.user?.user_metadata['user_img_url'] ?? data.user?.user_metadata['avatar_url'],
 			authenticated: true,
 			name: data.user?.user_metadata['display_name'] ?? data.user?.user_metadata['full_name'],
-			dateJoined: formattedDate(data.user?.confirmed_at ?? '')
+			dateJoined: formattedDate(data.user?.confirmed_at ?? ''),
+			public: data.user?.user_metadata['profile_public'] ?? false,
 		}
 		this.userSubject.next(user)
 		return null

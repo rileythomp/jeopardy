@@ -47,11 +47,14 @@ export class ProfileComponent implements OnInit {
 	}
 
 	async ngOnInit() {
-		await this.auth.GetUser()
-		if (this.profileName) {
+		if (await this.auth.GetUser() && !this.profileName) {
+			this.modal.displayMessage('You must be logged in to view your profile.')
+			return
+		}
+		if (this.profileName && this.profileName != this.user.name) {
 			let { user, err } = await this.api.GetUserByName(this.profileName)
 			if (err) {
-				this.modal.displayMessage('Uh oh, there was an error getting this user. Please try again later.')
+				this.modal.displayMessage('Sorry, there is no user with this name and a public profile.')
 				return
 			}
 			this.profileUser = user
@@ -120,5 +123,13 @@ export class ProfileComponent implements OnInit {
 		}
 		this.profileUser.name = this.editedUserName
 		this.showEditName(false)
+	}
+
+	async updateProfileVisibility(profilePublic: boolean) {
+		if (await this.auth.UpdateProfileVisibility(profilePublic)) {
+			this.modal.displayMessage('Uh oh, there was an error updating your profile visibility. Please try again later.')
+			return
+		}
+		await this.auth.GetUser()
 	}
 }

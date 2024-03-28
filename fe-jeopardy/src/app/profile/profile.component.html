@@ -1,4 +1,4 @@
-<div *ngIf='profileUser'  id='profile-container' class='flex-row'>
+<div *ngIf='profileUser && (profileUser.public || profileUser.email == user.email)'  id='profile-container' class='flex-row'>
     <div id='profile-side-panel' class='flex-column profile-panel'>
         <div>
             <img [src]="profileUser.imgUrl" alt="">
@@ -20,6 +20,12 @@
         </div>
         <div><p>{{ profileUser.email }}</p></div>
         <div><p>Date joined: {{ profileUser.dateJoined }}</p></div>
+        <div *ngIf='user.email == profileUser.email'>
+            <input id='private-profile' type="checkbox" [(ngModel)]="!user.public" (change)="updateProfileVisibility(false)">
+            <label for="private-profile" style="margin-right: 1em;">Private</label>
+            <input id='public-profile' type="checkbox" [(ngModel)]="user.public" (change)="updateProfileVisibility(true)">
+            <label for="public-profile">Public</label>
+        </div>
         <div *ngIf='user.email == profileUser.email'>
             <p class='link' (click)='showPasswordReset = !showPasswordReset'>Reset password</p>
             <div *ngIf='showPasswordReset'>

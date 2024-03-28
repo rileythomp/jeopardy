@@ -4,6 +4,7 @@ export type User = {
     name: string;
     email: string;
     dateJoined: string;
+    public: boolean;
 }
 
 export type Game = {

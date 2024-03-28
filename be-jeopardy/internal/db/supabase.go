@@ -15,6 +15,7 @@ type (
 		Email       string    `json:"email"`
 		DisplayName string    `json:"displayName"`
 		ImgUrl      string    `json:"imgUrl"`
+		Public      bool      `json:"public"`
 		ConfirmedAt time.Time `json:"confirmedAt"`
 	}
 
@@ -50,6 +51,7 @@ func (db *SupabaseDB) GetUserByName(ctx context.Context, name string) (User, err
 		&user.Email,
 		&user.DisplayName,
 		&user.ImgUrl,
+		&user.Public,
 		&user.ConfirmedAt,
 	)
 	if err != nil {

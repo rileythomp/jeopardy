@@ -14,6 +14,7 @@ const nullUser = {
     authenticated: false,
     name: '',
     dateJoined: '',
+    public: false,
 }
 
 @Injectable({
@@ -101,7 +102,8 @@ export class ApiService {
             imgUrl: resp.imgUrl,
             authenticated: false,
             name: resp.displayName,
-            dateJoined: formattedDate(resp.confirmedAt)
+            dateJoined: formattedDate(resp.confirmedAt),
+            public: resp.public,
         }
         return { user: user, err: null }
     }
