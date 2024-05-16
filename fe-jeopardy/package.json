@@ -17,7 +17,7 @@
     "@angular/forms": "^17.3.1",
     "@angular/platform-browser": "^17.3.1",
     "@angular/platform-browser-dynamic": "^17.3.1",
-    "@angular/router": "^17.3.1",
+    "@angular/router": "^17.3.9",
     "@supabase/supabase-js": "^2.39.8",
     "@types/uuid": "^9.0.8",
     "rxjs": "~7.8.0",
