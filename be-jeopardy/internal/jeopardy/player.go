@@ -136,6 +136,7 @@ func NewPlayer(name, imgUrl, email string) *Player {
 		CancelWagerTimeout:  func() {},
 		sendGamePing:        time.NewTicker(pingFrequency),
 		sendChatPing:        time.NewTicker(pingFrequency),
+		sendReactPing:       time.NewTicker(pingFrequency),
 	}
 }
 

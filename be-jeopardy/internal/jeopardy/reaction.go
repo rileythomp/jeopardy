@@ -3,6 +3,7 @@ package jeopardy
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -13,6 +14,7 @@ type Reaction struct {
 	PlayerName string `json:"name"`
 	Reaction   string `json:"reaction"`
 	TimeStamp  int64  `json:"timeStamp"`
+	RandPos    int    `json:"randPos"`
 }
 
 func JoinReactions(playerId string, conn SafeConn) error {
@@ -26,7 +28,7 @@ func JoinReactions(playerId string, conn SafeConn) error {
 		return err
 	}
 	if player.reactionConn() != nil {
-		return fmt.Errorf("Player already in reactions stream")
+		return fmt.Errorf("Player already in game reactions")
 	}
 	player.setReactionConn(conn)
 
@@ -52,8 +54,10 @@ func (p *Player) processReactions(reactChan chan Reaction) {
 			if err := json.Unmarshal(message, &msg); err != nil {
 				log.Errorf("Error parsing reaction message: %s", err.Error())
 			}
+			log.Infof("Received reaction from player %s: %+v", p.Name, msg)
 			msg.PlayerName = p.Name
 			msg.TimeStamp = time.Now().Unix()
+			msg.RandPos = getRandPos(10, 150)
 			reactChan <- msg
 		}
 	}()
@@ -74,7 +78,7 @@ func (g *Game) processReactions() {
 
 func (p *Player) readReaction() ([]byte, error) {
 	if p.ReactionConn == nil {
-		log.Infof("Skipping reading reaction message from player %s because connection is nil", p.Name)
+		log.Infof("Skipping reading reaction from player %s because connection is nil", p.Name)
 		return nil, fmt.Errorf("Player %s has no reaction connection", p.Name)
 	}
 	_, msg, err := p.ReactionConn.ReadMessage()
@@ -85,8 +89,9 @@ func (p *Player) readReaction() ([]byte, error) {
 }
 
 func (p *Player) sendReaction(msg Reaction) error {
+	log.Infof("Sending reaction to player %s: %+v", p.Name, msg)
 	if p.ReactionConn == nil {
-		log.Errorf("Error sending reaction message to player %s because connection is nil", p.Name)
+		log.Errorf("Error sending reaction to player %s because connection is nil", p.Name)
 		return fmt.Errorf("player has no reaction connection")
 	}
 	if err := p.ReactionConn.WriteJSON(msg); err != nil {
@@ -107,6 +112,7 @@ func (p *Player) sendReactionPings() {
 					PlayerName: ping,
 					Reaction:   ping,
 					TimeStamp:  time.Now().Unix(),
+					RandPos:    getRandPos(10, 10),
 				}); err != nil {
 					if p.ReactionConn == nil {
 						log.Infof("Stopping sending reaction pings to player %s because connection is nil", p.Name)
@@ -126,4 +132,8 @@ func (p *Player) sendReactionPings() {
 			}
 		}
 	}()
+}
+
+func getRandPos(min, max int) int {
+	return rand.Intn(max-min+1) + min
 }

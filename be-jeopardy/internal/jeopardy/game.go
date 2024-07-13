@@ -127,6 +127,7 @@ func NewGame(ctx context.Context, db jeopardyDB, config GameConfig) (*Game, erro
 			disconnectChan: make(chan GamePlayer),
 			restartChan:    make(chan bool),
 			chatChan:       make(chan ChatMessage),
+			reactChan:      make(chan Reaction),
 		},
 		GameTimeouts: GameTimeouts{
 			cancelBoardIntroTimeout: func() {},
@@ -148,6 +149,7 @@ func NewGame(ctx context.Context, db jeopardyDB, config GameConfig) (*Game, erro
 	}
 	game.processMessages()
 	game.processChatMessages()
+	game.processReactions()
 	return game, nil
 }
 
