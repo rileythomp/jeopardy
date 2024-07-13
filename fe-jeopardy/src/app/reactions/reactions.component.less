@@ -1,0 +1,108 @@
+#game-reactions {
+	position: fixed;
+	right: calc(10px + var(--players-container-width));
+	bottom: 10px;
+	border: 1px solid black;
+	border-radius: 5px;
+	z-index: 1000;
+	max-height: 7.5em;
+	overflow-y: auto;
+	background-color: white;
+	scrollbar-width: thin;
+	width: 13em;
+
+	.reactions-header {
+		border-bottom: 1px solid black;
+		background-color: white;
+		flex: 0;
+		padding: 3px;
+
+		input {
+			padding: 3px;
+			font-size: 0.75em;
+		}
+
+		ion-icon {
+			float: right;
+			font-size: 1.25em;
+			margin-top: 1px;
+		}
+
+		ion-icon:hover {
+			cursor: pointer;
+			font-weight: bold;
+			color: red;
+		}
+	}
+
+	.reactions-input {
+		padding: 5px;
+		flex: 0;
+		gap: 10px;
+
+		p {
+			margin: 0;
+			text-align: center;
+			user-select: none;
+			font-size: 1.25em;
+		}
+
+		p:hover {
+			cursor: pointer;
+			transform: scale(1.4);
+		}
+	}
+}
+
+.floating-reaction {
+	position: fixed;
+	animation: floatUp 6s forwards;
+	z-index: -1;
+
+	p {
+		margin: 0;
+		text-align: right;
+	}
+
+	.reaction-name {
+		font-size: 0.75em;
+	}
+
+	.reaction-emoji {
+		font-size: 1.5em;
+	}
+}
+
+@keyframes floatUp {
+	0% {
+		top: calc(100% - 4em);
+		opacity: 1;
+	}
+
+	50% {
+		opacity: 1;
+	}
+
+	100% {
+		top: var(--header-height);
+		opacity: 0;
+	}
+}
+
+#reaction-box {
+	position: fixed;
+	right: calc(var(--players-container-width)/2);
+	bottom: 10px;
+	width: 50px;
+	height: 50px;
+	text-align: center;
+	vertical-align: middle;
+	line-height: 50px;
+	background-color: white;
+	font-size: 30px;
+}
+
+#reaction-box:hover {
+	cursor: pointer;
+	transform: scale(1.1);
+}

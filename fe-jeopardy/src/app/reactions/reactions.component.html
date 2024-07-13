@@ -1,0 +1,19 @@
+<div id='game-reactions' class='flex-column' *ngIf="!hideReactions">
+    <div class='reactions-header flex-row'>
+        <input type="text" placeholder="Search emojis" [(ngModel)]="emojiFilter" (input)="filterEmojis()">
+        <ion-icon name="close-outline" (click)="closeReactions()"></ion-icon>
+    </div>
+    <div class='reactions-input flex-row' *ngFor="let row of emojisList">
+        <p *ngFor="let emoji of row" (click)="sendReaction(emoji.emoji)">{{emoji.emoji}}</p>
+    </div>
+</div>
+
+<div class='floating-reaction' *ngFor="let reaction of reactionsList"
+[ngStyle]="{'right': getRightPosition(reaction.randPos)}">
+    <p class='reaction-name'>{{reaction.username}}</p>
+    <p class='reaction-emoji'>{{reaction.reaction}}</p>
+</div>
+
+<div id='reaction-box' *ngIf="hideReactions" (click)="openReactions()">
+    <ion-icon name="happy-outline"></ion-icon>
+</div>
