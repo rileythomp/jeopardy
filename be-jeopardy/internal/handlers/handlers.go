@@ -102,6 +102,11 @@ var (
 		},
 		{
 			Method:  http.MethodGet,
+			Path:    "/jeopardy/reactions",
+			Handler: JoinReactions,
+		},
+		{
+			Method:  http.MethodGet,
 			Path:    "/jeopardy/analytics",
 			Handler: GetAnalytics,
 		},
@@ -144,6 +149,7 @@ const (
 	ErrGeneratingJWTMsg    = "Error generating JWT: %s"
 	ErrGettingPlayerIdMsg  = "Error getting playerId from token: %s"
 	ErrJoiningChatMsg      = "Uh oh, something went wrong when joining the game chat."
+	ErrJoiningReactionsMsg = "Uh oh, something went wrong when joining the game reactions."
 	ErrInvalidAuthCredMsg  = "Uh oh, something went wrong: Invalid authentication credentials"
 	ErrMalformedReqMsg     = "Uh oh, something went wrong: Malformed request"
 )
@@ -313,6 +319,46 @@ func JoinGameChat(c *gin.Context) {
 	if err != nil {
 		log.Errorf("Error joining chat: %s", err.Error())
 		closeConnWithMsg(ws, socket.BadRequest, "Unable to join chat: %s", err.Error())
+		return
+	}
+}
+
+func JoinReactions(c *gin.Context) {
+	log.Infof("Received request to join game reactions")
+
+	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		log.Errorf("Error upgrading connection to WebSocket: %s", err.Error())
+		respondWithError(c, http.StatusInternalServerError, ErrJoiningReactionsMsg)
+		return
+	}
+
+	_, msg, err := ws.ReadMessage()
+	if err != nil {
+		log.Errorf("Error reading message from WebSocket: %s", err.Error())
+		closeConnWithMsg(ws, socket.ServerError, ErrJoiningReactionsMsg)
+		return
+	}
+
+	var req TokenRequest
+	if err := json.Unmarshal(msg, &req); err != nil {
+		log.Errorf("Error parsing reaction request: %s", err.Error())
+		closeConnWithMsg(ws, socket.BadRequest, ErrMalformedReqMsg)
+		return
+	}
+
+	playerId, err := auth.GetJWTSubject(req.Token)
+	if err != nil {
+		log.Errorf(ErrGettingPlayerIdMsg, err.Error())
+		closeConnWithMsg(ws, socket.Unauthorized, ErrInvalidAuthCredMsg)
+		return
+	}
+
+	conn := socket.NewSafeConn(ws)
+	err = jeopardy.JoinReactions(playerId, conn)
+	if err != nil {
+		log.Errorf("Error joining reactions: %s", err.Error())
+		closeConnWithMsg(ws, socket.BadRequest, "Unable to join reactions: %s", err.Error())
 		return
 	}
 }

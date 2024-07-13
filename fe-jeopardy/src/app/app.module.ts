@@ -33,6 +33,7 @@ import { JoinComponent } from './join/join.component';
 import { LeaderboardsComponent } from './leaderboards/leaderboards.component';
 import { LinkJoinComponent } from './link-join/link-join.component';
 import { ProfileComponent } from './profile/profile.component';
+import { ReactionsComponent } from './reactions/reactions.component';
 import { WarningComponent } from './warning/warning.component';
 
 @NgModule({
@@ -66,6 +67,7 @@ import { WarningComponent } from './warning/warning.component';
     PasswordResetComponent,
     NewPasswordComponent,
     LeaderboardsComponent,
+    ReactionsComponent,
   ],
   imports: [
     BrowserModule,
