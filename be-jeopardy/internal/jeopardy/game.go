@@ -57,6 +57,7 @@ type (
 		disconnectChan chan GamePlayer
 		restartChan    chan bool
 		chatChan       chan ChatMessage
+		reactChan      chan Reaction
 	}
 
 	jeopardyDB interface {

@@ -1,6 +1,6 @@
 module github.com/rileythomp/jeopardy/be-jeopardy
 
-go 1.22
+go 1.22.5
 
 require (
 	github.com/agnivade/levenshtein v1.1.1

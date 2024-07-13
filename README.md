@@ -83,7 +83,7 @@ Play here: https://playjeopardy.netlify.app
 Server
 
 ```
-$ cd jeopardy-be
+$ cd be-jeopardy
 $ go mod tidy
 $ docker compose up -d postgres
 $ source .env
@@ -93,7 +93,7 @@ $ make run
 Client
 
 ```
-$ cd jeopardy-fe
+$ cd fe-jeopardy
 $ npm install
 $ ng serve
 ```
