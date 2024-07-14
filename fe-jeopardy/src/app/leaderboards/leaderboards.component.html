@@ -1,0 +1,40 @@
+<div id='leaderboards-container' class='flex-row'>
+    <div class='analytics-panel'>
+        <h2>Leaderboards</h2>
+        <select [(ngModel)]='leaderboardType' (change)='updateLeaderboard()'>
+            <option value="correct_rate">By % correct answers</option>
+            <option value="win_rate">By win %</option>
+            <option value="wins">By # of wins</option>
+            <option value="games">By # of games</option>
+            <option value="points">By total points (all-time)</option>
+            <option value="correct">By correct answers (all-time)</option>
+            <option value="max_points">By total points (1 game)</option>
+            <option value="max_correct">By correct answers (1 game)</option>
+        </select>
+        <div id='leaderboard' class='flex-column'>
+            <div class='player-container flex-row' *ngFor='let player of leaderboard'>
+                <div class='center-vert' style='flex: 0;'>
+                    <img [src]="player.imgUrl" alt="">
+                </div>
+                <div (click)="router.navigate(['/profile/' + player.displayName])" class='leader-name center-vert leader-text' style='margin-right: 2em; word-break: break-word;'>
+                    {{player.displayName}}
+                </div>
+                <div class='center-vert leader-text'>
+                    <span *ngIf='leaderboardType == "correct_rate"'>{{player.correctRate}}% ({{player.correct}}/{{player.answers}})</span>
+                    <span *ngIf='leaderboardType == "win_rate"'>{{ player.winRate }}% ({{ player.wins.toLocaleString() }}-{{ (player.games - player.wins).toLocaleString() }})</span>
+                    <span *ngIf='leaderboardType == "wins"'>{{player.wins.toLocaleString()}}</span>
+                    <span *ngIf='leaderboardType == "games"'>{{player.games.toLocaleString()}}</span>
+                    <span *ngIf='leaderboardType == "points"'>${{player.points.toLocaleString()}}</span>
+                    <span *ngIf='leaderboardType == "correct"'>{{player.correct.toLocaleString()}}</span>
+                    <span *ngIf='leaderboardType == "answers"'>{{player.answers.toLocaleString()}}</span>
+                    <span *ngIf='leaderboardType == "max_points"'>${{player.maxPoints.toLocaleString()}}</span>
+                    <span *ngIf='leaderboardType == "max_correct"'>{{player.maxCorrect.toLocaleString()}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class='analytics-panel'>
+        <h2>Analytics</h2>
+        <app-analytics></app-analytics>
+    </div>
+</div>

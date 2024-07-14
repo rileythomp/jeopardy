@@ -2,6 +2,7 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
+import { User } from './model/model';
 import { AuthService } from './services/auth.service';
 import { ModalService } from './services/modal.service';
 
@@ -19,11 +20,11 @@ import { ModalService } from './services/modal.service';
 })
 export class AppComponent implements OnInit, AfterViewInit {
 	protected showAuthOptions: boolean = false
-	protected userAuthenticated: boolean = false
-	protected playerImg: string = ''
+	protected user: User
+	protected showRegistration: boolean = false
 
 	constructor(
-		private router: Router,
+		protected router: Router,
 		protected modal: ModalService,
 		private auth: AuthService,
 	) { }
@@ -47,8 +48,7 @@ Please report any issues to https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhds
 		console.log(jeopardy)
 
 		this.auth.user.subscribe(user => {
-			this.userAuthenticated = user.authenticated
-			this.playerImg = user.imgUrl
+			this.user = user
 		})
 
 		this.auth.GetUser()
@@ -79,23 +79,23 @@ Please report any issues to https://docs.google.com/forms/d/e/1FAIpQLSdzHFumIhds
 		location.replace('');
 	}
 
-	async signUp() {
-		if (await this.auth.SignUp({
-			email: 'rileythompson99@gmail.com',
-			password: 'testpassword',
-			options: {
-				data: {
-					first_name: 'Riley',
-					age: 25,
-				}
-			}
-		})) {
-			this.handleAuthError('Uh oh, there was an unexpected error signing up. Please try again.')
-		}
+	startRegistration() {
+		this.showAuthOptions = false
+		this.modal.displayRegister()
 	}
 
 	handleAuthError(msg: string) {
 		this.showAuthOptions = false
 		this.modal.displayMessage(msg)
+	}
+
+	startLogin() {
+		this.showAuthOptions = false
+		this.modal.displayLogin()
+	}
+
+	goToProfile() {
+		this.showAuthOptions = false
+		this.router.navigate(['/profile'])
 	}
 }

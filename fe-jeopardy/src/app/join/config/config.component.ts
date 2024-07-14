@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
-import { ServerUnavailableMsg } from 'src/app/model/model';
+import { ServerUnavailableMsg, User } from 'src/app/model/model';
 import { ApiService } from 'src/app/services/api.service';
 import { JwtService } from 'src/app/services/jwt.service';
 import { ModalService } from 'src/app/services/modal.service';
@@ -11,9 +11,7 @@ import { ModalService } from 'src/app/services/modal.service';
 	styleUrls: ['./config.component.less']
 })
 export class ConfigComponent {
-	@Input() userAuthenticated: boolean = false
-	@Input() playerImg: string = ''
-	@Input() playerName: string = ''
+	@Input() user: User
 	@Input() oneRoundChecked: boolean = true
 	@Input() twoRoundChecked: boolean = false
 	@Input() penaltyChecked: boolean = true
@@ -106,7 +104,7 @@ export class ConfigComponent {
 	}
 
 	createPrivateGame(bots: number) {
-		if (this.playerName == '') {
+		if (this.user.name == '') {
 			document.getElementById('player-name-config')!.focus()
 			document.getElementById('player-name-config')!.style.border = '1px solid red';
 			setTimeout(() => {
@@ -115,12 +113,13 @@ export class ConfigComponent {
 			return
 		}
 		this.api.CreatePrivateGame(
-			this.playerName, this.playerImg,
+			this.user.name, this.user.imgUrl, this.user.email,
 			bots, this.twoRoundChecked, this.penaltyChecked,
 			this.pickConfig, this.buzzConfig, this.answerConfig, this.wagerConfig,
 			this.firstRoundCategories, this.secondRoundCategories
 		).subscribe({
 			next: (resp: any) => {
+				this.modal.hideConfig()
 				this.jwt.SetJWT(resp.token)
 				this.router.navigate([`/game/${resp.game.name}`])
 			},

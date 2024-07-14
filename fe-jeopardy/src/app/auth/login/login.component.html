@@ -1,0 +1,29 @@
+<div class='modal-container flex-column'>
+    <div class='modal-message'>
+        <h3>Sign in with email</h3>
+        <div id='login-inputs' class='flex-column'>
+            <div class='flex-row'>
+                <input (focus)="emailBorder('1px solid grey')" #emailInput [(ngModel)]="email" type="email" autocomplete="email" placeholder="Email">
+            </div>
+            <div>
+                <div id='password' class='flex-row'>
+                    <input (keydown.enter)='logIn()' (focus)="passwordsBorder('1px solid grey')" #passwordInput [(ngModel)]="password" type="password" autocomplete="current-password" placeholder="Password">
+                    <ion-icon *ngIf='showEye' (click)='showPassword(true)' name='eye-outline'></ion-icon>
+                    <ion-icon *ngIf='!showEye' (click)='showPassword(false)' name='eye-off-outline'></ion-icon>
+                </div>
+                <p (click)='showSendReset = !showSendReset' class='link'>Forgot your password?</p>
+                <button (click)='sendPasswordResetEmail()' *ngIf='showSendReset' id='reset-button'>
+                    <div class='icon-text'>
+                        <div><ion-icon name="paper-plane-outline"></ion-icon></div>
+                        <p>Send password reset email</p>
+                    </div>
+                </button>
+            </div>
+        </div>    
+    </div>
+    <div><p *ngIf="loginMessage != ''">{{loginMessage}}</p></div>
+    <div id='login-buttons' class='flex-row'>
+        <button (click)='logIn()'>Sign in</button>
+        <button (click)='modal.hideLogin()'>Exit</button>
+    </div>
+</div>

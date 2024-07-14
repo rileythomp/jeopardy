@@ -2,6 +2,9 @@ export type User = {
     imgUrl: string;
     authenticated: boolean;
     name: string;
+    email: string;
+    dateJoined: string;
+    public: boolean;
 }
 
 export type Game = {
@@ -99,6 +102,13 @@ export type Message = {
     username: string;
     message: string;
     timestamp: number;
+}
+
+export type Reaction = {
+    username: string;
+    reaction: string;
+    timestamp: number;
+    randPos: number;
 }
 
 export let ServerUnavailableMsg = 'Sorry, Jeopardy is not available right now. Please try again later.'

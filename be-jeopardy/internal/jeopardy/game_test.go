@@ -1,6 +1,7 @@
 package jeopardy
 
 import (
+	"context"
 	"testing"
 
 	"github.com/rileythomp/jeopardy/be-jeopardy/internal/db"
@@ -9,12 +10,13 @@ import (
 
 func TestSetQuestions(t *testing.T) {
 	t.Run("test setting questions", func(t *testing.T) {
-		db, err := db.NewJeopardyDB()
+		ctx := context.Background()
+		db, err := db.NewJeopardyDB(ctx)
 		if err != nil {
 			t.Fatalf("Error connecting to database: %s", err.Error())
 		}
 		g := Game{jeopardyDB: db}
-		err = g.setQuestions()
+		err = g.setQuestions(ctx)
 		assert.NoError(t, err)
 		assert.Len(t, g.FirstRound, 6)
 		for _, category := range g.FirstRound {

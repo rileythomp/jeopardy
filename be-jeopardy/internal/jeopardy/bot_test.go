@@ -1,6 +1,7 @@
 package jeopardy
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -34,7 +35,7 @@ func TestPickWager(t *testing.T) {
 	}
 	for i, tc := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
-			p1, p2, bot := NewPlayer("a", ""), NewPlayer("b", ""), NewBot("c", 0)
+			p1, p2, bot := NewPlayer("a", "", ""), NewPlayer("b", "", ""), NewBot("c", 0)
 			p1.addToScore(tc.score1)
 			p2.addToScore(tc.score2)
 			bot.addToScore(tc.score3)
@@ -52,7 +53,8 @@ func pickQuestion(g *Game, catIdx, valIdx int) {
 
 func TestPickQuestion(t *testing.T) {
 	t.Run("test pick question", func(t *testing.T) {
-		questionDB, err := db.NewJeopardyDB()
+		ctx := context.Background()
+		questionDB, err := db.NewJeopardyDB(ctx)
 		if err != nil {
 			t.Fatalf("Failed to create questionDB: %s", err)
 		}
@@ -60,7 +62,7 @@ func TestPickQuestion(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create config: %s", err)
 		}
-		game, err := NewGame(questionDB, config)
+		game, err := NewGame(ctx, questionDB, config)
 		if err != nil {
 			t.Fatalf("Failed to create game: %s", err)
 		}

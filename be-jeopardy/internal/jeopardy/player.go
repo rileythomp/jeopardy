@@ -22,8 +22,10 @@ type SafeConn interface {
 type GamePlayer interface {
 	id() string
 	name() string
+	email() string
 	conn() SafeConn
 	chatConn() SafeConn
+	reactionConn() SafeConn
 	score() int
 	canPick() bool
 	canBuzz() bool
@@ -41,6 +43,7 @@ type GamePlayer interface {
 	setImg(string)
 	setConn(SafeConn)
 	setChatConn(SafeConn)
+	setReactionConn(SafeConn)
 	setCanBuzz(bool)
 	setCanAnswer(bool)
 	setCanWager(bool)
@@ -52,11 +55,14 @@ type GamePlayer interface {
 
 	readMessages(msgChan chan Message, disconnectChan chan GamePlayer)
 	processChatMessages(chan ChatMessage)
+	processReactions(chan Reaction)
 	sendPings()
 	sendChatPings()
+	sendReactionPings()
 
 	sendMessage(Response) error
 	sendChatMessage(ChatMessage) error
+	sendReaction(Reaction) error
 	updateActions(pick, buzz, answer, wager bool)
 	updateScore(val int, isCorrect, penalty bool, round RoundState)
 	addFinalProtestor(string)
@@ -74,6 +80,7 @@ type GamePlayer interface {
 type Player struct {
 	Id              string          `json:"id"`
 	Name            string          `json:"name"`
+	Email           string          `json:"email"`
 	Score           int             `json:"score"`
 	CanPick         bool            `json:"canPick"`
 	CanBuzz         bool            `json:"canBuzz"`
@@ -87,14 +94,16 @@ type Player struct {
 	PlayAgain       bool            `json:"playAgain"`
 	ImgUrl          string          `json:"imgUrl"`
 
-	Conn     SafeConn `json:"conn"`
-	ChatConn SafeConn `json:"chatConn"`
+	Conn         SafeConn `json:"conn"`
+	ChatConn     SafeConn `json:"chatConn"`
+	ReactionConn SafeConn `json:"reactionConn"`
 
 	CancelAnswerTimeout context.CancelFunc `json:"-"`
 	CancelWagerTimeout  context.CancelFunc `json:"-"`
 
-	sendGamePing *time.Ticker
-	sendChatPing *time.Ticker
+	sendGamePing  *time.Ticker
+	sendChatPing  *time.Ticker
+	sendReactPing *time.Ticker
 }
 
 const (
@@ -111,10 +120,11 @@ var playerImgs = []string{
 	"https://xdlhyjzjygansfeoguvs.supabase.co/storage/v1/object/public/jeopardy_imgs/lion.png",
 }
 
-func NewPlayer(name string, imgUrl string) *Player {
+func NewPlayer(name, imgUrl, email string) *Player {
 	return &Player{
 		Id:                  uuid.New().String(),
 		Name:                name,
+		Email:               email,
 		Score:               0,
 		CanPick:             false,
 		CanBuzz:             false,
@@ -126,6 +136,7 @@ func NewPlayer(name string, imgUrl string) *Player {
 		CancelWagerTimeout:  func() {},
 		sendGamePing:        time.NewTicker(pingFrequency),
 		sendChatPing:        time.NewTicker(pingFrequency),
+		sendReactPing:       time.NewTicker(pingFrequency),
 	}
 }
 
@@ -226,12 +237,20 @@ func (p *Player) name() string {
 	return p.Name
 }
 
+func (p *Player) email() string {
+	return p.Email
+}
+
 func (p *Player) conn() SafeConn {
 	return p.Conn
 }
 
 func (p *Player) chatConn() SafeConn {
 	return p.ChatConn
+}
+
+func (p *Player) reactionConn() SafeConn {
+	return p.ReactionConn
 }
 
 func (p *Player) score() int {
@@ -296,6 +315,10 @@ func (p *Player) setConn(conn SafeConn) {
 
 func (p *Player) setChatConn(conn SafeConn) {
 	p.ChatConn = conn
+}
+
+func (p *Player) setReactionConn(conn SafeConn) {
+	p.ReactionConn = conn
 }
 
 func (p *Player) setCanBuzz(canBuzz bool) {

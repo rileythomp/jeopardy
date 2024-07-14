@@ -9,6 +9,11 @@ import { AnswersComponent } from './answers/answers.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthButtonComponent } from './auth/auth-button/auth-button.component';
+import { LoginComponent } from './auth/login/login.component';
+import { NewPasswordComponent } from './auth/new-password/new-password.component';
+import { PasswordResetComponent } from './auth/password-reset/password-reset.component';
+import { PwReqComponent } from './auth/pw-req/pw-req.component';
+import { RegisterComponent } from './auth/register/register.component';
 import { DisputeComponent } from './dispute/dispute.component';
 import { GameMessageComponent } from './game-message/game-message.component';
 import { BoardIntroComponent } from './game/board-intro/board-intro.component';
@@ -25,7 +30,10 @@ import { RecvWagerComponent } from './game/recv-wager/recv-wager.component';
 import { InstructionsComponent } from './instructions/instructions.component';
 import { ConfigComponent } from './join/config/config.component';
 import { JoinComponent } from './join/join.component';
+import { LeaderboardsComponent } from './leaderboards/leaderboards.component';
 import { LinkJoinComponent } from './link-join/link-join.component';
+import { ProfileComponent } from './profile/profile.component';
+import { ReactionsComponent } from './reactions/reactions.component';
 import { WarningComponent } from './warning/warning.component';
 
 @NgModule({
@@ -52,6 +60,14 @@ import { WarningComponent } from './warning/warning.component';
     AnswersComponent,
     PlayerPodiumComponent,
     AuthButtonComponent,
+    RegisterComponent,
+    PwReqComponent,
+    LoginComponent,
+    ProfileComponent,
+    PasswordResetComponent,
+    NewPasswordComponent,
+    LeaderboardsComponent,
+    ReactionsComponent,
   ],
   imports: [
     BrowserModule,

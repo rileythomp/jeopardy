@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"os"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -31,12 +30,12 @@ type (
 	}
 )
 
-func NewJeopardyDB() (*JeopardyDB, error) {
+func NewJeopardyDB(ctx context.Context) (*JeopardyDB, error) {
 	poolConfig, err := pgxpool.ParseConfig(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		return &JeopardyDB{}, err
 	}
-	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
 		return &JeopardyDB{}, err
 	}
@@ -50,8 +49,8 @@ func (db *JeopardyDB) Close() {
 //go:embed sql/get_questions.sql
 var getQuestions string
 
-func (db *JeopardyDB) GetQuestions(firstRoundCategories, secondRoundCategories int) ([]Question, error) {
-	rows, err := db.pool.Query(context.Background(), getQuestions, firstRoundCategories, secondRoundCategories)
+func (db *JeopardyDB) GetQuestions(ctx context.Context, frCategories, srCategories int) ([]Question, error) {
+	rows, err := db.pool.Query(ctx, getQuestions, frCategories, srCategories)
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +72,8 @@ func (db *JeopardyDB) GetQuestions(firstRoundCategories, secondRoundCategories i
 //go:embed sql/get_category_questions.sql
 var getCategoryQuestions string
 
-func (db *JeopardyDB) GetCategoryQuestions(category Category) ([]Question, error) {
-	rows, err := db.pool.Query(context.Background(), getCategoryQuestions, category.Name, category.AirDate, category.Round)
+func (db *JeopardyDB) GetCategoryQuestions(ctx context.Context, category Category) ([]Question, error) {
+	rows, err := db.pool.Query(ctx, getCategoryQuestions, category.Name, category.AirDate, category.Round)
 	if err != nil {
 		return nil, err
 	}
@@ -96,105 +95,24 @@ func (db *JeopardyDB) GetCategoryQuestions(category Category) ([]Question, error
 //go:embed sql/add_alternatives.sql
 var addAlternative string
 
-func (db *JeopardyDB) AddAlternative(alternative, answer string) error {
-	_, err := db.pool.Exec(context.Background(), addAlternative, alternative, answer)
+func (db *JeopardyDB) AddAlternative(ctx context.Context, alternative, answer string) error {
+	_, err := db.pool.Exec(ctx, addAlternative, alternative, answer)
 	return err
 }
 
 //go:embed sql/add_incorrect.sql
 var addIncorrect string
 
-func (db *JeopardyDB) AddIncorrect(incorrect, clue string) error {
-	_, err := db.pool.Exec(context.Background(), addIncorrect, incorrect, clue)
+func (db *JeopardyDB) AddIncorrect(ctx context.Context, incorrect, clue string) error {
+	_, err := db.pool.Exec(ctx, addIncorrect, incorrect, clue)
 	return err
-}
-
-type AnalyticsRound struct {
-	Categories []AnalyticsCategory
-	Answers    *int
-	Correct    *int
-	Score      *float64
-}
-
-type AnalyticsCategory struct {
-	Title    string              `json:"title"`
-	Question []AnalyticsQuestion `json:"question"`
-}
-
-type AnalyticsQuestion struct {
-	Answers []AnalyticsAnswer `json:"answers"`
-}
-
-type AnalyticsAnswer struct {
-	PlayerID    string `json:"playerId"`
-	Answer      string `json:"answer"`
-	Correct     bool   `json:"correct"`
-	HasDisputed bool   `json:"hasDisputed"`
-	Overturned  bool   `json:"overturned"`
-	Bot         bool   `json:"bot"`
-}
-
-//go:embed sql/save_game_analytics.sql
-var saveGameAnalytics string
-
-func (db *JeopardyDB) SaveGameAnalytics(gameID uuid.UUID, createdAt int64, fr AnalyticsRound, sr AnalyticsRound) error {
-	_, err := db.pool.Exec(
-		context.Background(), saveGameAnalytics, gameID, createdAt,
-		fr.Categories, fr.Answers, fr.Correct, fr.Score,
-		sr.Categories, sr.Answers, sr.Correct, sr.Score,
-	)
-	return err
-}
-
-//go:embed sql/get_analytics.sql
-var getAnalytics string
-
-func (db *JeopardyDB) GetAnalytics() (any, error) {
-	var (
-		gamesPlayed         int
-		firstRoundAnsRate   int
-		firstRoundCorrRate  int
-		firstRoundScore     int
-		secondRoundAnsRate  int
-		secondRoundCorrRate int
-		secondRoundScore    int
-	)
-	err := db.pool.QueryRow(context.Background(), getAnalytics).Scan(
-		&gamesPlayed,
-		&firstRoundAnsRate,
-		&firstRoundCorrRate,
-		&firstRoundScore,
-		&secondRoundAnsRate,
-		&secondRoundCorrRate,
-		&secondRoundScore,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return struct {
-		GamesPlayed         int `json:"gamesPlayed"`
-		FirstRoundAnsRate   int `json:"firstRoundAnsRate"`
-		FirstRoundCorrRate  int `json:"firstRoundCorrRate"`
-		FirstRoundScore     int `json:"firstRoundScore"`
-		SecondRoundAnsRate  int `json:"secondRoundAnsRate"`
-		SecondRoundCorrRate int `json:"secondRoundCorrRate"`
-		SecondRoundScore    int `json:"secondRoundScore"`
-	}{
-		GamesPlayed:         gamesPlayed,
-		FirstRoundAnsRate:   firstRoundAnsRate,
-		FirstRoundCorrRate:  firstRoundCorrRate,
-		FirstRoundScore:     firstRoundScore,
-		SecondRoundAnsRate:  secondRoundAnsRate,
-		SecondRoundCorrRate: secondRoundCorrRate,
-		SecondRoundScore:    secondRoundScore,
-	}, nil
 }
 
 //go:embed sql/search_categories.sql
 var searchCategories string
 
-func (db *JeopardyDB) SearchCategories(query, start string, secondRound int) ([]Category, error) {
-	rows, err := db.pool.Query(context.Background(), searchCategories, query, secondRound, start)
+func (db *JeopardyDB) SearchCategories(ctx context.Context, query, start string, secondRound int) ([]Category, error) {
+	rows, err := db.pool.Query(ctx, searchCategories, query, secondRound, start)
 	if err != nil {
 		return nil, err
 	}
@@ -210,4 +128,12 @@ func (db *JeopardyDB) SearchCategories(query, start string, secondRound int) ([]
 	}
 
 	return categories, nil
+}
+
+//go:embed sql/increment_player_games.sql
+var incrementPlayerGames string
+
+func (db *JeopardyDB) IncrementPlayerGames(ctx context.Context, email string, win, points, answered, correct int) error {
+	_, err := db.pool.Exec(ctx, incrementPlayerGames, email, win, points, answered, correct)
+	return err
 }

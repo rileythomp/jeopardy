@@ -1,11 +1,21 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { User } from '../model/model';
 import { JwtService } from './jwt.service';
+import { formattedDate } from './utils';
 
 const apiAddr = environment.apiServerUrl;
 const httpProtocol = environment.httpProtocol;
+const nullUser = {
+    email: '',
+    imgUrl: '',
+    authenticated: false,
+    name: '',
+    dateJoined: '',
+    public: false,
+}
 
 @Injectable({
     providedIn: 'root'
@@ -17,30 +27,36 @@ export class ApiService {
         private jwt: JwtService,
     ) { }
 
+    GetPlayerAnalytics(email: string): Observable<any> {
+        return this.get(`analytics/players?email=${email}`)
+    }
+
     CreatePrivateGame(
-        playName: string, playerImg: string, bots: number, fullGame: boolean, penalty: boolean,
+        name: string, imgUrl: string, email: string, bots: number, fullGame: boolean, penalty: boolean,
         pickConfig: number, buzzConfig: number, answerConfig: number, wagerConfig: number,
         firstRoundCategories: any[], secondRoundCategories: any[]
     ): Observable<any> {
         return this.post('games', {
-            playerName: playName, playerImg: playerImg, bots: bots, fullGame: fullGame, penalty: penalty,
+            name: name, imgUrl: imgUrl, email: email, bots: bots, fullGame: fullGame, penalty: penalty,
             pickConfig: pickConfig, buzzConfig: buzzConfig, answerConfig: answerConfig, wagerConfig: wagerConfig,
             firstRoundCategories: firstRoundCategories, secondRoundCategories: secondRoundCategories,
         })
     }
 
-    JoinGameByCode(playerName: string, playerImg: string, joinCode: string): Observable<any> {
+    JoinGameByCode(name: string, imgUrl: string, email: string, joinCode: string): Observable<any> {
         return this.put(`games/${joinCode}`, {
-            playerName: playerName,
-            playerImg: playerImg,
+            name: name,
+            imgUrl: imgUrl,
+            email: email,
             joinCode: joinCode,
         })
     }
 
-    JoinPublicGame(playerName: string, playerImg: string): Observable<any> {
+    JoinPublicGame(name: string, imgUrl: string, email: string): Observable<any> {
         return this.put('games', {
-            playerName: playerName,
-            playerImg: playerImg,
+            name: name,
+            imgUrl: imgUrl,
+            email: email,
             fullGame: true,
         })
     }
@@ -72,6 +88,34 @@ export class ApiService {
 
     StartGame(): Observable<any> {
         return this.put('games/start', {})
+    }
+
+    async GetUserByName(name: string): Promise<{ user: User, err: Error | null }> {
+        let resp;
+        try {
+            resp = await firstValueFrom(this.get(`users/${name}`))
+        } catch (error) {
+            return { user: nullUser, err: Error('Error getting user by name') }
+        }
+        let user: User = {
+            email: resp.email,
+            imgUrl: resp.imgUrl,
+            authenticated: false,
+            name: resp.displayName,
+            dateJoined: formattedDate(resp.createdAt),
+            public: resp.public,
+        }
+        return { user: user, err: null }
+    }
+
+    async GetLeaderboard(type: string): Promise<{ leaderboard: any[], err: Error | null }> {
+        let resp;
+        try {
+            resp = await firstValueFrom(this.get(`analytics/leaderboard?type=${type}`))
+        } catch (error) {
+            return { leaderboard: [], err: Error('Error getting leaderboard') }
+        }
+        return { leaderboard: resp, err: null }
     }
 
     private post(path: string, req: any): Observable<any> {

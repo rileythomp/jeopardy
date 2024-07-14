@@ -3,8 +3,8 @@
         <h3>Jeopardy Configuration</h3>
         <div id='config-inputs' class='flex-row'>
             <div class='game-inputs'>
-                <div *ngIf="!userAuthenticated">
-                    <input id="player-name-config" type="text" [(ngModel)]="playerName" placeholder="Enter your name">
+                <div *ngIf="!user.authenticated">
+                    <input id="player-name-config" type="text" [(ngModel)]="user.name" placeholder="Enter your name">
                 </div>
                 <div>
                     <input type="checkbox" id="one-round-config" [(ngModel)]="oneRoundChecked" (change)="twoRoundChecked = !oneRoundChecked">

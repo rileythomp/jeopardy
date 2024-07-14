@@ -1,6 +1,9 @@
 package jeopardy
 
 import (
+	"context"
+	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,7 +16,45 @@ type GameAnalytics struct {
 	SecondRoundScore float64 `json:"secondRoundScore"`
 }
 
-func (g *Game) saveGameAnalytics() {
+func (g *Game) isWinner(score int) bool {
+	for _, player := range g.Players {
+		if player.score() > score {
+			return false
+		}
+	}
+	return true
+}
+
+func (g *Game) answersFor(player GamePlayer) (int, int) {
+	answers, correct := 0, 0
+	for _, category := range g.FirstRound {
+		for _, question := range category.Questions {
+			for _, answer := range question.Answers {
+				if answer.Player.id() == player.id() {
+					answers++
+					if answer.Correct {
+						correct++
+					}
+				}
+			}
+		}
+	}
+	for _, category := range g.SecondRound {
+		for _, question := range category.Questions {
+			for _, answer := range question.Answers {
+				if answer.Player.id() == player.id() {
+					answers++
+					if answer.Correct {
+						correct++
+					}
+				}
+			}
+		}
+	}
+	return answers, correct
+}
+
+func (g *Game) saveGameAnalytics(ctx context.Context) {
 	if !g.Penalty {
 		return
 	}
@@ -22,8 +63,20 @@ func (g *Game) saveGameAnalytics() {
 	if !g.FullGame {
 		sr = db.AnalyticsRound{}
 	}
-	if err := g.jeopardyDB.SaveGameAnalytics(uuid.New(), time.Now().Unix(), fr, sr); err != nil {
+	if err := g.jeopardyDB.SaveGameAnalytics(ctx, uuid.New(), time.Now().Unix(), fr, sr); err != nil {
 		log.Errorf("Error saving game analytics: %s", err.Error())
+	}
+	for _, player := range g.Players {
+		if !player.isBot() && player.email() != "" {
+			wins := 0
+			if g.isWinner(player.score()) {
+				wins = 1
+			}
+			answers, correct := g.answersFor(player)
+			if err := g.jeopardyDB.IncrementPlayerGames(ctx, player.email(), wins, player.score(), answers, correct); err != nil {
+				log.Errorf("Error incrementing player game count: %s", err.Error())
+			}
+		}
 	}
 }
 
@@ -65,18 +118,45 @@ func getRoundAnalytics(round []Category) db.AnalyticsRound {
 	}
 }
 
-func GetAnalytics() (any, error) {
-	db, err := db.NewJeopardyDB()
-	if err != nil {
-		log.Errorf("Error connecting to database: %s", err.Error())
-		return nil, err
-	}
-
-	analytics, err := db.GetAnalytics()
+func GetAnalytics(ctx context.Context) (any, error) {
+	analytics, err := analyticsDB.GetAnalytics(ctx)
 	if err != nil {
 		log.Errorf("Error getting game analytics: %s", err.Error())
 		return nil, err
 	}
-
 	return analytics, nil
+}
+
+func GetPlayerAnalytics(ctx context.Context, email string) (db.PlayerAnalytics, error) {
+	analytics, err := analyticsDB.GetPlayerAnalytics(ctx, email)
+	if err != nil {
+		log.Errorf("Error getting player analytics: %s", err.Error())
+		return db.PlayerAnalytics{}, err
+	}
+	return analytics, nil
+}
+
+var userCache = map[string]db.User{}
+
+func GetLeaderboard(ctx context.Context, leaderboardType string) ([]*db.LeaderboardUser, error) {
+	leaderboard, err := analyticsDB.GetLeaderboard(ctx, leaderboardType)
+	if err != nil {
+		log.Errorf("Error getting leaderboard: %s", err.Error())
+		return nil, err
+	}
+	for _, user := range leaderboard {
+		user.WinRate, _ = strconv.ParseFloat(fmt.Sprintf("%.1f", 100*user.WinRate), 64)
+		user.CorrectRate, _ = strconv.ParseFloat(fmt.Sprintf("%.1f", 100*user.CorrectRate), 64)
+		if u, ok := userCache[user.Email]; ok {
+			user.User = u
+		} else {
+			user.User, err = supabase.GetUserByEmail(ctx, user.Email)
+			if err != nil {
+				log.Errorf("Error getting user: %s", err.Error())
+				return nil, err
+			}
+		}
+		userCache[user.Email] = user.User
+	}
+	return leaderboard, nil
 }

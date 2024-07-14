@@ -19,15 +19,17 @@
     "@angular/platform-browser-dynamic": "^17.3.1",
     "@angular/router": "^17.3.1",
     "@supabase/supabase-js": "^2.39.8",
+    "@types/uuid": "^10.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "uuid": "^10.0.0",
     "zone.js": "~0.14.4"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^17.3.1",
     "@angular/cli": "~17.3.1",
     "@angular/compiler-cli": "^17.3.1",
-    "@types/jasmine": "~4.6.0",
+    "@types/jasmine": "~5.1.0",
     "jasmine-core": "~5.1.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
@@ -38,7 +40,7 @@
   },
   "overrides": {
     "@supabase/supabase-js": {
-      "@supabase/gotrue-js": "2.62.2"
+      "@supabase/gotrue-js": "2.61.0"
     }
   }
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core'
 import { Router } from '@angular/router'
 import { Observer } from 'rxjs'
-import { ServerUnavailableMsg } from '../model/model'
+import { ServerUnavailableMsg, User } from '../model/model'
 import { ApiService } from '../services/api.service'
 import { AuthService } from '../services/auth.service'
 import { JwtService } from '../services/jwt.service'
@@ -13,9 +13,7 @@ import { ModalService } from '../services/modal.service'
 	styleUrls: ['./join.component.less'],
 })
 export class JoinComponent implements OnInit {
-	protected playerName: string = ''
-	protected playerImg: string = ''
-	protected userAuthenticated: boolean = false
+	protected user: User
 	protected joinCode: string = ''
 	protected showJoinCodeInput: boolean = false
 	protected oneRoundChecked: boolean = true
@@ -32,9 +30,7 @@ export class JoinComponent implements OnInit {
 
 	ngOnInit() {
 		this.auth.user.subscribe(user => {
-			this.userAuthenticated = user.authenticated
-			this.playerName = user.name
-			this.playerImg = user.imgUrl
+			this.user = user
 		})
 	}
 
@@ -60,31 +56,31 @@ export class JoinComponent implements OnInit {
 	}
 
 	createPrivateGame(bots: number) {
-		if (this.playerName == '') {
+		if (this.user.name == '') {
 			this.showInvalidName()
 			return
 		}
 		this.api.CreatePrivateGame(
-			this.playerName, this.playerImg,
+			this.user.name, this.user.imgUrl, this.user.email,
 			bots, this.twoRoundChecked, this.penaltyChecked,
 			30, 30, 15, 30, [], []
 		).subscribe(this.joinResp())
 	}
 
 	joinGameByCode() {
-		if (this.playerName == '') {
+		if (this.user.name == '') {
 			this.showInvalidName()
 			return
 		}
-		this.api.JoinGameByCode(this.playerName, this.playerImg, this.joinCode).subscribe(this.joinResp())
+		this.api.JoinGameByCode(this.user.name, this.user.imgUrl, this.user.email, this.joinCode).subscribe(this.joinResp())
 	}
 
 	joinPublicGame() {
-		if (this.playerName == '') {
+		if (this.user.name == '') {
 			this.showInvalidName()
 			return
 		}
-		this.api.JoinPublicGame(this.playerName, this.playerImg).subscribe(this.joinResp())
+		this.api.JoinPublicGame(this.user.name, this.user.imgUrl, this.user.email).subscribe(this.joinResp())
 	}
 
 	rejoin() {
@@ -100,7 +96,7 @@ export class JoinComponent implements OnInit {
 	}
 
 	toggleJoinCodeInput() {
-		if (this.showJoinCodeInput && this.joinCode && this.playerName) {
+		if (this.showJoinCodeInput && this.joinCode && this.user.name) {
 			this.joinGameByCode()
 			return
 		}
