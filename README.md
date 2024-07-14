@@ -43,7 +43,7 @@ Play here: https://playjeopardy.netlify.app
 
 - Sign in with Google and GitHub accounts or email
 
-- Player accounts with analytics (all-time record, totals and highs)
+- Player accounts with privacy controls and analytics (all-time record, totals and highs)
 
 - Game configuration
 
@@ -54,6 +54,23 @@ Play here: https://playjeopardy.netlify.app
   - Play with or without penalties for incorrect answers
   - Play in public or private games
 
+- In-game chat
+
+- Allows for players to pause the game
+
+- Handles players disconnecting and rejoining the game
+
+- Leaderboards
+
+  - By % correct answers
+  - By win %
+  - By # of wins
+  - By # of games
+  - By total points (all-time)
+  - By correct answers (all-time)
+  - By total points (1 game)
+  - By correct answers (1 game)
+
 - Game analytics
 
   - Total number of games played
@@ -61,18 +78,12 @@ Play here: https://playjeopardy.netlify.app
   - Buzz-in rate for each round
   - Correctness rate for each round
 
-- In-game chat
-
-- Allows for players to pause the game
-
-- Handles players disconnecting and rejoining the game
-
 ### Development
 
 Server
 
 ```
-$ cd jeopardy-be
+$ cd be-jeopardy
 $ go mod tidy
 $ docker compose up -d postgres
 $ source .env
@@ -82,14 +93,12 @@ $ make run
 Client
 
 ```
-$ cd jeopardy-fe
+$ cd fe-jeopardy
 $ npm install
 $ ng serve
 ```
 
 ### TODO
-
-- Leaderboards and improved analytics
 
 - Allow players to select bot difficulty
 

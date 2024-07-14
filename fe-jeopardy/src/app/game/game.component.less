@@ -9,7 +9,7 @@
     .player-box {
         padding: 1em;
         border-bottom: 1px solid black;
-        gap: 1em; 
+        gap: 1em;
         position: relative;
     }
 }
@@ -37,13 +37,13 @@
 
 #game-controls {
     .game-control {
-        position: fixed; 
+        position: fixed;
         left: 15px;
 
         ion-icon {
             font-size: 2em;
         }
-    
+
         ion-icon:hover {
             cursor: pointer;
             transform: scale(1.1);
@@ -55,26 +55,26 @@
             1000% {
                 transform: translateX(0);
             }
-    
+
             50% {
                 transform: translateX(-5px);
             }
         }
-    
+
         .control-info {
             animation: moveUpDown 1s infinite;
-            position: fixed; 
-            left: 50px; 
+            position: fixed;
+            left: 50px;
 
             ion-icon {
                 font-size: 1em;
             }
-    
+
             ion-icon:hover {
                 cursor: default;
                 transform: none;
             }
-    
+
             p {
                 margin: 0;
             }
@@ -88,7 +88,7 @@
             top: calc(var(--header-height) + 22px);
         }
     }
-    
+
     #pause-game {
         top: calc(var(--header-height) + 60px);
 

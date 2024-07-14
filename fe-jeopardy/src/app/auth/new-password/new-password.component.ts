@@ -17,7 +17,7 @@ export class NewPasswordComponent {
 		return this.password.length > 7 &&
 			this.password == this.confirmedPassword &&
 			this.hasUppercase() && this.hasLowercase() &&
-			this.hasNumber() && this.hasSpecialChar()
+			this.hasNumber()
 	}
 
 	public setBorder(border: string) {
@@ -35,10 +35,6 @@ export class NewPasswordComponent {
 
 	protected hasNumber(): boolean {
 		return /[0-9]/.test(this.password)
-	}
-
-	protected hasSpecialChar(): boolean {
-		return /[^A-Za-z0-9]/.test(this.password)
 	}
 
 	protected showPassword(show: boolean) {

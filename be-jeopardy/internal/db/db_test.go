@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,11 +9,12 @@ import (
 
 func TestGetQuestions(t *testing.T) {
 	t.Run("test getting questions", func(t *testing.T) {
-		questionDB, err := NewJeopardyDB()
+		ctx := context.Background()
+		questionDB, err := NewJeopardyDB(ctx)
 		if err != nil {
 			t.Fatalf("Error connecting to database: %s", err.Error())
 		}
-		questions, err := questionDB.GetQuestions(6, 6)
+		questions, err := questionDB.GetQuestions(ctx, 6, 6)
 		if err != nil {
 			t.Fatalf("Error getting questions: %s", err.Error())
 		}

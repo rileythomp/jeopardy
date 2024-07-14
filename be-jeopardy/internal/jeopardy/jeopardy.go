@@ -1,6 +1,7 @@
 package jeopardy
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -63,8 +64,8 @@ func (g *Game) validateName(name string) error {
 	return nil
 }
 
-func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
-	jeopardyDB, err := db.NewJeopardyDB()
+func CreatePrivateGame(ctx context.Context, req GameRequest) (*Game, string, error, int) {
+	jeopardyDB, err := db.NewJeopardyDB(ctx)
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
@@ -76,7 +77,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	if err != nil {
 		return &Game{}, "", err, socket.BadRequest
 	}
-	game, err := NewGame(jeopardyDB, config)
+	game, err := NewGame(ctx, jeopardyDB, config)
 	if err != nil {
 		return &Game{}, "", err, socket.ServerError
 	}
@@ -103,7 +104,7 @@ func CreatePrivateGame(req GameRequest) (*Game, string, error, int) {
 	return game, player.Id, nil, 0
 }
 
-func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
+func JoinPublicGame(ctx context.Context, req GameRequest) (*Game, string, error, int) {
 	var game *Game
 	for _, g := range publicGames {
 		if len(g.Players) < maxPlayers && g.validateName(req.PlayerName) == nil {
@@ -112,7 +113,7 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 		}
 	}
 	if game == nil {
-		jeopardyDB, err := db.NewJeopardyDB()
+		jeopardyDB, err := db.NewJeopardyDB(ctx)
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}
@@ -124,7 +125,7 @@ func JoinPublicGame(req GameRequest) (*Game, string, error, int) {
 		if err != nil {
 			return &Game{}, "", err, socket.BadRequest
 		}
-		game, err = NewGame(jeopardyDB, config)
+		game, err = NewGame(ctx, jeopardyDB, config)
 		if err != nil {
 			return &Game{}, "", err, socket.ServerError
 		}
@@ -338,20 +339,26 @@ func PlayAgain(playerId string) error {
 
 var searchDB *db.JeopardyDB
 var analyticsDB *db.JeopardyDB
+var supabase *db.SupabaseDB
 
 func init() {
+	ctx := context.Background()
 	var err error
-	searchDB, err = db.NewJeopardyDB()
+	searchDB, err = db.NewJeopardyDB(ctx)
 	if err != nil {
 		log.Fatalf("Error connecting to database: %s", err.Error())
 	}
-	analyticsDB, err = db.NewJeopardyDB()
+	analyticsDB, err = db.NewJeopardyDB(ctx)
+	if err != nil {
+		log.Fatalf("Error connecting to database: %s", err.Error())
+	}
+	supabase, err = db.NewSupabaseDB(ctx)
 	if err != nil {
 		log.Fatalf("Error connecting to database: %s", err.Error())
 	}
 }
 
-func SearchCategories(category, rounds string) ([]db.Category, error) {
+func SearchCategories(ctx context.Context, category, rounds string) ([]db.Category, error) {
 	if category == "" {
 		return []db.Category{}, nil
 	}
@@ -363,7 +370,7 @@ func SearchCategories(category, rounds string) ([]db.Category, error) {
 	if rounds == "first" {
 		secondRound = 1
 	}
-	categories, err := searchDB.SearchCategories(strings.ToLower(category), start, secondRound)
+	categories, err := searchDB.SearchCategories(ctx, strings.ToLower(category), start, secondRound)
 	if err != nil {
 		log.Errorf("Error searching categories: %s", err.Error())
 		return nil, err
