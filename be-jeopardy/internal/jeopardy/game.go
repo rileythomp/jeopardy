@@ -162,10 +162,8 @@ func (g *Game) processMessages() {
 					log.Errorf("Error processing message: %s", err.Error())
 				}
 			case player := <-g.disconnectChan:
-				log.Infof("Stopping game %s", g.Name)
 				g.disconnectPlayer(player)
 			case <-g.restartChan:
-				log.Infof("Restarting game %s", g.Name)
 				g.restartGame(context.Background())
 			}
 		}
@@ -239,21 +237,17 @@ func (g *Game) disconnectPlayer(player GamePlayer) {
 func (g *Game) processMsg(ctx context.Context, msg Message) error {
 	player := msg.Player
 	if g.State != msg.State {
-		log.Infof("Ignoring message from player %s because it is not for the current game state", player.name())
 		return nil
 	}
 	if g.Paused {
 		if msg.Pause == -1 {
-			log.Infof("Player %s resumed the game", player.name())
 			g.startGame()
 			g.messageAllPlayers("Player %s resumed the game", player.name())
 			return nil
 		}
-		log.Infof("Ignoring message from player %s because game is paused", player.name())
 		return nil
 	}
 	if msg.Pause == 1 {
-		log.Infof("Player %s paused the game", player.name())
 		g.pauseGame()
 		g.messageAllPlayers("Player %s paused the game", player.name())
 		return nil
@@ -262,34 +256,19 @@ func (g *Game) processMsg(ctx context.Context, msg Message) error {
 	switch g.State {
 	case RecvPick:
 		if msg.InitDispute {
-			log.Infof("Player %s disputed the previous question", player.name())
 			err = g.initDispute(player)
 		} else {
-			log.Debugf("Player %s picked", player.name())
 			err = g.processPick(player, msg.CatIdx, msg.ValIdx)
 		}
 	case RecvBuzz:
-		action := "buzzed"
-		if msg.IsPass {
-			action = "passed"
-		}
-		log.Debugf("Player %s %s", player.name(), action)
 		err = g.processBuzz(ctx, player, msg.IsPass)
 	case RecvAns:
-		log.Debugf("Player %s answered", player.name())
 		err = g.processAnswer(ctx, player, msg.Answer)
 	case RecvWager:
-		log.Debugf("Player %s wagered", player.name())
 		err = g.processWager(player, msg.Wager)
 	case RecvDispute:
-		action := "confirmed"
-		if !msg.Dispute {
-			action = "disputed"
-		}
-		log.Debugf("Player %s %s the question", player.name(), action)
 		err = g.processDispute(ctx, player, msg.Dispute)
 	case PostGame:
-		log.Debugf("Player %s protested", player.name())
 		err = g.processProtest(player, msg.ProtestFor)
 	case PreGame:
 		err = fmt.Errorf("received unexpected message")
