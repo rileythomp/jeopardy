@@ -37,7 +37,6 @@ export class PostGameComponent {
 	playAgain() {
 		return this.api.PlayAgain().subscribe({
 			next: (resp: any) => {
-				console.log(resp)
 			},
 			error: (err: any) => {
 				let msg = err.status != 0 ? err.error.message : ServerUnavailableMsg;
@@ -53,7 +52,7 @@ export class PostGameComponent {
 			},
 			error: (err: any) => {
 				let msg = err.status != 0 ? err.error.message : ServerUnavailableMsg;
-				console.log(msg)
+				console.error(msg)
 				this.router.navigate(['/'])
 			},
 		})

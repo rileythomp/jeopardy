@@ -38,15 +38,13 @@ export class ReactionsComponent {
 
 		this.reactions.OnOpen(() => {
 			this.reactions.Send({ token: this.jwt.GetJWT() })
-			console.log('Connected to reactions service')
 		})
 
 		this.reactions.OnMessage((event: { data: string }) => {
 			let resp = JSON.parse(event.data)
-			console.log('Received reaction:', resp)
 
 			if (resp.code >= 4400) {
-				console.log(resp.reaction)
+				console.error(resp.reaction)
 				this.reactionsList.push({
 					username: 'Jeopardy System',
 					reaction: resp.reaction,
@@ -59,8 +57,6 @@ export class ReactionsComponent {
 			if (resp.reaction == Ping) {
 				return
 			}
-
-			console.log(resp)
 
 			this.reactionsList.push({
 				username: resp.name,

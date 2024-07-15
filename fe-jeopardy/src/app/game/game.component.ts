@@ -101,8 +101,6 @@ export class GameComponent implements OnInit {
 			this.player.updatePlayer(resp.curPlayer)
 			this.gameMessage = resp.message
 
-			console.log(resp)
-
 			if (resp.code == 4100) {
 				this.modal.displayMessage(resp.message)
 				return
