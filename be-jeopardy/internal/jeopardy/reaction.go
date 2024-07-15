@@ -62,19 +62,6 @@ func (p *Player) processReactions(reactChan chan Reaction) {
 	}()
 }
 
-func (g *Game) processReactions() {
-	go func() {
-		for {
-			select {
-			case msg := <-g.reactChan:
-				for _, p := range g.Players {
-					_ = p.sendReaction(msg)
-				}
-			}
-		}
-	}()
-}
-
 func (p *Player) readReaction() ([]byte, error) {
 	if p.ReactionConn == nil {
 		log.Infof("Skipping reading reaction from player %s because connection is nil", p.Name)

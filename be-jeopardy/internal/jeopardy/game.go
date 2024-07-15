@@ -162,12 +162,82 @@ func (g *Game) processMessages() {
 					log.Errorf("Error processing message: %s", err.Error())
 				}
 			case player := <-g.disconnectChan:
+				log.Infof("Stopping game %s", g.Name)
 				g.disconnectPlayer(player)
 			case <-g.restartChan:
+				log.Infof("Restarting game %s", g.Name)
 				g.restartGame(context.Background())
 			}
 		}
 	}()
+}
+
+func (g *Game) processChatMessages() {
+	go func() {
+		for {
+			select {
+			case msg := <-g.chatChan:
+				for _, p := range g.Players {
+					_ = p.sendChatMessage(msg)
+				}
+			}
+		}
+	}()
+}
+
+func (g *Game) processReactions() {
+	go func() {
+		for {
+			select {
+			case msg := <-g.reactChan:
+				for _, p := range g.Players {
+					_ = p.sendReaction(msg)
+				}
+			}
+		}
+	}()
+}
+
+func (g *Game) processMsg(ctx context.Context, msg Message) error {
+	player := msg.Player
+	if g.State != msg.State {
+		return nil
+	}
+	if g.Paused {
+		if msg.Pause == -1 {
+			g.startGame()
+			g.messageAllPlayers("Player %s resumed the game", player.name())
+			return nil
+		}
+		return nil
+	}
+	if msg.Pause == 1 {
+		g.pauseGame()
+		g.messageAllPlayers("Player %s paused the game", player.name())
+		return nil
+	}
+	var err error
+	switch g.State {
+	case RecvPick:
+		if msg.InitDispute {
+			err = g.initDispute(player)
+		} else {
+			err = g.processPick(player, msg.CatIdx, msg.ValIdx)
+		}
+	case RecvBuzz:
+		err = g.processBuzz(ctx, player, msg.IsPass)
+	case RecvAns:
+		err = g.processAnswer(ctx, player, msg.Answer)
+	case RecvWager:
+		err = g.processWager(player, msg.Wager)
+	case RecvDispute:
+		err = g.processDispute(ctx, player, msg.Dispute)
+	case PostGame:
+		err = g.processProtest(player, msg.ProtestFor)
+	case PreGame:
+		err = fmt.Errorf("received unexpected message")
+	}
+	return err
 }
 
 func (g *Game) startRound(player GamePlayer) {
@@ -232,48 +302,6 @@ func (g *Game) disconnectPlayer(player GamePlayer) {
 		removeGame(g)
 	}
 
-}
-
-func (g *Game) processMsg(ctx context.Context, msg Message) error {
-	player := msg.Player
-	if g.State != msg.State {
-		return nil
-	}
-	if g.Paused {
-		if msg.Pause == -1 {
-			g.startGame()
-			g.messageAllPlayers("Player %s resumed the game", player.name())
-			return nil
-		}
-		return nil
-	}
-	if msg.Pause == 1 {
-		g.pauseGame()
-		g.messageAllPlayers("Player %s paused the game", player.name())
-		return nil
-	}
-	var err error
-	switch g.State {
-	case RecvPick:
-		if msg.InitDispute {
-			err = g.initDispute(player)
-		} else {
-			err = g.processPick(player, msg.CatIdx, msg.ValIdx)
-		}
-	case RecvBuzz:
-		err = g.processBuzz(ctx, player, msg.IsPass)
-	case RecvAns:
-		err = g.processAnswer(ctx, player, msg.Answer)
-	case RecvWager:
-		err = g.processWager(player, msg.Wager)
-	case RecvDispute:
-		err = g.processDispute(ctx, player, msg.Dispute)
-	case PostGame:
-		err = g.processProtest(player, msg.ProtestFor)
-	case PreGame:
-		err = fmt.Errorf("received unexpected message")
-	}
-	return err
 }
 
 func (g *Game) getIncorrectAns(player GamePlayer) (*Answer, bool) {
