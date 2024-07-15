@@ -133,4 +133,20 @@ export class ProfileComponent implements OnInit {
 		}
 		await this.auth.GetUser()
 	}
+
+	protected get publicProfile(): boolean {
+		return this.user.public
+	}
+
+	protected get privateProfile(): boolean {
+		return !this.user.public
+	}
+
+	protected set publicProfile(value: boolean) {
+		this.user.public = value
+	}
+
+	protected set privateProfile(value: boolean) {
+		this.user.public = !value
+	}
 }

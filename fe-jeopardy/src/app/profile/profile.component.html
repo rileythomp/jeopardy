@@ -21,9 +21,9 @@
         <div><p>{{ profileUser.email }}</p></div>
         <div><p>Date joined: {{ profileUser.dateJoined }}</p></div>
         <div *ngIf='user.email == profileUser.email'>
-            <input id='private-profile' type="checkbox" [(ngModel)]="!user.public" (change)="updateProfileVisibility(false)">
+            <input id='private-profile' type="checkbox" [(ngModel)]="privateProfile" (change)="updateProfileVisibility(false)">
             <label for="private-profile" style="margin-right: 1em;">Private</label>
-            <input id='public-profile' type="checkbox" [(ngModel)]="user.public" (change)="updateProfileVisibility(true)">
+            <input id='public-profile' type="checkbox" [(ngModel)]="publicProfile" (change)="updateProfileVisibility(true)">
             <label for="public-profile">Public</label>
         </div>
         <div *ngIf='user.email == profileUser.email'>
