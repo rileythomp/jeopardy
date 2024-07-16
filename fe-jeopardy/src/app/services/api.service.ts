@@ -48,7 +48,6 @@ export class ApiService {
             name: name,
             imgUrl: imgUrl,
             email: email,
-            joinCode: joinCode,
         })
     }
 

@@ -16,7 +16,6 @@ type GameRequest struct {
 	PlayerName            string        `json:"name"`
 	PlayerImg             string        `json:"imgUrl"`
 	PlayerEmail           string        `json:"email"`
-	JoinCode              string        `json:"joinCode"`
 	Bots                  int           `json:"bots"`
 	FullGame              bool          `json:"fullGame"`
 	Penalty               bool          `json:"penalty"`
@@ -160,8 +159,8 @@ func findGame(joinCode string) *Game {
 	return nil
 }
 
-func JoinGameByCode(req GameRequest) (*Game, string, error) {
-	game := findGame(req.JoinCode)
+func JoinGameByCode(req GameRequest, joinCode string) (*Game, string, error) {
+	game := findGame(joinCode)
 	if game == nil {
 		return &Game{}, "", fmt.Errorf("Game not found")
 	}
@@ -241,10 +240,15 @@ func AddBot(playerId string) error {
 	return nil
 }
 
-func PlayGame(playerId string, conn SafeConn) error {
+func PlayGame(playerId, gameName string, conn SafeConn) error {
 	game, err := GetPlayerGame(playerId)
 	if err != nil {
 		return err
+	}
+
+	if game.Name != gameName {
+		log.Errorf("Player's current game name '%s' and given game name '%s' do not match", game.Name, gameName)
+		return fmt.Errorf("Game names do not match")
 	}
 
 	player, err := game.getPlayerById(playerId)
