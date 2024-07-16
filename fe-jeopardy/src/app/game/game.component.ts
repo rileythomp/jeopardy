@@ -1,5 +1,6 @@
 import { animate, state, style, transition, trigger } from '@angular/animations'
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core'
+import { ActivatedRoute, Router } from '@angular/router'
 import { GameState, Ping, Player } from '../model/model'
 import { GameStateService } from '../services/game-state.service'
 import { JwtService } from '../services/jwt.service'
@@ -20,7 +21,7 @@ import { WebsocketService } from '../services/websocket.service'
 })
 export class GameComponent implements OnInit {
 	private countdownInterval: NodeJS.Timeout
-	protected gameLink: string
+	protected joinPath: string
 	protected gameMessage: string
 	protected questionAnswer: string
 	protected wagerAmt: string
@@ -38,9 +39,15 @@ export class GameComponent implements OnInit {
 		protected game: GameStateService,
 		protected player: PlayerService,
 		private modal: ModalService,
+		private router: Router,
+		private route: ActivatedRoute,
 	) { }
 
 	ngOnInit(): void {
+		this.route.paramMap.subscribe(params => {
+			let joinCode = params.get('joinCode')
+			this.joinPath = joinCode ? `/join/${joinCode}` : '/'
+		})
 		let showJeopardyMusicInfo = localStorage.getItem('showJeopardyMusicInfo')
 		if (showJeopardyMusicInfo === null) {
 			this.showMusicInfo = true
@@ -74,6 +81,8 @@ export class GameComponent implements OnInit {
 			if (resp.code >= 4400) {
 				switch (resp.code) {
 					case 4400:
+						this.router.navigate([this.joinPath])
+						break
 					case 4401:
 					case 4500:
 						this.modal.displayMessage(resp.message)
@@ -91,8 +100,6 @@ export class GameComponent implements OnInit {
 			this.game.updateGameState(resp.game)
 			this.player.updatePlayer(resp.curPlayer)
 			this.gameMessage = resp.message
-
-			console.log(resp)
 
 			if (resp.code == 4100) {
 				this.modal.displayMessage(resp.message)

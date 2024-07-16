@@ -46,7 +46,7 @@ func (p *Player) processReactions(reactChan chan Reaction) {
 			if err != nil {
 				log.Errorf("Error reading reaction message from player %s: %s", p.Name, err.Error())
 				if websocket.IsCloseError(err, 1001) {
-					log.Infof("Player %s closed chat connection", p.Name)
+					log.Infof("Player %s closed reaction connection", p.Name)
 				}
 				return
 			}
@@ -54,7 +54,6 @@ func (p *Player) processReactions(reactChan chan Reaction) {
 			if err := json.Unmarshal(message, &msg); err != nil {
 				log.Errorf("Error parsing reaction message: %s", err.Error())
 			}
-			log.Infof("Received reaction from player %s: %+v", p.Name, msg)
 			msg.PlayerName = p.Name
 			msg.TimeStamp = time.Now().Unix()
 			msg.RandPos = getRandPos(10, 150)
@@ -89,7 +88,6 @@ func (p *Player) readReaction() ([]byte, error) {
 }
 
 func (p *Player) sendReaction(msg Reaction) error {
-	log.Infof("Sending reaction to player %s: %+v", p.Name, msg)
 	if p.ReactionConn == nil {
 		log.Errorf("Error sending reaction to player %s because connection is nil", p.Name)
 		return fmt.Errorf("player has no reaction connection")

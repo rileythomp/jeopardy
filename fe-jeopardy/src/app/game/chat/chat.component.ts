@@ -34,7 +34,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 			let resp = JSON.parse(event.data)
 
 			if (resp.code >= 4400) {
-				console.log(resp.message)
+				console.error(resp.message)
 				this.messages.push({
 					username: 'Jeopardy System',
 					message: resp.message,
@@ -46,8 +46,6 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 			if (resp.message == Ping) {
 				return
 			}
-
-			console.log(resp)
 
 			this.messages.push({
 				username: resp.name,
