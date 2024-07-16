@@ -47,6 +47,7 @@ export class GameComponent implements OnInit {
 		this.route.paramMap.subscribe(params => {
 			let joinCode = params.get('joinCode')
 			this.joinPath = joinCode ? `/join/${joinCode}` : '/'
+			this.websocket.Connect(`play/${joinCode}`)
 		})
 		let showJeopardyMusicInfo = localStorage.getItem('showJeopardyMusicInfo')
 		if (showJeopardyMusicInfo === null) {
@@ -65,8 +66,6 @@ export class GameComponent implements OnInit {
 			}, 5000)
 			localStorage.setItem('showPauseGame', 'shown')
 		}
-
-		this.websocket.Connect('play')
 
 		this.websocket.OnOpen(() => {
 			this.websocket.Send({

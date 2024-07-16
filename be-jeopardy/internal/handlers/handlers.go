@@ -62,7 +62,7 @@ var (
 		},
 		{
 			Method:  http.MethodGet,
-			Path:    "/jeopardy/play",
+			Path:    "/jeopardy/play/:gameCode",
 			Handler: PlayGame,
 		},
 		{
@@ -392,6 +392,8 @@ func PlayGame(c *gin.Context) {
 		return
 	}
 
+	gameName := c.Param("gameName")
+
 	_, msg, err := ws.ReadMessage()
 	if err != nil {
 		log.Errorf("Error reading message from WebSocket: %s", err.Error())
@@ -414,7 +416,7 @@ func PlayGame(c *gin.Context) {
 	}
 
 	conn := socket.NewSafeConn(ws)
-	err = jeopardy.PlayGame(playerId, conn)
+	err = jeopardy.PlayGame(playerId, gameName, conn)
 	if err != nil {
 		log.Errorf("Error playing game: %s", err.Error())
 		closeConnWithMsg(ws, socket.BadRequest, "Unable to play game: %s", err.Error())
