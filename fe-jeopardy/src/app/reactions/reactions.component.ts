@@ -45,12 +45,6 @@ export class ReactionsComponent {
 
 			if (resp.code >= 4400) {
 				console.error(resp.reaction)
-				this.reactionsList.push({
-					username: 'Jeopardy System',
-					reaction: resp.reaction,
-					timestamp: resp.timeStamp,
-					randPos: resp.randPos,
-				})
 				return
 			}
 
