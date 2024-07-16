@@ -5,12 +5,12 @@ import { PlayerService } from '../services/player.service';
 import { ReactionsService } from '../services/reactions.service';
 
 const emojisList = [
-	[{ emoji: "👏", description: "clapping" }, { emoji: "🔥", description: "fire" }, { emoji: "😃", description: "smiley" }, { emoji: "😡", description: "angry" }, { emoji: "🤔", description: "thinking" }],
-	[{ emoji: "😵", description: "dizzy" }, { emoji: "😐", description: "neutral" }, { emoji: "😤", description: "triumph" }, { emoji: "💸", description: "money" }, { emoji: "🎉", description: "party" }],
-	[{ emoji: "😲", description: "shocked" }, { emoji: "🏆", description: "trophy" }, { emoji: "🧠", description: "brain" }, { emoji: "😢", description: "sad" }, { emoji: "😂", description: "laughing" }],
-	[{ emoji: "💯", description: "hundred" }, { emoji: "🙃", description: "upside-down" }, { emoji: "😅", description: "sweat" }, { emoji: "😒", description: "unamused" }, { emoji: "😭", description: "crying" }],
-	[{ emoji: "🙌", description: "raisedhands" }, { emoji: "💪", description: "strong" }, { emoji: "👎", description: "thumbsdown" }, { emoji: "👌", description: "ok" }, { emoji: "👍", description: "thumbsup" }],
-	[{ emoji: "😎", description: "cool" }, { emoji: "📈", description: "chartup" }, { emoji: "📉", description: "chartdown" }, { emoji: "🖕", description: "fu" }, { emoji: "👽", description: "alien" }]
+	[{ emoji: "👏", description: "clapping" }, { emoji: "🔥", description: "fire" }, { emoji: "😃", description: "smiley" }, { emoji: "🤔", description: "thinking" }, { emoji: "😡", description: "angry" }],
+	[{ emoji: "😲", description: "shocked" }, { emoji: "😤", description: "triumph" }, { emoji: "😂", description: "laughing" }, { emoji: "😅", description: "sweat" }, { emoji: "😭", description: "crying" }],
+	[{ emoji: "🙌", description: "raisedhands" }, { emoji: "🎉", description: "party" }, { emoji: "😎", description: "cool" }, { emoji: "😒", description: "unamused" }, { emoji: "😢", description: "sad" },],
+	[{ emoji: "👌", description: "ok" }, { emoji: "💪", description: "strong" }, { emoji: "👍", description: "thumbsup" }, { emoji: "👎", description: "thumbsdown" }, { emoji: "🖕", description: "fu" }],
+	[{ emoji: "😵", description: "dizzy" }, { emoji: "🙃", description: "upside-down" }, { emoji: "📈", description: "chartup" }, { emoji: "📉", description: "chartdown" }, { emoji: "😐", description: "neutral" },],
+	[{ emoji: "🧠", description: "brain" }, { emoji: "💸", description: "money" }, { emoji: "🏆", description: "trophy" }, { emoji: "💯", description: "hundred" }, { emoji: "👽", description: "alien" }]
 ]
 
 @Component({
