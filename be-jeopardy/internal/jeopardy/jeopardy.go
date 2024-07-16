@@ -248,7 +248,7 @@ func PlayGame(playerId, gameName string, conn SafeConn) error {
 
 	if game.Name != gameName {
 		log.Errorf("Player's current game name '%s' and given game name '%s' do not match", game.Name, gameName)
-		return fmt.Errorf("Game names does not match")
+		return fmt.Errorf("Game names do not match")
 	}
 
 	player, err := game.getPlayerById(playerId)

@@ -53,9 +53,9 @@ export class GameComponent implements OnInit {
 
 	ngOnInit(): void {
 		this.route.paramMap.subscribe(params => {
-			let joinCode = params.get('joinCode')
-			this.joinPath = joinCode ? `/join/${joinCode}` : '/'
-			this.websocket.Connect(`play/${joinCode}`)
+			let gameName = params.get('gameName')
+			this.joinPath = gameName ? `/join/${gameName}` : '/'
+			this.websocket.Connect(`play/${gameName}`)
 		})
 		let showJeopardyMusicInfo = localStorage.getItem('showJeopardyMusicInfo')
 		if (showJeopardyMusicInfo === null) {

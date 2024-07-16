@@ -12,7 +12,7 @@ const routes: Routes = [
 	{ path: '', component: JoinComponent },
 	{ path: 'join', component: JoinComponent },
 	{ path: 'join/:joinCode', component: LinkJoinComponent },
-	{ path: 'game/:joinCode', component: GameComponent },
+	{ path: 'game/:gameName', component: GameComponent },
 	{ path: 'warning', component: WarningComponent },
 	{ path: 'profile', component: ProfileComponent },
 	{ path: 'profile/:name', component: ProfileComponent },
