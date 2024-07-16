@@ -16,7 +16,6 @@ type GameRequest struct {
 	PlayerName            string        `json:"name"`
 	PlayerImg             string        `json:"imgUrl"`
 	PlayerEmail           string        `json:"email"`
-	JoinCode              string        `json:"joinCode"`
 	Bots                  int           `json:"bots"`
 	FullGame              bool          `json:"fullGame"`
 	Penalty               bool          `json:"penalty"`
@@ -160,8 +159,8 @@ func findGame(joinCode string) *Game {
 	return nil
 }
 
-func JoinGameByCode(req GameRequest) (*Game, string, error) {
-	game := findGame(req.JoinCode)
+func JoinGameByCode(req GameRequest, joinCode string) (*Game, string, error) {
+	game := findGame(joinCode)
 	if game == nil {
 		return &Game{}, "", fmt.Errorf("Game not found")
 	}

@@ -62,7 +62,7 @@ var (
 		},
 		{
 			Method:  http.MethodGet,
-			Path:    "/jeopardy/play/:gameCode",
+			Path:    "/jeopardy/play/:gameName",
 			Handler: PlayGame,
 		},
 		{
@@ -225,7 +225,9 @@ func JoinGameByCode(c *gin.Context) {
 		return
 	}
 
-	game, playerId, err := jeopardy.JoinGameByCode(req)
+	joinCode := c.Param("joinCode")
+
+	game, playerId, err := jeopardy.JoinGameByCode(req, joinCode)
 	if err != nil {
 		log.Errorf("Error joining game by code: %s", err.Error())
 		respondWithError(c, http.StatusBadRequest, "Unable to join game: %s", err.Error())
