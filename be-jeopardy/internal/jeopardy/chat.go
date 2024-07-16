@@ -73,7 +73,6 @@ func (p *Player) readChatMessage() ([]byte, error) {
 
 func (p *Player) sendChatMessage(msg ChatMessage) error {
 	if p.ChatConn == nil {
-		log.Errorf("Error sending chat message to player %s because connection is nil", p.Name)
 		return fmt.Errorf("player has no chat connection")
 	}
 	if err := p.ChatConn.WriteJSON(msg); err != nil {

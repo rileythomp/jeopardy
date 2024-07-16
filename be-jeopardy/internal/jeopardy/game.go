@@ -205,7 +205,7 @@ func (g *Game) processMsg(ctx context.Context, msg Message) error {
 	}
 	if g.Paused {
 		if msg.Pause == -1 {
-			g.startGame()
+			g.resumeGame()
 			g.messageAllPlayers("Player %s resumed the game", player.name())
 			return nil
 		}
@@ -238,100 +238,6 @@ func (g *Game) processMsg(ctx context.Context, msg Message) error {
 		err = fmt.Errorf("received unexpected message")
 	}
 	return err
-}
-
-func (g *Game) startRound(player GamePlayer) {
-	if os.Getenv("GIN_MODE") == "debug" {
-		g.setState(RecvPick, player)
-	} else {
-		g.setState(BoardIntro, player)
-	}
-}
-
-func (g *Game) restartGame(ctx context.Context) {
-	g.State = PreGame
-	g.Round = FirstRound
-	g.LastToPick = &Player{}
-	g.CurQuestion = &Question{}
-	g.OfficialAnswer = ""
-	g.AnsCorrectness = false
-	g.GuessedWrong = []string{}
-	g.Passed = []string{}
-	g.Disputers = 0
-	g.NonDisputers = 0
-	g.NumFinalWagers = 0
-	g.FinalWagers = []string{}
-	g.FinalAnswers = []string{}
-	g.setQuestions(ctx)
-	for _, p := range g.Players {
-		p.resetPlayer()
-	}
-	g.startRound(g.Players[0])
-	g.messageAllPlayers("We are ready to play")
-}
-
-func (g *Game) pauseGame() {
-	g.PausedAt = time.Now()
-	g.Paused = true
-	g.PausedState = g.State
-	g.cancelBoardIntroTimeout()
-	g.cancelPickTimeout()
-	g.cancelBuzzTimeout()
-	for _, p := range g.Players {
-		p.pausePlayer()
-	}
-}
-
-func (g *Game) disconnectPlayer(player GamePlayer) {
-	g.Disconnected = true
-	g.pauseGame()
-	if g.State != PostGame {
-		g.State = PreGame
-	}
-	player.endConnections()
-	player.setPlayAgain(false)
-	g.messageAllPlayers("Player %s disconnected from the game", player.name())
-	endGame := true
-	for _, p := range g.Players {
-		if p.conn() != nil {
-			endGame = false
-		}
-	}
-	if endGame {
-		log.Infof("All players disconnected, removing game %s", g.Name)
-		removeGame(g)
-	}
-
-}
-
-func (g *Game) getIncorrectAns(player GamePlayer) (*Answer, bool) {
-	for _, ans := range g.CurQuestion.Answers {
-		if ans.Player.id() == player.id() && !ans.HasDisputed && !ans.Correct && ans.Answer != "answer-timeout" {
-			return ans, true
-		} else if ans.Overturned {
-			return &Answer{}, false
-		}
-	}
-	return &Answer{}, false
-}
-
-func (g *Game) initDispute(player GamePlayer) error {
-	ans, canDispute := g.getIncorrectAns(player)
-	if !canDispute {
-		return fmt.Errorf("player cannot initiate dispute")
-	}
-	g.cancelPickTimeout()
-	for _, p := range g.Players {
-		if p.canPick() {
-			g.DisputePicker = p
-		}
-	}
-	g.Disputers = 1
-	ans.HasDisputed = true
-	g.CurQuestion.CurDisputed = ans
-	g.setState(RecvDispute, player)
-	g.messageAllPlayers("Player %s disputed the answer", player.name())
-	return nil
 }
 
 func (g *Game) processPick(player GamePlayer, catIdx, valIdx int) error {
@@ -621,7 +527,58 @@ func (g *Game) setState(state GameState, player GamePlayer) {
 	g.State = state
 }
 
-func (g *Game) startGame() {
+func (g *Game) messageAllPlayers(msg string, args ...any) {
+	for _, p := range g.Players {
+		_ = p.sendMessage(Response{
+			Code:      socket.Ok,
+			Message:   fmt.Sprintf(msg, args...),
+			Game:      g,
+			CurPlayer: p,
+		})
+	}
+}
+
+func (g *Game) startRound(player GamePlayer) {
+	if os.Getenv("GIN_MODE") == "debug" {
+		g.setState(RecvPick, player)
+	} else {
+		g.setState(BoardIntro, player)
+	}
+}
+
+func (g *Game) startSecondRound() {
+	g.Round = SecondRound
+	g.resetGuesses()
+	g.startRound(g.lowestPlayer())
+}
+
+func (g *Game) startFinalRound(ctx context.Context) {
+	g.Round = FinalRound
+	g.resetGuesses()
+	g.CurQuestion = g.FinalQuestion
+	g.OfficialAnswer = g.CurQuestion.Answer
+	g.NumFinalWagers = g.numFinalWagers()
+	if g.NumFinalWagers < 2 {
+		g.setState(PostGame, &Player{})
+		g.saveGameAnalytics(ctx)
+	} else {
+		g.setState(RecvWager, &Player{})
+	}
+}
+
+func (g *Game) pauseGame() {
+	g.PausedAt = time.Now()
+	g.Paused = true
+	g.PausedState = g.State
+	g.cancelBoardIntroTimeout()
+	g.cancelPickTimeout()
+	g.cancelBuzzTimeout()
+	for _, p := range g.Players {
+		p.pausePlayer()
+	}
+}
+
+func (g *Game) resumeGame() {
 	if g.Paused {
 		g.State = g.PausedState
 	}
@@ -656,49 +613,47 @@ func (g *Game) startGame() {
 	g.setState(state, player)
 }
 
-func (g *Game) getAvgScore() float64 {
-	total := 0.0
-	players := 0
+func (g *Game) disconnectPlayer(player GamePlayer) {
+	g.Disconnected = true
+	g.pauseGame()
+	if g.State != PostGame {
+		g.State = PreGame
+	}
+	player.endConnections()
+	player.setPlayAgain(false)
+	g.messageAllPlayers("Player %s disconnected from the game", player.name())
+	endGame := true
 	for _, p := range g.Players {
-		if !p.isBot() {
-			total += float64(p.score())
-			players++
+		if p.conn() != nil {
+			endGame = false
 		}
 	}
-	return total / float64(players)
-}
-
-func (g *Game) startSecondRound() {
-	g.Round = SecondRound
-	g.resetGuesses()
-	g.startRound(g.lowestPlayer())
-}
-
-func (g *Game) startFinalRound(ctx context.Context) {
-	g.Round = FinalRound
-	g.resetGuesses()
-	g.CurQuestion = g.FinalQuestion
-	g.OfficialAnswer = g.CurQuestion.Answer
-	g.NumFinalWagers = g.numFinalWagers()
-	if g.NumFinalWagers < 2 {
-		g.setState(PostGame, &Player{})
-		g.saveGameAnalytics(ctx)
-	} else {
-		g.setState(RecvWager, &Player{})
+	if endGame {
+		log.Infof("All players disconnected, removing game %s", g.Name)
+		removeGame(g)
 	}
 }
 
-func (g *Game) handleRoundEnd(ctx context.Context) {
-	if g.Round == FirstRound {
-		g.FirstRoundScore = g.getAvgScore()
-	} else if g.Round == SecondRound {
-		g.SecondRoundScore = g.getAvgScore()
+func (g *Game) restartGame(ctx context.Context) {
+	g.State = PreGame
+	g.Round = FirstRound
+	g.LastToPick = &Player{}
+	g.CurQuestion = &Question{}
+	g.OfficialAnswer = ""
+	g.AnsCorrectness = false
+	g.GuessedWrong = []string{}
+	g.Passed = []string{}
+	g.Disputers = 0
+	g.NonDisputers = 0
+	g.NumFinalWagers = 0
+	g.FinalWagers = []string{}
+	g.FinalAnswers = []string{}
+	g.setQuestions(ctx)
+	for _, p := range g.Players {
+		p.resetPlayer()
 	}
-	if g.Round == FirstRound && g.FullGame {
-		g.startSecondRound()
-	} else {
-		g.startFinalRound(ctx)
-	}
+	g.startRound(g.Players[0])
+	g.messageAllPlayers("We are ready to play")
 }
 
 func (g *Game) nextQuestion(ctx context.Context, player GamePlayer, isCorrect bool) {
@@ -744,35 +699,34 @@ func (g *Game) skipQuestion(ctx context.Context) {
 	g.messageAllPlayers(msg)
 }
 
-func (g *Game) resetGuesses() {
-	g.GuessedWrong = []string{}
-	g.Passed = []string{}
-	g.Disputers = 0
-	g.NonDisputers = 0
-}
-
-func (g *Game) messageAllPlayers(msg string, args ...any) {
-	for _, p := range g.Players {
-		_ = p.sendMessage(Response{
-			Code:      socket.Ok,
-			Message:   fmt.Sprintf(msg, args...),
-			Game:      g,
-			CurPlayer: p,
-		})
+func (g *Game) initDispute(player GamePlayer) error {
+	ans, canDispute := g.getIncorrectAns(player)
+	if !canDispute {
+		return fmt.Errorf("player cannot initiate dispute")
 	}
-}
-
-func (g *Game) getPlayerById(id string) (GamePlayer, error) {
+	g.cancelPickTimeout()
 	for _, p := range g.Players {
-		if p.id() == id {
-			return p, nil
+		if p.canPick() {
+			g.DisputePicker = p
 		}
 	}
-	return &Player{}, fmt.Errorf("Player not found in game %s", g.Name)
+	g.Disputers = 1
+	ans.HasDisputed = true
+	g.CurQuestion.CurDisputed = ans
+	g.setState(RecvDispute, player)
+	g.messageAllPlayers("Player %s disputed the answer", player.name())
+	return nil
 }
 
-func (g *Game) noPlayerCanBuzz() bool {
-	return len(g.Passed)+len(g.GuessedWrong) == len(g.Players)
+func (g *Game) getIncorrectAns(player GamePlayer) (*Answer, bool) {
+	for _, ans := range g.CurQuestion.Answers {
+		if ans.Player.id() == player.id() && !ans.HasDisputed && !ans.Correct && ans.Answer != "answer-timeout" {
+			return ans, true
+		} else if ans.Overturned {
+			return &Answer{}, false
+		}
+	}
+	return &Answer{}, false
 }
 
 func (g *Game) roundEnded() bool {
@@ -791,6 +745,51 @@ func (g *Game) roundEnded() bool {
 		}
 	}
 	return true
+}
+
+func (g *Game) handleRoundEnd(ctx context.Context) {
+	if g.Round == FirstRound {
+		g.FirstRoundScore = g.getAvgScore()
+	} else if g.Round == SecondRound {
+		g.SecondRoundScore = g.getAvgScore()
+	}
+	if g.Round == FirstRound && g.FullGame {
+		g.startSecondRound()
+	} else {
+		g.startFinalRound(ctx)
+	}
+}
+
+func (g *Game) resetGuesses() {
+	g.GuessedWrong = []string{}
+	g.Passed = []string{}
+	g.Disputers = 0
+	g.NonDisputers = 0
+}
+
+func (g *Game) getPlayerById(id string) (GamePlayer, error) {
+	for _, p := range g.Players {
+		if p.id() == id {
+			return p, nil
+		}
+	}
+	return &Player{}, fmt.Errorf("Player not found in game %s", g.Name)
+}
+
+func (g *Game) getAvgScore() float64 {
+	total := 0.0
+	players := 0
+	for _, p := range g.Players {
+		if !p.isBot() {
+			total += float64(p.score())
+			players++
+		}
+	}
+	return total / float64(players)
+}
+
+func (g *Game) noPlayerCanBuzz() bool {
+	return len(g.Passed)+len(g.GuessedWrong) == len(g.Players)
 }
 
 func (g *Game) lowestPlayer() GamePlayer {

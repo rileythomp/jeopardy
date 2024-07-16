@@ -273,7 +273,7 @@ func StartGame(playerId string) error {
 		game.Disconnected = false
 	}
 	if game.Paused {
-		game.startGame()
+		game.resumeGame()
 	} else {
 		game.startRound(game.Players[0])
 	}
