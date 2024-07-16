@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core'
 import { Subject } from 'rxjs'
-import { Game, Player, Question, GameState, RoundState, Answer } from '../model/model'
+import { Answer, Game, GameState, Player, Question, RoundState } from '../model/model'
 import { PlayerService } from './player.service'
 
 @Injectable({
@@ -36,6 +36,10 @@ export class GameStateService {
 			this.game.players = []
 		}
 		return this.game.players
+	}
+
+	NumConnectedPlayers(): number {
+		return this.game.players.filter(player => player.conn).length
 	}
 
 	OtherPlayers(): Player[] {

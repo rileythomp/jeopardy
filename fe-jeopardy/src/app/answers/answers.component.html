@@ -7,7 +7,7 @@
         <span *ngIf="answer.answer == 'answer-timeout'">
             didn't answer in time
         </span>
-        <button class='dispute-button' *ngIf="answer.player.id == player.Id() && game.CanInitDispute(player.Id()) && game.Penalty() && game.RecvPick()" (click)="disputeQuestion()">
+        <button class='dispute-button' *ngIf="answer.player.id == player.Id() && game.CanInitDispute(player.Id()) && game.RecvPick()" (click)="disputeQuestion()">
             Dispute
         </button>
     </li>

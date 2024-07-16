@@ -364,6 +364,7 @@ func (p *Player) addToScore(points int) {
 func (p *Player) endConnections() {
 	p.Conn = nil
 	p.ChatConn = nil
+	p.ReactionConn = nil
 }
 
 func (p *Player) setCancelWagerTimeout(cancel context.CancelFunc) {

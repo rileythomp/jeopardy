@@ -11,7 +11,7 @@
 
     <div>
         <button id='start-game' (click)="startGame()">Start game</button>
-        <button (click)="addBot()">Add bot</button>
+        <button *ngIf='game.NumConnectedPlayers() < 6' (click)="addBot()">Add bot</button>
         <p>Other players taking too long? Add a Jeopardy bot to the game to play against.</p>
     </div>
 </div>
