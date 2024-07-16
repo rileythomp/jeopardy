@@ -59,19 +59,6 @@ func (p *Player) processChatMessages(chatChan chan ChatMessage) {
 	}()
 }
 
-func (g *Game) processChatMessages() {
-	go func() {
-		for {
-			select {
-			case msg := <-g.chatChan:
-				for _, p := range g.Players {
-					_ = p.sendChatMessage(msg)
-				}
-			}
-		}
-	}()
-}
-
 func (p *Player) readChatMessage() ([]byte, error) {
 	if p.ChatConn == nil {
 		log.Infof("Skipping reading chat message from player %s because connection is nil", p.Name)
@@ -86,7 +73,6 @@ func (p *Player) readChatMessage() ([]byte, error) {
 
 func (p *Player) sendChatMessage(msg ChatMessage) error {
 	if p.ChatConn == nil {
-		log.Errorf("Error sending chat message to player %s because connection is nil", p.Name)
 		return fmt.Errorf("player has no chat connection")
 	}
 	if err := p.ChatConn.WriteJSON(msg); err != nil {

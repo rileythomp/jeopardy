@@ -37,7 +37,7 @@ func (g *Game) startBoardIntroTimeout() {
 	g.cancelBoardIntroTimeout = cancel
 	g.startTimeout(ctx, boardIntroTimeout, &Player{}, func(_ GamePlayer) error {
 		if g.Round == FirstRound {
-			g.startGame()
+			g.resumeGame()
 		} else {
 			g.setState(RecvPick, g.lowestPlayer())
 		}
