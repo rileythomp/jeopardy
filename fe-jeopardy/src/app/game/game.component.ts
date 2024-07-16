@@ -8,6 +8,14 @@ import { ModalService } from '../services/modal.service'
 import { PlayerService } from '../services/player.service'
 import { WebsocketService } from '../services/websocket.service'
 
+const BadRequest = 4400
+const Unauthorized = 4401
+const ServerError = 4500
+
+function isError(code: number): boolean {
+	return code >= 4400
+}
+
 @Component({
 	selector: 'app-game',
 	templateUrl: './game.component.html',
@@ -77,13 +85,13 @@ export class GameComponent implements OnInit {
 		this.websocket.OnMessage((event: { data: string }) => {
 			let resp = JSON.parse(event.data)
 
-			if (resp.code >= 4400) {
+			if (isError(resp.code)) {
 				switch (resp.code) {
-					case 4400:
+					case BadRequest:
+					case Unauthorized:
 						this.router.navigate([this.joinPath])
 						break
-					case 4401:
-					case 4500:
+					case ServerError:
 						this.modal.displayMessage(resp.message)
 						break
 				}
