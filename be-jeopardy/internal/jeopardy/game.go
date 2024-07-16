@@ -162,10 +162,8 @@ func (g *Game) processMessages() {
 					log.Errorf("Error processing message: %s", err.Error())
 				}
 			case player := <-g.disconnectChan:
-				log.Infof("Stopping game %s", g.Name)
 				g.disconnectPlayer(player)
 			case <-g.restartChan:
-				log.Infof("Restarting game %s", g.Name)
 				g.restartGame(context.Background())
 			}
 		}
