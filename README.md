@@ -54,7 +54,7 @@ Play here: https://playjeopardy.netlify.app
   - Play with or without penalties for incorrect answers
   - Play in public or private games
 
-- In-game chat
+- In-game chat and emoji reactions
 
 - Allows for players to pause the game
 
