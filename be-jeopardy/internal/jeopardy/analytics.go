@@ -59,6 +59,10 @@ func (g *Game) saveGameAnalytics(ctx context.Context) {
 		return
 	}
 	fr, sr := getRoundAnalytics(g.FirstRound), getRoundAnalytics(g.SecondRound)
+	if *fr.Answers == 0 || *sr.Answers == 0 {
+		// players likely left the game and let it play out so just ignore it
+		return
+	}
 	fr.Score, sr.Score = &g.FirstRoundScore, &g.SecondRoundScore
 	if !g.FullGame {
 		sr = db.AnalyticsRound{}
