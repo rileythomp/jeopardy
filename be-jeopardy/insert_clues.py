@@ -2,9 +2,10 @@
 # NOTE: Run add_alternatives.py after remove_slashes.sql
 
 import csv
-import psycopg2
 import os
 import time
+
+import psycopg2
 
 conn = psycopg2.connect(
     dbname='postgres',
