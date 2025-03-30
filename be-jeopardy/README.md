@@ -2,6 +2,7 @@
 
 ```
 $ go mod tidy
-$ source .env 
+$ source .env
+$ docker compose up -d postgres
 $ make run
 ```

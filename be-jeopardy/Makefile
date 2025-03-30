@@ -1,19 +1,17 @@
 BINARY_NAME=bin/jeopardy
-GOBUILD=go build
-GOCLEAN=go clean
-
 
 build:
 	go build -o $(BINARY_NAME) -v
+
+run: build
+	./$(BINARY_NAME)
 
 clean:
 	go clean
 	rm -f $(BINARY_NAME)
 
-run:
+run-heroku:
 	go install -v ./...
 	heroku local web --port 8080
 
-all: build
-
-.PHONY: all build clean run
+.PHONY: build run clean run-heroku
